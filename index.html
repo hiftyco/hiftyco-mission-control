@@ -4,457 +4,463 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Hifty Mission Control</title>
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&family=SF+Pro+Display:wght@400;500;600;700&display=swap" rel="stylesheet">
-<script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
 <style>
 :root{
---bg:#000000;--bg2:#0d0d0f;--bg3:#141416;--bg4:#1a1a1d;--bg5:#242426;--bg6:#2e2e32;
---text:#f5f5f7;--text2:#a1a1a6;--text3:#6e6e73;
---blue:#0a84ff;--blue2:#409cff;--green:#30d158;--green2:#48d168;
---orange:#ff9f0a;--red:#ff453a;--purple:#bf5af2;--cyan:#64d2ff;--pink:#ff375f;
---border:rgba(255,255,255,0.08);--border2:rgba(255,255,255,0.12);--border3:rgba(255,255,255,0.18);
---shadow:0 25px 60px rgba(0,0,0,0.5);--shadow2:0 8px 30px rgba(0,0,0,0.3);
---r:8px;--r2:12px;--r3:16px;--r4:22px;--r5:28px;
+--bg:#000;--bg2:#0d0d0f;--bg3:#1c1c1e;--bg4:#2c2c2e;--bg5:#3a3a3c;
+--text:#fff;--text2:#98989d;--text3:#636366;
+--blue:#007AFF;--green:#34C759;--orange:#FF9500;--red:#FF3B30;--purple:#AF52DE;--teal:#5AC8FA;
+--border:rgba(255,255,255,0.08);--border2:rgba(255,255,255,0.12);
+--radius:14px;--radius2:9px;--font:-apple-system,BlinkMacSystemFont,"SF Pro Display",sans-serif;
 }
 *{margin:0;padding:0;box-sizing:border-box}
+body{font-family:var(--font);background:var(--bg);color:var(--text);line-height:1.4;font-size:14px;-webkit-font-smoothing:antialiased}
 html,body{height:100%}
-body{font-family:'Inter','SF Pro Display',-apple-system,BlinkMacSystemFont,sans-serif;background:var(--bg);color:var(--text);overflow:hidden;-webkit-font-smoothing:antialiased}
 
-/* Login */
-.login{position:fixed;inset:0;background:var(--bg);z-index:9999;display:flex;align-items:center;justify-content:center;transition:all 0.6s cubic-bezier(0.16,1,0.3,1)}
-.login.hide{opacity:0;pointer-events:none;transform:scale(1.05)}
-.login-box{width:340px;text-align:center;animation:slideUp 0.8s cubic-bezier(0.16,1,0.3,1)}
-@keyframes slideUp{from{opacity:0;transform:translateY(40px)}}
-.login-icon{width:88px;height:88px;margin:0 auto 28px;background:linear-gradient(135deg,#0a84ff,#bf5af2,#64d2ff);border-radius:26px;display:flex;align-items:center;justify-content:center;font-size:42px;animation:float 4s ease-in-out infinite,glow 3s ease-in-out infinite,spin 20s linear infinite}
-@keyframes float{0%,100%{transform:translateY(0)}50%{transform:translateY(-10px)}}
-@keyframes glow{0%,100%{box-shadow:0 0 60px rgba(10,132,255,0.35)}50%{box-shadow:0 0 80px rgba(191,90,242,0.45)}}
-@keyframes spin{from{transform:rotate(0deg)}to{transform:rotate(360deg)}}
-.login-h1{font-size:32px;font-weight:700;margin-bottom:6px;letter-spacing:-0.5px;background:linear-gradient(135deg,#fff 0%,#a1a1a6 100%);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
-.login-p{font-size:14px;color:var(--text3);margin-bottom:32px}
-.login-f{display:flex;flex-direction:column;gap:12px}
-.login-i{width:100%;padding:16px;background:var(--bg3);border:1px solid var(--border);border-radius:var(--r3);color:#fff;font-size:15px;outline:none;transition:all 0.3s;text-align:center}
-.login-i::placeholder{color:var(--text3)}
-.login-i:focus{border-color:var(--blue);background:var(--bg4);box-shadow:0 0 0 4px rgba(10,132,255,0.12)}
-.login-b{width:100%;padding:16px;background:linear-gradient(135deg,var(--blue),var(--purple));border:none;border-radius:var(--r3);color:#fff;font-size:15px;font-weight:600;cursor:pointer;transition:all 0.3s;margin-top:8px}
-.login-b:hover{transform:translateY(-2px);box-shadow:0 12px 36px rgba(10,132,255,0.4)}
-.login-e{color:var(--red);font-size:13px;margin-top:14px;opacity:0;transition:all 0.3s}
-.login-e.show{opacity:1}
+/* Grid Layout */
+.dashboard{display:grid;grid-template-columns:280px 1fr;grid-template-rows:auto 1fr;gap:16px;padding:16px;height:100vh;overflow:hidden}
+.header{grid-column:1/-1;display:flex;align-items:center;justify-content:space-between;padding:12px 20px;background:var(--bg2);border-radius:var(--radius);border:1px solid var(--border)}
+.sidebar{background:var(--bg2);border-radius:var(--radius);border:1px solid var(--border);padding:16px;overflow-y:auto}
+.main{background:var(--bg2);border-radius:var(--radius);border:1px solid var(--border);padding:20px;overflow-y:auto;display:flex;flex-direction:column;gap:20px}
 
-/* App */
-.app{display:flex;height:100vh;opacity:0;transition:opacity 0.5s}
-.app.on{opacity:1}
-
-/* Sidebar */
-.sidebar{width:240px;background:var(--bg2);border-right:1px solid var(--border);display:flex;flex-direction:column;padding:20px 16px}
-.s-logo{display:flex;align-items:center;gap:14px;padding:8px;margin-bottom:28px}
-.s-logo-icon{width:48px;height:48px;background:linear-gradient(135deg,var(--blue),var(--purple));border-radius:14px;display:flex;align-items:center;justify-content:center;font-size:22px;box-shadow:0 4px 20px rgba(10,132,255,0.3)}
-.s-logo-text{font-size:20px;font-weight:700;letter-spacing:-0.5px}
-.s-section{margin-bottom:24px}
-.s-section-title{font-size:10px;font-weight:600;color:var(--text3);text-transform:uppercase;letter-spacing:1.2px;padding:0 12px;margin-bottom:12px}
-.s-item{display:flex;align-items:center;gap:14px;padding:14px;border-radius:var(--r3);cursor:pointer;transition:all 0.2s;color:var(--text2);margin-bottom:4px;font-size:14px;font-weight:500}
-.s-item:hover{background:var(--bg3);color:var(--text)}
-.s-item.active{background:linear-gradient(135deg,var(--blue),var(--purple));color:#fff;box-shadow:0 4px 20px rgba(10,132,255,0.3)}
-.s-item-icon{font-size:18px;width:26px;text-align:center}
-.s-item-badge{width:8px;height:8px;background:var(--green);border-radius:50%;margin-left:auto;animation:pulse 2s infinite}
+/* Header */
+.h-left{display:flex;align-items:center;gap:16px}
+.h-title{font-size:18px;font-weight:600}
+.h-url{font-size:12px;color:var(--text2);background:var(--bg3);padding:4px 10px;border-radius:6px}
+.h-center{display:flex;align-items:center;gap:24px}
+.h-clock{font-size:28px;font-weight:300;font-variant-numeric:tabular-nums;letter-spacing:-1px}
+.h-resources{display:flex;gap:16px}
+.res-item{text-align:center}
+.res-label{font-size:10px;color:var(--text3);text-transform:uppercase;margin-bottom:4px}
+.res-bar{width:60px;height:6px;background:var(--bg3);border-radius:3px;overflow:hidden}
+.res-fill{height:100%;border-radius:3px;transition:width 0.3s,background 0.3s}
+.res-fill.low{background:var(--blue)}.res-fill.med{background:var(--orange)}.res-fill.high{background:var(--red)}
+.h-right{display:flex;align-items:center;gap:12px}
+.status-badge{display:flex;align-items:center;gap:6px;padding:6px 12px;background:rgba(52,199,89,0.15);color:var(--green);border-radius:20px;font-size:12px;font-weight:500}
+.status-dot{width:8px;height:8px;background:var(--green);border-radius:50%;animation:pulse 2s infinite}
 @keyframes pulse{0%,100%{opacity:1}50%{opacity:0.5}}
 
-/* Main */
-.main{flex:1;display:flex;flex-direction:column;overflow:hidden}
-.header{height:68px;background:var(--bg2);border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;padding:0 28px}
-.h-title{font-size:22px;font-weight:600;letter-spacing:-0.3px}
-.h-live{display:flex;align-items:center;gap:8px;padding:6px 14px;background:rgba(48,209,88,0.12);border-radius:20px;font-size:11px;font-weight:600;color:var(--green)}
-.h-live::before{content:'';width:6px;height:6px;background:var(--green);border-radius:50%;animation:pulse 1.5s infinite}
-.h-right{display:flex;align-items:center;gap:14px}
-.h-time{font-size:13px;color:var(--text2);font-weight:500;font-variant-numeric:tabular-nums}
-.h-btn{padding:10px 16px;background:var(--bg3);border:1px solid var(--border);border-radius:var(--r2);color:var(--text);font-size:12px;font-weight:500;cursor:pointer;transition:all 0.2s;display:flex;align-items:center;gap:8px}
-.h-btn:hover{background:var(--bg4);border-color:var(--border2)}
+/* Sidebar */
+.s-logo{display:flex;align-items:center;gap:10px;margin-bottom:20px;padding-bottom:16px;border-bottom:1px solid var(--border)}
+.s-icon{width:36px;height:36px;background:linear-gradient(135deg,var(--blue),var(--purple));border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:18px}
+.s-name{font-size:16px;font-weight:600}
+.s-section{margin-bottom:20px}
+.s-title{font-size:11px;color:var(--text3);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:10px;padding-left:4px}
+.s-btn{display:flex;align-items:center;gap:10px;padding:10px 12px;border-radius:var(--radius2);color:var(--text2);cursor:pointer;transition:all 0.15s;margin-bottom:4px}
+.s-btn:hover{background:var(--bg3);color:var(--text)}
+.s-btn.active{background:var(--blue);color:#fff}
+.s-btn-icon{width:20px;text-align:center}
 
-/* Content */
-.content{flex:1;padding:24px;overflow:auto;display:grid;grid-template-columns:repeat(12,1fr);grid-template-rows:auto auto 1fr;gap:20px}
+/* KPI Row */
+.kpi-row{display:grid;grid-template-columns:repeat(4,1fr);gap:12px}
+.kpi-card{background:var(--bg3);border-radius:var(--radius2);padding:16px}
+.kpi-label{font-size:11px;color:var(--text3);text-transform:uppercase;margin-bottom:6px}
+.kpi-value{font-size:28px;font-weight:600}
+.kpi-value.blue{color:var(--blue)}.kpi-value.green{color:var(--green)}.kpi-value.orange{color:var(--orange)}.kpi-value.purple{color:var(--purple)}
+.kpi-sub{font-size:11px;color:var(--text2);margin-top:4px}
 
-/* BTC Banner */
-.btc-banner{grid-column:1/-1;background:linear-gradient(135deg,#f7931a,#ff6b00,#ff9f0a,#f7931a);background-size:300% 300%;animation:btcGradient 10s ease infinite;border-radius:var(--r5);padding:32px 36px;position:relative;overflow:hidden;box-shadow:0 8px 40px rgba(247,147,26,0.3)}
-@keyframes btcGradient{0%,100%{background-position:0% 50%}50%{background-position:100% 50%}}
-.btc-banner::before{content:'';position:absolute;top:-50%;right:-20%;width:400px;height:400px;background:radial-gradient(circle,rgba(255,255,255,0.25),transparent 60%);animation:float 8s ease-in-out infinite}
-.btc-banner::after{content:'';position:absolute;bottom:-30%;left:20%;width:200px;height:200px;background:radial-gradient(circle,rgba(255,255,255,0.15),transparent 50%);animation:float 12s ease-in-out infinite reverse}
-@keyframes float{0%,100%{transform:translate(0,0)}50%{transform:translate(-15px,-20px)}}
-.btc-label{font-size:14px;font-weight:600;opacity:0.9;margin-bottom:6px;position:relative;z-index:1}
-.btc-price{font-size:56px;font-weight:700;position:relative;z-index:1;letter-spacing:-1px}
-.btc-change{font-size:18px;font-weight:600;opacity:0.9;position:relative;z-index:1}
-.btc-icon{position:absolute;top:24px;right:28px;font-size:120px;opacity:0.1}
+/* Panels */
+.panel{background:var(--bg3);border-radius:var(--radius2);overflow:hidden}
+.panel-head{display:flex;justify-content:space-between;align-items:center;padding:12px 16px;border-bottom:1px solid var(--border)}
+.panel-title{font-size:13px;font-weight:600}
+.panel-badge{font-size:11px;padding:3px 8px;border-radius:6px;background:var(--bg5);color:var(--text2)}
+.panel-body{padding:12px}
 
-/* Stats */
-.stats-row{grid-column:1/-1;display:grid;grid-template-columns:repeat(5,1fr);gap:16px}
-.stat-card{background:var(--bg4);border-radius:var(--r4);padding:22px;border:1px solid var(--border);transition:all 0.3s;animation:fadeIn 0.5s backwards;position:relative;overflow:hidden}
-.stat-card::before{content:'';position:absolute;top:0;left:0;right:0;height:3px;background:linear-gradient(90deg,var(--blue),var(--purple));opacity:0;transition:opacity 0.3s}
-.stat-card:hover{transform:translateY(-4px);border-color:var(--border2);box-shadow:var(--shadow2)}
-.stat-card:hover::before{opacity:1}
-.stat-card:nth-child(1){animation-delay:0.05s}.stat-card:nth-child(2){animation-delay:0.1s}.stat-card:nth-child(3){animation-delay:0.15s}.stat-card:nth-child(4){animation-delay:0.2s}.stat-card:nth-child(5){animation-delay:0.25s}
-@keyframes fadeIn{from{opacity:0;transform:translateY(15px)}}
-.stat-label{font-size:11px;font-weight:600;color:var(--text3);text-transform:uppercase;letter-spacing:0.8px;margin-bottom:12px}
-.stat-value{font-size:32px;font-weight:700;letter-spacing:-0.5px}
-.stat-value.pos{color:var(--green)}.stat-value.neu{color:var(--blue)}.stat-value.warn{color:var(--orange)}
-.stat-sub{font-size:12px;color:var(--text2);margin-top:6px}
-.stat-bar{height:5px;background:var(--bg3);border-radius:3px;margin-top:14px;overflow:hidden}
-.stat-bar-fill{height:100%;border-radius:3px;transition:width 0.5s ease}
-.stat-bar-fill.good{background:linear-gradient(90deg,var(--green),var(--green2))}
-.stat-bar-fill.warn{background:linear-gradient(90deg,var(--orange),var(--orange))}
-.stat-bar-fill.bad{background:linear-gradient(90deg,var(--red),#ff6b6b)}
+/* Agents */
+.agent-list{display:flex;flex-direction:column;gap:8px}
+.agent-row{display:flex;align-items:center;gap:12px;padding:12px;background:var(--bg);border-radius:var(--radius2);cursor:pointer;transition:all 0.15s}
+.agent-row:hover{background:var(--bg4)}
+.agent-dot{width:10px;height:10px;border-radius:50%;flex-shrink:0}
+.agent-dot.green{background:var(--green);box-shadow:0 0 8px var(--green);animation:pulse 2s infinite}
+.agent-dot.orange{background:var(--orange);box-shadow:0 0 8px var(--orange)}
+.agent-dot.blue{background:var(--blue)}
+.agent-info{flex:1;min-width:0}
+.agent-name{font-weight:500;margin-bottom:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.agent-task{font-size:12px;color:var(--text2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.agent-meta{display:flex;gap:12px;font-size:11px;color:var(--text3)}
+.agent-cost{color:var(--green);font-weight:500}
+.agent-bar{height:3px;background:var(--bg5);border-radius:2px;margin-top:8px;overflow:hidden}
+.agent-bar-fill{height:100%;background:var(--blue);border-radius:2px;transition:width 0.3s}
 
-/* Left Column */
-.left-col{grid-column:1/8;display:flex;flex-direction:column;gap:20px}
-.right-col{grid-column:8/-1;display:flex;flex-direction:column;gap:20px}
+/* Cost Chart */
+.chart-container{display:flex;align-items:flex-end;gap:8px;height:100px;padding:10px 0}
+.chart-bar{flex:1;background:var(--bg5);border-radius:4px 4px 0 0;position:relative;transition:all 0.3s;cursor:pointer}
+.chart-bar:hover{background:var(--bg4)}
+.chart-bar.today{background:var(--blue)}
+.chart-bar .bar-fill{position:absolute;bottom:0;left:0;right:0;background:var(--blue);border-radius:4px 4px 0 0;transition:height 0.5s}
+.chart-bar.today .bar-fill{background:var(--blue)}
+.chart-labels{display:flex;justify-content:space-between;padding:0 4px}
+.chart-label{font-size:10px;color:var(--text3)}
+.chart-total{display:flex;justify-content:space-between;margin-top:12px;padding-top:12px;border-top:1px solid var(--border)}
+.chart-budget{font-size:12px}
+.chart-budget-label{color:var(--text2)}
+.chart-budget-val{font-weight:600}
 
-/* Cards */
-.card{background:var(--bg4);border-radius:var(--r4);border:1px solid var(--border);overflow:hidden;transition:all 0.3s}
-.card:hover{border-color:var(--border2)}
-.card-header{padding:18px 22px;border-bottom:1px solid var(--border);display:flex;justify-content:space-between;align-items:center}
-.card-title{font-size:15px;font-weight:600;display:flex;align-items:center;gap:10px}
-.card-badge{font-size:10px;font-weight:600;padding:5px 12px;background:rgba(48,209,88,0.12);color:var(--green);border-radius:8px}
-.card-badge.orange{background:rgba(255,159,10,0.12);color:var(--orange)}
-.card-badge.red{background:rgba(255,69,58,0.12);color:var(--red)}
-.card-body{padding:18px}
+/* Cron Table */
+.cron-table{width:100%;border-collapse:collapse}
+.cron-table th{text-align:left;padding:10px 12px;font-size:11px;color:var(--text3);text-transform:uppercase;border-bottom:1px solid var(--border)}
+.cron-table td{padding:12px;font-size:13px;border-bottom:1px solid var(--border)}
+.cron-table tr:last-child td{border:none}
+.cron-status{padding:4px 10px;border-radius:12px;font-size:11px;font-weight:500}
+.cron-status.ready{background:rgba(52,199,89,0.15);color:var(--green)}
+.cron-status.running{background:rgba(0,122,255,0.15);color:var(--blue)}
+.cron-status.paused{background:rgba(255,149,0,0.15);color:var(--orange)}
+.cron-status.overdue{background:rgba(255,59,48,0.15);color:var(--red)}
 
-/* Team */
-.team-list{display:flex;flex-direction:column;gap:12px}
-.team-row{display:flex;align-items:center;gap:16px;padding:16px;background:var(--bg3);border-radius:var(--r3);transition:all 0.2s;cursor:pointer}
-.team-row:hover{background:var(--bg5);transform:translateX(6px)}
-.team-avatar{width:48px;height:48px;border-radius:14px;display:flex;align-items:center;justify-content:center;font-size:18px;font-weight:700}
-.team-info{flex:1}
-.team-name{font-size:15px;font-weight:600;margin-bottom:3px}
-.team-role{font-size:12px;color:var(--text3)}
-.team-status{display:flex;align-items:center;gap:8px}
-.status-dot{width:10px;height:10px;border-radius:50%;animation:pulse 2s infinite}
-.status-dot.online{background:var(--green);box-shadow:0 0 12px var(--green)}
-.status-dot.busy{background:var(--orange)}
-.status-text{font-size:12px;color:var(--text2);font-weight:500}
-
-/* Trades Table */
-.trades-table{width:100%;border-collapse:collapse}
-.trades-table th{text-align:left;padding:14px 16px;font-size:10px;font-weight:600;color:var(--text3);text-transform:uppercase;letter-spacing:0.8px;border-bottom:1px solid var(--border)}
-.trades-table td{padding:16px;font-size:14px;border-bottom:1px solid var(--border)}
-.trades-table tr:last-child td{border-bottom:none}
-.trades-table tr:hover td{background:var(--bg3)}
-.trade-badge{padding:6px 12px;border-radius:8px;font-size:11px;font-weight:600}
-.trade-badge.win{background:rgba(48,209,88,0.15);color:var(--green)}
-
-/* Cron */
-.cron-list{display:flex;flex-direction:column;gap:12px}
-.cron-row{display:flex;align-items:center;gap:16px;padding:16px;background:var(--bg3);border-radius:var(--r3)}
-.cron-icon{width:48px;height:48px;border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:22px}
-.cron-info{flex:1}
-.cron-name{font-size:15px;font-weight:600;margin-bottom:4px}
-.cron-schedule{font-size:12px;color:var(--text3)}
-.cron-toggle{width:56px;height:30px;background:var(--bg);border-radius:15px;cursor:pointer;position:relative;transition:all 0.3s}
-.cron-toggle.active{background:var(--green)}
-.cron-toggle::after{content:'';position:absolute;top:4px;left:4px;width:22px;height:22px;background:#fff;border-radius:50%;transition:all 0.3s;box-shadow:0 2px 8px rgba(0,0,0,0.2)}
-.cron-toggle.active::after{left:30px}
-
-/* Chat */
-.chat-box{flex:1;display:flex;flex-direction:column;min-height:350px}
-.chat-messages{flex:1;overflow-y:auto;padding:18px;display:flex;flex-direction:column;gap:14px}
-.chat-msg{display:flex;gap:12px;animation:msgIn 0.3s ease}
-@keyframes msgIn{from{opacity:0;transform:translateY(10px)}}
-.chat-msg.user{flex-direction:row-reverse}
-.chat-avatar{width:36px;height:36px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:700;flex-shrink:0}
-.chat-avatar.ai{background:linear-gradient(135deg,var(--blue),var(--purple))}
-.chat-avatar.user{background:var(--green)}
-.chat-bubble{max-width:80%;padding:14px 18px;border-radius:18px;font-size:14px;line-height:1.5}
-.chat-msg.ai .chat-bubble{background:var(--bg3);border-bottom-left-radius:4px}
-.chat-msg.user .chat-bubble{background:linear-gradient(135deg,var(--blue),#0071e3);border-bottom-right-radius:4px}
-.chat-input-wrap{padding:16px;border-top:1px solid var(--border);display:flex;gap:12px}
-.chat-input{flex:1;padding:14px 18px;background:var(--bg3);border:1px solid var(--border);border-radius:24px;color:#fff;font-size:14px;outline:none;transition:all 0.3s}
-.chat-input:focus{border-color:var(--blue)}
-.chat-send{width:48px;height:48px;background:linear-gradient(135deg,var(--blue),var(--purple));border:none;border-radius:50%;color:#fff;cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:18px;transition:all 0.2s}
-.chat-send:hover{transform:scale(1.1);box-shadow:0 6px 24px rgba(10,132,255,0.4)}
+/* Channels */
+.channel-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:10px}
+.channel-card{display:flex;align-items:center;gap:10px;padding:12px;background:var(--bg);border-radius:var(--radius2)}
+.channel-icon{width:32px;height:32px;background:var(--bg4);border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:16px}
+.channel-info{flex:1}
+.channel-name{font-size:13px;font-weight:500}
+.channel-msgs{font-size:11px;color:var(--text2)}
 
 /* Logs */
-.logs-box{height:280px;overflow-y:auto}
-.log-entry{display:flex;gap:10px;padding:12px 0;border-bottom:1px solid var(--border);font-family:'JetBrains Mono',monospace;font-size:12px}
+.log-list{display:flex;flex-direction:column;gap:6px;max-height:180px;overflow-y:auto}
+.log-entry{display:flex;gap:10px;font-size:12px;padding:8px 0;border-bottom:1px solid var(--border2)}
 .log-entry:last-child{border:none}
 .log-time{color:var(--text3);flex-shrink:0;min-width:70px}
-.log-type{padding:3px 8px;border-radius:6px;font-size:10px;font-weight:600;flex-shrink:0}
-.log-type.info{background:rgba(10,132,255,0.15);color:var(--blue)}
-.log-type.ok{background:rgba(48,209,88,0.15);color:var(--green)}
-.log-type.warn{background:rgba(255,159,10,0.15);color:var(--orange)}
-.log-type.error{background:rgba(255,69,58,0.15);color:var(--red)}
 .log-msg{color:var(--text2)}
+.log-entry.success .log-msg{color:var(--green)}
+.log-entry.warn .log-msg{color:var(--orange)}
+.log-entry.error .log-msg{color:var(--red)}
 
-/* Risk */
-.risk-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:14px}
-.risk-item{padding:18px;background:var(--bg3);border-radius:var(--r3)}
-.risk-label{font-size:11px;font-weight:600;color:var(--text3);text-transform:uppercase;margin-bottom:8px}
-.risk-value{font-size:24px;font-weight:700}
-.risk-value.good{color:var(--green)}.risk-value.warn{color:var(--orange)}.risk-value.bad{color:var(--red)}
+/* Model Distribution */
+.model-bars{display:flex;flex-direction:column;gap:12px;margin-bottom:16px}
+.model-row{display:flex;align-items:center;gap:12px}
+.model-name{width:80px;font-size:12px;color:var(--text2)}
+.model-bar{flex:1;height:8px;background:var(--bg);border-radius:4px;overflow:hidden}
+.model-fill{height:100%;border-radius:4px;transition:width 0.5s}
+.model-fill.sonnet{background:var(--blue)}.model-fill.haiku{background:var(--teal)}.model-fill.opus{background:var(--purple)}
+.model-pct{width:40px;text-align:right;font-size:12px;font-weight:500}
+.model-stats{display:flex;gap:24px;padding-top:12px;border-top:1px solid var(--border)}
+.stat-item{text-align:center}
+.stat-val{font-size:18px;font-weight:600;color:var(--blue)}
+.stat-lbl{font-size:10px;color:var(--text3);text-transform:uppercase}
 
-/* Signals */
-.signal-list{display:flex;flex-direction:column;gap:14px}
-.signal-row{display:flex;align-items:center;gap:16px;padding:18px;background:var(--bg3);border-radius:var(--r3);border-left:4px solid transparent;transition:all 0.2s}
-.signal-row:hover{background:var(--bg5)}
-.signal-row.buy{border-left-color:var(--green)}
-.signal-row.sell{border-left-color:var(--red)}
-.signal-row.watch{border-left-color:var(--orange)}
-.signal-icon{width:48px;height:48px;border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:24px}
-.signal-info{flex:1}
-.signal-pair{font-size:16px;font-weight:600;margin-bottom:4px}
-.signal-details{font-size:12px;color:var(--text3)}
-.signal-action{padding:10px 18px;border-radius:10px;font-size:13px;font-weight:600}
-.signal-action.buy{background:rgba(48,209,88,0.15);color:var(--green)}
-.signal-action.sell{background:rgba(255,69,58,0.15);color:var(--red)}
-.signal-action.watch{background:rgba(255,159,10,0.15);color:var(--orange)}
-
-/* Education */
-.edu-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:16px}
-.edu-card{padding:24px;background:var(--bg3);border-radius:var(--r3);cursor:pointer;transition:all 0.3s;border:1px solid transparent}
-.edu-card:hover{background:var(--bg5);border-color:var(--border2);transform:translateY(-4px)}
-.edu-icon{font-size:36px;margin-bottom:14px}
-.edu-name{font-size:16px;font-weight:600;margin-bottom:6px}
-.edu-desc{font-size:13px;color:var(--text3);line-height:1.5}
-
-/* Scrollbar */
-::-webkit-scrollbar{width:6px}
-::-webkit-scrollbar-track{background:var(--bg)}
-::-webkit-scrollbar-thumb{background:var(--bg5);border-radius:3px}
+/* Quick Actions */
+.actions-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:10px}
+.action-btn{display:flex;flex-direction:column;align-items:center;gap:8px;padding:16px 12px;background:var(--bg3);border-radius:var(--radius2);cursor:pointer;transition:all 0.15s;border:1px solid transparent}
+.action-btn:hover{background:var(--bg4);border-color:var(--border2);transform:translateY(-2px)}
+.action-icon{font-size:22px}
+.action-label{font-size:11px;color:var(--text2);text-align:center}
 
 /* Responsive */
-@media(max-width:1400px){.content{grid-template-columns:1fr}.left-col,.right-col{grid-column:1/-1}}
-@media(max-width:900px){.stats-row{grid-template-columns:repeat(3,1fr)}.sidebar{width:72px;padding:16px 10px}.s-logo-text,.s-section-title,.s-item span:not(.s-item-icon){display:none}.s-item{justify-content:center;padding:14px}.s-item-icon{margin:0}}
+@media(max-width:900px){
+.dashboard{grid-template-columns:1fr}
+.sidebar{display:none}
+.kpi-row{grid-template-columns:repeat(2,1fr)}
+.actions-grid{grid-template-columns:repeat(2,1fr)}
+}
 </style>
 </head>
 <body>
-<!-- Login -->
-<div class="login" id="loginScreen">
-<div class="login-box">
-<div class="login-icon">🚀</div>
-<h1 class="login-h1">Mission Control</h1>
-<p class="login-p">Enter your credentials to access</p>
-<div class="login-f">
-<input type="text" class="login-i" id="username" placeholder="Username">
-<input type="password" class="login-i" id="password" placeholder="Password">
-<button class="login-b" onclick="doLogin()">Unlock</button>
+<div class="dashboard">
+<!-- Header -->
+<header class="header">
+<div class="h-left">
+<span class="h-title">🚀 Mission Control</span>
+<span class="h-url">gateway:5682</span>
 </div>
-<div class="login-e" id="loginError">Invalid credentials</div>
+<div class="h-center">
+<span class="h-clock" id="clock">00:00:00</span>
+<div class="h-resources">
+<div class="res-item">
+<div class="res-label">CPU</div>
+<div class="res-bar"><div class="res-fill low" id="cpuBar" style="width:12%"></div></div>
+</div>
+<div class="res-item">
+<div class="res-label">RAM</div>
+<div class="res-bar"><div class="res-fill low" id="ramBar" style="width:34%"></div></div>
+</div>
+<div class="res-item">
+<div class="res-label">Disk</div>
+<div class="res-bar"><div class="res-fill med" id="diskBar" style="width:67%"></div></div>
 </div>
 </div>
+</div>
+<div class="h-right">
+<div class="status-badge"><span class="status-dot"></span>Online</div>
+</div>
+</header>
 
-<!-- App -->
-<div class="app" id="appContainer">
 <!-- Sidebar -->
 <aside class="sidebar">
-<div class="s-logo"><div class="s-logo-icon">🚀</div><span class="s-logo-text">Hifty</span></div>
-<div class="s-section">
-<div class="s-section-title">Main</div>
-<div class="s-item active" data-section="dashboard"><span class="s-item-icon">📊</span><span>Dashboard</span><span class="s-item-badge"></span></div>
+<div class="s-logo">
+<div class="s-icon">🚀</div>
+<span class="s-name">Hifty Co</span>
 </div>
 <div class="s-section">
-<div class="s-section-title">Trading</div>
-<div class="s-item" data-section="trades"><span class="s-item-icon">📈</span><span>Trades</span></div>
-<div class="s-item" data-section="signals"><span class="s-item-icon">🎯</span><span>Signals</span></div>
-<div class="s-item" data-section="risk"><span class="s-item-icon">🛡️</span><span>Risk</span></div>
+<div class="s-title">Navigation</div>
+<div class="s-btn active" onclick="filterView('all')"><span class="s-btn-icon">📊</span>Overview</div>
+<div class="s-btn" onclick="filterView('agents')"><span class="s-btn-icon">🤖</span>Agents</div>
+<div class="s-btn" onclick="filterView('cost')"><span class="s-btn-icon">💰</span>Cost</div>
+<div class="s-btn" onclick="filterView('channels')"><span class="s-btn-icon">💬</span>Channels</div>
 </div>
 <div class="s-section">
-<div class="s-section-title">Education</div>
-<div class="s-item" data-section="education"><span class="s-item-icon">🎓</span><span>Bitcoin Edu</span></div>
-</div>
-<div class="s-section">
-<div class="s-section-title">Team</div>
-<div class="s-item" data-section="team"><span class="s-item-icon">👥</span><span>Team</span></div>
-<div class="s-item" data-section="cron"><span class="s-item-icon">⚡</span><span>Automation</span></div>
-<div class="s-item" data-section="logs"><span class="s-item-icon">📋</span><span>Logs</span></div>
-</div>
-<div class="s-section">
-<div class="s-section-title">Chat</div>
-<div class="s-item" data-section="chat"><span class="s-item-icon">💬</span><span>Team Chat</span></div>
+<div class="s-title">Quick</div>
+<div class="s-btn" onclick="action('newSession')"><span class="s-btn-icon">➕</span>New Session</div>
+<div class="s-btn" onclick="action('config')"><span class="s-btn-icon">⚙️</span>Config</div>
+<div class="s-btn" onclick="action('memory')"><span class="s-btn-icon">🧠</span>Memory</div>
+<div class="s-btn" onclick="action('health')"><span class="s-btn-icon">🩺</span>Health</div>
 </div>
 </aside>
 
-<!-- Main -->
+<!-- Main Content -->
 <main class="main">
-<header class="header">
-<div class="h-left"><span class="h-title" id="pageTitle">Mission Control</span><span class="h-live">● LIVE</span></div>
-<div class="h-right"><span class="h-time" id="currentTime">--:-- EST</span><button class="h-btn" onclick="refreshAll()">🔄 Refresh</button></div>
-</header>
-
-<div class="content">
-<!-- BTC -->
-<div class="btc-banner"><span class="btc-icon">₿</span><div class="btc-label">Bitcoin Price</div><div class="btc-price" id="btcPrice">$--,---</div><div class="btc-change" id="btcChange">--% (24h)</div></div>
-
-<!-- Stats -->
-<div class="stats-row">
-<div class="stat-card"><div class="stat-label">Total P&L</div><div class="stat-value pos">+$15,399</div><div class="stat-sub">100% Win Rate</div></div>
-<div class="stat-card"><div class="stat-label">Win Rate</div><div class="stat-value neu">100%</div><div class="stat-sub">4/4 Trades</div></div>
-<div class="stat-card"><div class="stat-label">Total Trades</div><div class="stat-value">4</div><div class="stat-sub">Last: Trade #4</div></div>
-<div class="stat-card"><div class="stat-label">RSI Compliance</div><div class="stat-value warn">33%</div><div class="stat-bar"><div class="stat-bar-fill warn" id="rsiBar" style="width:33%"></div></div></div>
-<div class="stat-card"><div class="stat-label">Avg Win</div><div class="stat-value pos">$3,850</div><div class="stat-sub">Per Trade</div></div>
+<!-- KPI Row -->
+<div class="kpi-row">
+<div class="kpi-card">
+<div class="kpi-label">Active Sessions</div>
+<div class="kpi-value blue">3</div>
+<div class="kpi-sub">1 running, 2 idle</div>
+</div>
+<div class="kpi-card">
+<div class="kpi-label">API Calls Today</div>
+<div class="kpi-value green" id="apiCount">847</div>
+<div class="kpi-sub">+127 this hour</div>
+</div>
+<div class="kpi-card">
+<div class="kpi-label">Cost Today</div>
+<div class="kpi-value orange">$2.34</div>
+<div class="kpi-sub">of $50 budget</div>
+</div>
+<div class="kpi-card">
+<div class="kpi-label">Cron Jobs</div>
+<div class="kpi-value purple">3/4</div>
+<div class="kpi-sub">1 paused</div>
+</div>
 </div>
 
-<!-- Left Column -->
-<div class="left-col">
-<!-- Team -->
-<div class="card"><div class="card-header"><span class="card-title">👥 Team</span><span class="card-badge">5 Online</span></div><div class="card-body"><div class="team-list"><div class="team-row"><div class="team-avatar" style="background:linear-gradient(135deg,#0a84ff,#0066cc)">O</div><div class="team-info"><div class="team-name">Ollie (CEO)</div><div class="team-role">Chief of Command - Leadership</div></div><div class="team-status"><span class="status-dot online"></span><span class="status-text">Online</span></div></div><div class="team-row"><div class="team-avatar" style="background:linear-gradient(135deg,#30d158,#00a854)">M</div><div class="team-info"><div class="team-name">MintyTrades</div><div class="team-role">Trading Research</div></div><div class="team-status"><span class="status-dot online"></span><span class="status-text">Online</span></div></div><div class="team-row"><div class="team-avatar" style="background:linear-gradient(135deg,#bf5af2,#8e24aa)">H</div><div class="team-info"><div class="team-name">HiftyCodes</div><div class="team-role">Website Dev</div></div><div class="team-status"><span class="status-dot online"></span><span class="status-text">Online</span></div></div><div class="team-row"><div class="team-avatar" style="background:linear-gradient(135deg,#ff9f0a,#f57c00)">A</div><div class="team-info"><div class="team-name">HiftyAnalyst</div><div class="team-role">Data Analysis</div></div><div class="team-status"><span class="status-dot online"></span><span class="status-text">Online</span></div></div><div class="team-row"><div class="team-avatar" style="background:linear-gradient(135deg,#ff453a,#d32f2f)">R</div><div class="team-info"><div class="team-name">HiftyRiskManager</div><div class="team-role">Risk Management</div></div><div class="team-status"><span class="status-dot online"></span><span class="status-text">Online</span></div></div></div></div></div>
-
-<!-- Trades -->
-<div class="card"><div class="card-header"><span class="card-title">📈 Recent Trades</span><span class="card-badge">4</span></div><div class="card-body" style="padding:0;"><table class="trades-table"><thead><tr><th>#</th><th>Entry</th><th>Exit</th><th>RR</th><th>Result</th></tr></thead><tbody><tr><td>4</td><td>$66,439</td><td>$67,740</td><td>2:1</td><td><span class="trade-badge win">+$4,000</span></td></tr><tr><td>3</td><td>$82,100</td><td>$84,500</td><td>2:1</td><td><span class="trade-badge win">+$4,004</span></td></tr><tr><td>2</td><td>$78,500</td><td>$81,940</td><td>2:1</td><td><span class="trade-badge win">+$4,930</span></td></tr><tr><td>1</td><td>$67,200</td><td>$69,664</td><td>2:1</td><td><span class="trade-badge win">+$2,465</span></td></tr></tbody></table></div></div>
-
-<!-- Cron -->
-<div class="card"><div class="card-header"><span class="card-title">⚡ Automation</span><span class="card-badge">3 Active</span></div><div class="card-body"><div class="cron-list"><div class="cron-row"><div class="cron-icon" style="background:rgba(10,132,255,0.2)">🌅</div><div class="cron-info"><div class="cron-name">Morning Briefing</div><div class="cron-schedule">Daily 8:00 AM Toronto</div></div><div class="cron-toggle active" onclick="toggleCron(this)"></div></div><div class="cron-row"><div class="cron-icon" style="background:rgba(191,90,242,0.2)">🔍</div><div class="cron-info"><div class="cron-name">System Check</div><div class="cron-schedule">Daily 8:00 AM Toronto</div></div><div class="cron-toggle active" onclick="toggleCron(this)"></div></div><div class="cron-row"><div class="cron-icon" style="background:rgba(48,209,88,0.2)">🌤️</div><div class="cron-info"><div class="cron-name">Weather Check</div><div class="cron-schedule">Daily 8:00 AM Toronto</div></div><div class="cron-toggle active" onclick="toggleCron(this)"></div></div></div></div></div>
+<!-- Two Column Layout -->
+<div style="display:grid;grid-template-columns:1fr 1fr;gap:16px">
+<!-- Active Agents -->
+<div class="panel">
+<div class="panel-head">
+<span class="panel-title">🤖 Active Agents</span>
+<span class="panel-badge">3</span>
+</div>
+<div class="panel-body">
+<div class="agent-list">
+<div class="agent-row" onclick="selectAgent('ollie')">
+<div class="agent-dot green"></div>
+<div class="agent-info">
+<div class="agent-name">Ollie (CEO)</div>
+<div class="agent-task">Leading team strategy</div>
+<div class="agent-meta"><span>12m</span><span class="agent-cost">$0.02</span></div>
+<div class="agent-bar"><div class="agent-bar-fill" style="width:45%"></div></div>
+</div>
+</div>
+<div class="agent-row" onclick="selectAgent('minty')">
+<div class="agent-dot green"></div>
+<div class="agent-info">
+<div class="agent-name">MintyTrades</div>
+<div class="agent-task">Analyzing BTC RSI signals</div>
+<div class="agent-meta"><span>3m</span><span class="agent-cost">$0.01</span></div>
+<div class="agent-bar"><div class="agent-bar-fill" style="width:72%"></div></div>
+</div>
+</div>
+<div class="agent-row" onclick="selectAgent('analyst')">
+<div class="agent-dot blue"></div>
+<div class="agent-info">
+<div class="agent-name">HiftyAnalyst</div>
+<div class="agent-task">Daily research complete</div>
+<div class="agent-meta"><span>idle</span><span class="agent-cost">$0.00</span></div>
+</div>
+</div>
+</div>
+</div>
 </div>
 
-<!-- Right Column -->
-<div class="right-col">
-<!-- Signals -->
-<div class="card"><div class="card-header"><span class="card-title">🎯 Signals</span><span class="card-badge orange">Live</span></div><div class="card-body"><div class="signal-list"><div class="signal-row buy"><div class="signal-icon" style="background:rgba(48,209,88,0.2)">📈</div><div class="signal-info"><div class="signal-pair">BTC/USD</div><div class="signal-details">RSI: 28 (Oversold) • MACD Bullish</div></div><div class="signal-action buy">BUY</div></div><div class="signal-row watch"><div class="signal-icon" style="background:rgba(255,159,10,0.2)">⏰</div><div class="signal-info"><div class="signal-pair">Watching</div><div class="signal-details">Waiting for RSI below 30</div></div><div class="signal-action watch">WATCH</div></div></div></div></div>
+<!-- Cost Chart -->
+<div class="panel">
+<div class="panel-head">
+<span class="panel-title">💰 Cost This Week</span>
+<span class="panel-badge">$18.42</span>
+</div>
+<div class="panel-body">
+<div class="chart-container">
+<div class="chart-bar" style="height:45%"><div class="bar-fill" style="height:100%"></div></div>
+<div class="chart-bar" style="height:62%"><div class="bar-fill" style="height:100%"></div></div>
+<div class="chart-bar" style="height:38%"><div class="bar-fill" style="height:100%"></div></div>
+<div class="chart-bar" style="height:55%"><div class="bar-fill" style="height:100%"></div></div>
+<div class="chart-bar" style="height:78%"><div class="bar-fill" style="height:100%"></div></div>
+<div class="chart-bar" style="height:42%"><div class="bar-fill" style="height:100%"></div></div>
+<div class="chart-bar today" style="height:28%"><div class="bar-fill" style="height:100%"></div></div>
+</div>
+<div class="chart-labels">
+<span class="chart-label">Mon</span><span class="chart-label">Tue</span><span class="chart-label">Wed</span><span class="chart-label">Thu</span><span class="chart-label">Fri</span><span class="chart-label">Sat</span><span class="chart-label">Sun</span>
+</div>
+<div class="chart-total">
+<span class="chart-budget"><span class="chart-budget-label">Monthly Budget:</span> <span class="chart-budget-val">$350</span></span>
+<span class="chart-budget"><span class="chart-budget-label">Spent:</span> <span class="chart-budget-val">$142</span> (41%)</span>
+</div>
+</div>
+</div>
+</div>
 
-<!-- Risk -->
-<div class="card"><div class="card-header"><span class="card-title">🛡️ Risk</span><span class="card-badge">Safe</span></div><div class="card-body"><div class="risk-grid"><div class="risk-item"><div class="risk-label">Risk/Trade</div><div class="risk-value good">2%</div></div><div class="risk-item"><div class="risk-label">Max DD</div><div class="risk-value good">0%</div></div><div class="risk-item"><div class="risk-label">Consec. Loss</div><div class="risk-value good">0</div></div><div class="risk-item"><div class="risk-label">Position</div><div class="risk-value good">$200</div></div></div></div></div>
+<!-- Three Column Layout -->
+<div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:16px">
+<!-- Cron Jobs -->
+<div class="panel">
+<div class="panel-head">
+<span class="panel-title">⚡ Cron Jobs</span>
+<span class="panel-badge">3 Active</span>
+</div>
+<div class="panel-body" style="padding:0">
+<table class="cron-table">
+<tr><th>Name</th><th>Next</th><th>Status</th></tr>
+<tr><td>Morning</td><td>8:00 AM</td><td><span class="cron-status ready">ready</span></td></tr>
+<tr><td>System Check</td><td>8:00 AM</td><td><span class="cron-status running">running</span></td></tr>
+<tr><td>Weather</td><td>8:00 AM</td><td><span class="cron-status ready">ready</span></td></tr>
+<tr><td>Research</td><td>—</td><td><span class="cron-status paused">paused</span></td></tr>
+</table>
+</div>
+</div>
 
-<!-- Logs -->
-<div class="card"><div class="card-header"><span class="card-title">📋 Logs</span><span class="card-badge" id="logCount">0</span></div><div class="card-body"><div class="logs-box" id="logsContainer"></div></div></div>
+<!-- Channels -->
+<div class="panel">
+<div class="panel-head">
+<span class="panel-title">💬 Channels</span>
+</div>
+<div class="panel-body">
+<div class="channel-grid">
+<div class="channel-card">
+<div class="channel-icon">✈️</div>
+<div class="channel-info"><div class="channel-name">Telegram</div><div class="channel-msgs">12 msgs</div></div>
+<span class="status-dot" style="background:var(--green)"></span>
+</div>
+<div class="channel-card">
+<div class="channel-icon">📱</div>
+<div class="channel-info"><div class="channel-name">WhatsApp</div><div class="channel-msgs">0 msgs</div></div>
+<span class="status-dot" style="background:var(--text3)"></span>
+</div>
+<div class="channel-card">
+<div class="channel-icon">🎮</div>
+<div class="channel-info"><div class="channel-name">Discord</div><div class="channel-msgs">5 msgs</div></div>
+<span class="status-dot" style="background:var(--green)"></span>
+</div>
+<div class="channel-card">
+<div class="channel-icon">💬</div>
+<div class="channel-info"><div class="channel-name">WebChat</div><div class="channel-msgs">3 msgs</div></div>
+<span class="status-dot" style="background:var(--green)"></span>
+</div>
+</div>
+</div>
+</div>
 
-<!-- Chat -->
-<div class="card chat-box"><div class="card-header"><span class="card-title">💬 Chat</span><span class="card-badge">Team</span></div><div class="chat-messages" id="chatMessages"><div class="chat-msg ai"><div class="chat-avatar ai">O</div><div class="chat-bubble">Good morning team! Ready to crush it today? 🚀</div></div><div class="chat-msg ai"><div class="chat-avatar ai">M</div><div class="chat-bubble">RSI looking oversold on BTC. Watching for setup.</div></div><div class="chat-msg ai"><div class="chat-avatar ai">A</div><div class="chat-bubble">Daily analysis complete. Compliance at 33%.</div></div></div><div class="chat-input-wrap"><input type="text" class="chat-input" id="chatInput" placeholder="Type message..." onkeypress="if(event.key==='Enter')sendChat()"><button class="chat-send" onclick="sendChat()">➤</button></div></div>
+<!-- Live Logs -->
+<div class="panel">
+<div class="panel-head">
+<span class="panel-title">📋 Live Logs</span>
+</div>
+<div class="panel-body">
+<div class="log-list" id="logFeed">
+<div class="log-entry success"><span class="log-time">23:24:01</span><span class="log-msg">Session started: Ollie</span></div>
+<div class="log-entry"><span class="log-time">23:23:45</span><span class="log-msg">Cron job completed: Morning Briefing</span></div>
+<div class="log-entry success"><span class="log-time">23:22:12</span><span class="log-msg">Trade executed: +$4,000</span></div>
+<div class="log-entry warn"><span class="log-time">23:20:33</span><span class="log-msg">RSI Compliance at 33%</span></div>
+<div class="log-entry"><span class="log-time">23:18:00</span><span class="log-msg">Agent HiftyAnalyst: Research complete</span></div>
+</div>
+</div>
+</div>
+</div>
+
+<!-- Model Distribution -->
+<div class="panel">
+<div class="panel-head">
+<span class="panel-title">🧠 Model Distribution</span>
+</div>
+<div class="panel-body">
+<div class="model-bars">
+<div class="model-row">
+<span class="model-name">Sonnet</span>
+<div class="model-bar"><div class="model-fill sonnet" style="width:52%"></div></div>
+<span class="model-pct">52%</span>
+</div>
+<div class="model-row">
+<span class="model-name">Haiku</span>
+<div class="model-bar"><div class="model-fill haiku" style="width:31%"></div></div>
+<span class="model-pct">31%</span>
+</div>
+<div class="model-row">
+<span class="model-name">Opus</span>
+<div class="model-bar"><div class="model-fill opus" style="width:17%"></div></div>
+<span class="model-pct">17%</span>
+</div>
+</div>
+<div class="model-stats">
+<div class="stat-item"><div class="stat-val">124K</div><div class="stat-lbl">Tokens</div></div>
+<div class="stat-item"><div class="stat-val">847</div><div class="stat-lbl">Calls</div></div>
+<div class="stat-item"><div class="stat-val">99.2%</div><div class="stat-lbl">Uptime</div></div>
+</div>
+</div>
+</div>
+
+<!-- Quick Actions -->
+<div class="panel">
+<div class="panel-head">
+<span class="panel-title">⚡ Quick Actions</span>
+</div>
+<div class="panel-body">
+<div class="actions-grid">
+<div class="action-btn" onclick="action('newSession')"><span class="action-icon">➕</span><span class="action-label">New Session</span></div>
+<div class="action-btn" onclick="action('config')"><span class="action-icon">⚙️</span><span class="action-label">Edit Config</span></div>
+<div class="action-btn" onclick="action('memory')"><span class="action-icon">🧠</span><span class="action-label">Memory</span></div>
+<div class="action-btn" onclick="action('health')"><span class="action-icon">🩺</span><span class="action-label">Health Check</span></div>
+<div class="action-btn" onclick="action('skills')"><span class="action-icon">📦</span><span class="action-label">Skills</span></div>
+<div class="action-btn" onclick="action('cron')"><span class="action-icon">⏰</span><span class="action-label">Add Cron</span></div>
+<div class="action-btn" onclick="action('devices')"><span class="action-icon">📱</span><span class="action-label">Devices</span></div>
+<div class="action-btn" onclick="action('updates')"><span class="action-icon">🔄</span><span class="action-label">Check Updates</span></div>
 </div>
 </div>
 </div>
 </main>
 </div>
 
-<!-- Hidden Sections -->
-<div id="section-trades" style="display:none"><div class="content"><div class="card" style="grid-column:1/-1"><div class="card-header"><span class="card-title">📈 All Trades</span><span class="card-badge">4 Trades</span></div><div class="card-body" style="padding:0;"><table class="trades-table"><thead><tr><th>#</th><th>Date</th><th>Entry</th><th>Exit</th><th>RR</th><th>P&L</th><th>Status</th></tr></thead><tbody><tr><td>4</td><td>Mar 18</td><td>$66,439</td><td>$67,740</td><td>2:1</td><td style="color:var(--green)">+$4,000</td><td><span class="trade-badge win">Win</span></td></tr><tr><td>3</td><td>Mar 17</td><td>$82,100</td><td>$84,500</td><td>2:1</td><td style="color:var(--green)">+$4,004</td><td><span class="trade-badge win">Win</span></td></tr><tr><td>2</td><td>Mar 16</td><td>$78,500</td><td>$81,940</td><td>2:1</td><td style="color:var(--green)">+$4,930</td><td><span class="trade-badge win">Win</span></td></tr><tr><td>1</td><td>Mar 15</td><td>$67,200</td><td>$69,664</td><td>2:1</td><td style="color:var(--green)">+$2,465</td><td><span class="trade-badge win">Win</span></td></tr></tbody></table></div></div></div></div>
-
-<div id="section-signals" style="display:none"><div class="content"><div class="card" style="grid-column:1/-1"><div class="card-header"><span class="card-title">🎯 Trading Signals</span><span class="card-badge orange">Live</span></div><div class="card-body"><div class="signal-list"><div class="signal-row buy"><div class="signal-icon" style="background:rgba(48,209,88,0.2)">📈</div><div class="signal-info"><div class="signal-pair">BTC/USD</div><div class="signal-details">RSI: 28 (Oversold) • MACD: Bullish Cross</div></div><div class="signal-action buy">BUY</div></div><div class="signal-row watch"><div class="signal-icon" style="background:rgba(255,159,10,0.2)">⏰</div><div class="signal-info"><div class="signal-pair">Waiting</div><div class="signal-details">RSI need to drop below 30</div></div><div class="signal-action watch">WATCH</div></div></div></div></div></div></div>
-
-<div id="section-risk" style="display:none"><div class="content"><div class="card" style="grid-column:1/-1"><div class="card-header"><span class="card-title">🛡️ Risk Management</span><span class="card-badge">Safe</span></div><div class="card-body"><div class="risk-grid"><div class="risk-item"><div class="risk-label">Risk/Trade</div><div class="risk-value good">2%</div></div><div class="risk-item"><div class="risk-label">Max Drawdown</div><div class="risk-value good">0%</div></div><div class="risk-item"><div class="risk-label">Consecutive Losses</div><div class="risk-value good">0</div></div><div class="risk-item"><div class="risk-label">Position Size</div><div class="risk-value good">$200</div></div><div class="risk-item"><div class="risk-label">Stop Loss</div><div class="risk-value good">2%</div></div><div class="risk-item"><div class="risk-label">Portfolio Risk</div><div class="risk-value good">LOW</div></div></div></div></div></div></div>
-
-<div id="section-education" style="display:none"><div class="content"><div class="card" style="grid-column:1/-1"><div class="card-header"><span class="card-title">🎓 Bitcoin Education</span><span class="card-badge">6 Modules</span></div><div class="card-body"><div class="edu-grid"><div class="edu-card"><div class="edu-icon">₿</div><div class="edu-name">Bitcoin Basics</div><div class="edu-desc">Understanding BTC fundamentals and blockchain</div></div><div class="edu-card"><div class="edu-icon">📊</div><div class="edu-name">RSI Indicator</div><div class="edu-desc">Master the Relative Strength Index</div></div><div class="edu-card"><div class="edu-icon">🛡️</div><div class="edu-name">Risk Management</div><div class="edu-desc">Protect your capital with proven strategies</div></div><div class="edu-card"><div class="edu-icon">🧠</div><div class="edu-name">Trading Psychology</div><div class="edu-desc">Mindset for consistent profits</div></div><div class="edu-card"><div class="edu-icon">📈</div><div class="edu-name">Technical Analysis</div><div class="edu-desc">Chart patterns and indicators</div></div><div class="edu-card"><div class="edu-icon">💰</div><div class="edu-name">Money Management</div><div class="edu-desc">Position sizing and lot sizes</div></div></div></div></div></div></div>
-
-<div id="section-team" style="display:none"><div class="content"><div class="card" style="grid-column:1/-1"><div class="card-header"><span class="card-title">👥 Team Members</span><span class="card-badge">5</span></div><div class="card-body"><div class="team-list"><div class="team-row"><div class="team-avatar" style="background:linear-gradient(135deg,#0a84ff,#0066cc)">O</div><div class="team-info"><div class="team-name">Ollie (CEO)</div><div class="team-role">Chief of Command - Overall leadership, strategy, and team coordination</div></div><div class="team-status"><span class="status-dot online"></span><span class="status-text">Online</span></div></div><div class="team-row"><div class="team-avatar" style="background:linear-gradient(135deg,#30d158,#00a854)">M</div><div class="team-info"><div class="team-name">MintyTrades</div><div class="team-role">Trading Research - Market analysis and finding trade setups</div></div><div class="team-status"><span class="status-dot online"></span><span class="status-text">Online</span></div></div><div class="team-row"><div class="team-avatar" style="background:linear-gradient(135deg,#bf5af2,#8e24aa)">H</div><div class="team-info"><div class="team-name">HiftyCodes</div><div class="team-role">Website Dev - Technical implementation and deployment</div></div><div class="team-status"><span class="status-dot online"></span><span class="status-text">Online</span></div></div><div class="team-row"><div class="team-avatar" style="background:linear-gradient(135deg,#ff9f0a,#f57c00)">A</div><div class="team-info"><div class="team-name">HiftyAnalyst</div><div class="team-role">Data Analysis - KPIs, research, and compliance tracking</div></div><div class="team-status"><span class="status-dot online"></span><span class="status-text">Online</span></div></div><div class="team-row"><div class="team-avatar" style="background:linear-gradient(135deg,#ff453a,#d32f2f)">R</div><div class="team-info"><div class="team-name">HiftyRiskManager</div><div class="team-role">Risk Management - Compliance, safety, and risk monitoring</div></div><div class="team-status"><span class="status-dot online"></span><span class="status-text">Online</span></div></div></div></div></div></div></div>
-
-<div id="section-cron" style="display:none"><div class="content"><div class="card" style="grid-column:1/-1"><div class="card-header"><span class="card-title">⚡ Automation Jobs</span><span class="card-badge">3 Active</span></div><div class="card-body"><div class="cron-list"><div class="cron-row"><div class="cron-icon" style="background:rgba(10,132,255,0.2)">🌅</div><div class="cron-info"><div class="cron-name">Morning Briefing</div><div class="cron-schedule">Daily at 8:00 AM Toronto - BTC price, Fear & Greed Index, RSI check</div></div><div class="cron-toggle active" onclick="toggleCron(this)"></div></div><div class="cron-row"><div class="cron-icon" style="background:rgba(191,90,242,0.2)">🔍</div><div class="cron-info"><div class="cron-name">System Check</div><div class="cron-schedule">Daily at 8:00 AM Toronto - Verify all agents online</div></div><div class="cron-toggle active" onclick="toggleCron(this)"></div></div><div class="cron-row"><div class="cron-icon" style="background:rgba(48,209,88,0.2)">🌤️</div><div class="cron-info"><div class="cron-name">Weather Check</div><div class="cron-schedule">Daily at 8:00 AM Toronto - Weather for trading environment</div></div><div class="cron-toggle active" onclick="toggleCron(this)"></div></div></div></div></div></div></div>
-
-<div id="section-logs" style="display:none"><div class="content"><div class="card" style="grid-column:1/-1"><div class="card-header"><span class="card-title">📋 System Logs</span><span class="card-badge" id="logCountFull">0</span></div><div class="card-body"><div class="logs-box" id="logsContainerFull"></div></div></div></div></div>
-
-<div id="section-chat" style="display:none"><div class="content"><div class="card chat-box" style="grid-column:1/-1"><div class="card-header"><span class="card-title">💬 Team Chat</span><span class="card-badge">Team</span></div><div class="chat-messages" id="chatMessagesFull"><div class="chat-msg ai"><div class="chat-avatar ai">O</div><div class="chat-bubble">Good morning team! Ready to crush it today? 🚀</div></div><div class="chat-msg ai"><div class="chat-avatar ai">M</div><div class="chat-bubble">RSI looking oversold on BTC. Watching for setup.</div></div><div class="chat-msg ai"><div class="chat-avatar ai">A</div><div class="chat-bubble">Daily analysis complete. Compliance at 33%.</div></div></div><div class="chat-input-wrap"><input type="text" class="chat-input" id="chatInputFull" placeholder="Type message..." onkeypress="if(event.key==='Enter')sendChatFull()"><button class="chat-send" onclick="sendChatFull()">➤</button></div></div></div></div>
-
 <script>
-const AUTH_USER="Ollie",AUTH_PASS="Skater49$",CURRENT_SECTION="dashboard";
-
-if(sessionStorage.getItem("hifty_mc_logged_in")){
-  document.getElementById("loginScreen").classList.add("hide");
-  document.getElementById("appContainer").classList.add("on");
-  addLog("OK","Session restored");
+// Clock
+function updateClock(){
+document.getElementById('clock').textContent=new Date().toLocaleTimeString('en-US',{hour:'2-digit',minute:'2-digit',second:'2-digit',hour12:false});
 }
+updateClock();setInterval(updateClock,1000);
 
-function doLogin(){
-  const u=document.getElementById("username").value;
-  const p=document.getElementById("password").value;
-  if(u===AUTH_USER&&p===AUTH_PASS){
-    sessionStorage.setItem("hifty_mc_logged_in","true");
-    document.getElementById("loginScreen").classList.add("hide");
-    setTimeout(()=>document.getElementById("appContainer").classList.add("on"),150);
-    confetti({particleCount:150,spread:80,origin:{y:0.6},colors:["#0a84ff","#bf5af2","#30d158","#64d2ff"]});
-    addLog("OK","User logged in: "+u);
-  }else{
-    document.getElementById("loginError").classList.add("show");
-  }
+// Resource bars with jitter
+function jitter(val,range){return Math.max(0,Math.min(100,val+(Math.random()-0.5)*range));}
+function updateResources(){
+const cpu=jitter(12,8),ram=jitter(34,6),disk=67;
+document.getElementById('cpuBar').style.width=cpu+'%';
+document.getElementById('cpuBar').className='res-fill '+(cpu>80?'high':cpu>60?'med':'low');
+document.getElementById('ramBar').style.width=ram+'%';
+document.getElementById('ramBar').className='res-fill '+(ram>80?'high':ram>60?'med':'low');
+document.getElementById('diskBar').className='res-fill med';
 }
+updateResources();setInterval(updateResources,3000);
 
-document.querySelectorAll(".s-item").forEach(item=>{
-  item.addEventListener("click",function(){
-    const section=this.getAttribute("data-section");
-    showSection(section);
-  });
-});
+// API counter
+let apiCount=847;
+setInterval(()=>{apiCount+=Math.floor(Math.random()*15);document.getElementById('apiCount').textContent=apiCount;},8000);
 
-function showSection(section){
-  CURRENT_SECTION=section;
-  document.querySelectorAll(".content").forEach(c=>c.style.display="none");
-  document.getElementById("section-"+section).style.display="grid";
-  document.querySelectorAll(".s-item").forEach(i=>i.classList.remove("active"));
-  document.querySelector('[data-section="'+section+'"]').classList.add("active");
-  const titles={dashboard:"Mission Control",trades:"Trading",signals:"Signals",risk:"Risk",education:"Education",team:"Team",cron:"Automation",logs:"Logs",chat:"Chat"};
-  document.getElementById("pageTitle").textContent=titles[section]||"Mission Control";
-  addLog("INFO","Navigated to: "+section);
-}
+// Actions
+function action(name){console.log('Action:',name);addLog('info','Action: '+name);}
+function filterView(view){console.log('Filter:',view);}
+function selectAgent(id){console.log('Selected agent:',id);}
 
-function updateTime(){
-  document.getElementById("currentTime").textContent=new Date().toLocaleTimeString("en-US",{hour:'2-digit',minute:'2-digit',second:'2-digit',timeZone:"America/New_York"})+" EST";
-}
-updateTime();setInterval(updateTime,1000);
-
-async function fetchBTC(){
-  try{
-    // Use Binance API (supports CORS)
-    const r=await fetch("https://api.binance.com/api/v3/ticker/24hr?symbol=BTCUSDT");
-    const d=await r.json();
-    const price=parseFloat(d.lastPrice).toLocaleString(undefined,{minimumFractionDigits:0,maximumFractionDigits:0});
-    const change=parseFloat(d.priceChangePercent).toFixed(2);
-    document.getElementById("btcPrice").textContent="$"+price;
-    document.getElementById("btcChange").textContent=(parseFloat(change)>=0?"+":"")+change+"% (24h)";
-    addLog("OK","BTC: $"+price);
-  }catch(e){
-    // Fallback: show static value
-    document.getElementById("btcPrice").textContent="$71,111";
-    document.getElementById("btcChange").textContent="-4.26% (24h)";
-    addLog("WARN","BTC: using cached value");
-  }
-}
-fetchBTC();setInterval(fetchBTC,30000);
-
-function refreshAll(){fetchBTC();addLog("INFO","Manual refresh");}
-
-function sendChat(){
-  const input=document.getElementById("chatInput");
-  const text=input.value.trim();
-  if(!text)return;
-  const msgs=document.getElementById("chatMessages");
-  msgs.innerHTML+=`<div class="chat-msg user"><div class="chat-avatar user">M</div><div class="chat-bubble">${text}</div></div>`;
-  input.value="";
-  msgs.scrollTop=msgs.scrollHeight;
-  addLog("CHAT","Message sent");
-  setTimeout(()=>{
-    const responses=["Got it! Working on it.","I'll analyze that.","Done!","On it!"];
-    msgs.innerHTML+=`<div class="chat-msg ai"><div class="chat-avatar ai">O</div><div class="chat-bubble">${responses[Math.floor(Math.random()*responses.length)]}</div></div>`;
-    msgs.scrollTop=msgs.scrollHeight;
-  },600);
-}
-
-function sendChatFull(){
-  const input=document.getElementById("chatInputFull");
-  const text=input.value.trim();
-  if(!text)return;
-  const msgs=document.getElementById("chatMessagesFull");
-  msgs.innerHTML+=`<div class="chat-msg user"><div class="chat-avatar user">M</div><div class="chat-bubble">${text}</div></div>`;
-  input.value="";
-  msgs.scrollTop=msgs.scrollHeight;
-  addLog("CHAT","Message sent");
-  setTimeout(()=>{
-    const responses=["Got it! Working on it.","I'll analyze that.","Done!","On it!"];
-    msgs.innerHTML+=`<div class="chat-msg ai"><div class="chat-avatar ai">O</div><div class="chat-bubble">${responses[Math.floor(Math.random()*responses.length)]}</div></div>`;
-    msgs.scrollTop=msgs.scrollHeight;
-  },600);
-}
-
+// Add log entry
 function addLog(type,msg){
-  const c=document.getElementById("logsContainer");
-  const c2=document.getElementById("logsContainerFull");
-  const time=new Date().toLocaleTimeString("en-US",{hour12:false});
-  const cls=type==="OK"||type==="SUCCESS"?"ok":type==="ERROR"||type==="WARN"?"warn":"info";
-  const entry=`<div class="log-entry"><span class="log-time">${time}</span><span class="log-type ${cls}">${type}</span><span class="log-msg">${msg}</span></div>`;
-  if(c)c.innerHTML=entry+c.innerHTML;
-  if(c2)c2.innerHTML=entry+c2.innerHTML;
-  const count=document.querySelectorAll("#logCount, #logCountFull");
-  count.forEach(el=>{if(el)el.textContent=(parseInt(el.textContent)||0)+1;});
+const list=document.getElementById('logFeed');
+const time=new Date().toLocaleTimeString('en-US',{hour12:false});
+const entry=document.createElement('div');
+entry.className='log-entry '+type;
+entry.innerHTML='<span class="log-time">'+time+'</span><span class="log-msg">'+msg+'</span>';
+list.insertBefore(entry,list.firstChild);
+if(list.children.length>7)list.removeChild(list.lastChild);
 }
 
-function toggleCron(el){
-  el.classList.toggle("active");
-  addLog("CRON",el.classList.contains("active")?"Job enabled":"Job disabled");
-}
-
-addLog("OK","System initialized");
-addLog("OK","All systems operational");
-addLog("OK","5 agents online");
+// Simulate live logs
+setInterval(()=>{
+const msgs=['Processing request','Agent heartbeat','API call completed','Cron check'];
+addLog('success',msgs[Math.floor(Math.random()*msgs.length)]);
+},15000);
 </script>
 </body>
 </html>
