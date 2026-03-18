@@ -8,6 +8,111 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=SF+Pro+Display:wght@400;500;600;700&display=swap" rel="stylesheet">
     <style>
+        /* Login Screen */
+        .login-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: #000;
+            z-index: 9999;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: opacity 0.5s ease, visibility 0.5s ease;
+        }
+        
+        .login-overlay.hidden {
+            opacity: 0;
+            visibility: hidden;
+            pointer-events: none;
+        }
+        
+        .login-box {
+            background: #1c1c1e;
+            border-radius: 20px;
+            padding: 48px;
+            width: 100%;
+            max-width: 400px;
+            border: 1px solid rgba(255,255,255,0.1);
+            text-align: center;
+        }
+        
+        .login-logo {
+            width: 64px;
+            height: 64px;
+            background: linear-gradient(135deg, #2997ff, #bf5af2);
+            border-radius: 16px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 32px;
+            margin: 0 auto 24px;
+        }
+        
+        .login-title {
+            font-size: 24px;
+            font-weight: 600;
+            margin-bottom: 8px;
+        }
+        
+        .login-subtitle {
+            font-size: 14px;
+            color: #86868b;
+            margin-bottom: 32px;
+        }
+        
+        .login-input {
+            width: 100%;
+            padding: 16px;
+            background: #2d2d2f;
+            border: 1px solid rgba(255,255,255,0.1);
+            border-radius: 12px;
+            color: #fff;
+            font-size: 15px;
+            margin-bottom: 16px;
+            outline: none;
+            transition: border-color 0.2s;
+        }
+        
+        .login-input:focus {
+            border-color: #2997ff;
+        }
+        
+        .login-input::placeholder {
+            color: #6e6e73;
+        }
+        
+        .login-btn {
+            width: 100%;
+            padding: 16px;
+            background: #2997ff;
+            border: none;
+            border-radius: 12px;
+            color: #fff;
+            font-size: 15px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        
+        .login-btn:hover {
+            background: #0071e3;
+            transform: scale(1.02);
+        }
+        
+        .login-error {
+            color: #ff453a;
+            font-size: 13px;
+            margin-top: 16px;
+            display: none;
+        }
+        
+        .login-error.show {
+            display: block;
+        }
+
         :root {
             --bg-primary: #000000;
             --bg-secondary: #1d1d1f;
@@ -691,6 +796,21 @@
     </style>
 </head>
 <body>
+    <!-- Login Screen -->
+    <div class="login-overlay" id="loginOverlay">
+        <div class="login-box">
+            <div class="login-logo">🚀</div>
+            <div class="login-title">Mission Control</div>
+            <div class="login-subtitle">Enter your credentials to access</div>
+            <form id="loginForm">
+                <input type="text" class="login-input" id="username" placeholder="Username" required autocomplete="username">
+                <input type="password" class="login-input" id="password" placeholder="Password" required autocomplete="current-password">
+                <button type="submit" class="login-btn">Unlock</button>
+                <div class="login-error" id="loginError">Invalid credentials. Please try again.</div>
+            </form>
+        </div>
+    </div>
+    
     <div class="bg-gradient"></div>
     
     <!-- Sidebar -->
@@ -1003,6 +1123,30 @@
     </main>
     
     <script>
+        // Authentication
+        const AUTH_USER = 'Ollie';
+        const AUTH_PASS = 'Skater49$';
+        
+        // Check if already logged in
+        const isLoggedIn = sessionStorage.getItem('hifty_mc_logged_in');
+        if (isLoggedIn === 'true') {
+            document.getElementById('loginOverlay').classList.add('hidden');
+        }
+        
+        // Handle login
+        document.getElementById('loginForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            const user = document.getElementById('username').value;
+            const pass = document.getElementById('password').value;
+            
+            if (user === AUTH_USER && pass === AUTH_PASS) {
+                sessionStorage.setItem('hifty_mc_logged_in', 'true');
+                document.getElementById('loginOverlay').classList.add('hidden');
+            } else {
+                document.getElementById('loginError').classList.add('show');
+            }
+        });
+        
         // Update time
         function updateTime() {
             const now = new Date();
