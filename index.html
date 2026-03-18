@@ -28,7 +28,7 @@ body{font-family:Inter,-apple-system,sans-serif;background:var(--bg);color:var(-
 .login-e.show{opacity:1}
 .app{display:flex;height:100vh;opacity:0;transition:opacity 0.5s}
 .app.on{opacity:1}
-.sidebar{width:220px;background:var(--bg2);border-right:1px solid var(--border);display:flex;flex-direction:column}
+.sidebar{width:220px;background:var(--bg2);border-right:1px solid var(--border);display:flex;flex-direction:column;overflow-y:auto}
 .s-header{padding:20px;border-bottom:1px solid var(--border)}
 .s-logo{display:flex;align-items:center;gap:12px}
 .s-logo-icon{width:44px;height:44px;background:linear-gradient(135deg,var(--blue),var(--purple));border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:20px}
@@ -113,9 +113,11 @@ body{font-family:Inter,-apple-system,sans-serif;background:var(--bg);color:var(-
 .chat-avatar{width:32px;height:32px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;flex-shrink:0}
 .chat-avatar.ai{background:linear-gradient(135deg,var(--blue),var(--purple))}
 .chat-avatar.user{background:var(--green)}
+.chat-avatar.telegram{background:linear-gradient(135deg,#0088cc,#00aaff)}
 .chat-bubble{max-width:85%;padding:12px 16px;border-radius:16px;font-size:13px;line-height:1.5}
 .chat-message.ai .chat-bubble{background:var(--bg3);border-bottom-left-radius:4px}
 .chat-message.user .chat-bubble{background:var(--blue);border-bottom-right-radius:4px}
+.chat-message.telegram .chat-bubble{background:linear-gradient(135deg,#0088cc,#00aaff);border-bottom-right-radius:4px}
 .chat-input-area{padding:14px;border-top:1px solid var(--border);display:flex;gap:10px}
 .chat-input{flex:1;padding:12px 16px;background:var(--bg3);border:1px solid var(--border);border-radius:20px;color:#fff;font-size:13px;outline:none}
 .chat-input:focus{border-color:var(--blue)}
@@ -129,18 +131,25 @@ body{font-family:Inter,-apple-system,sans-serif;background:var(--bg);color:var(-
 .log-type.info{background:rgba(10,132,255,0.15);color:var(--blue)}
 .log-type.success{background:rgba(48,209,88,0.15);color:var(--green)}
 .log-type.warn{background:rgba(255,159,10,0.15);color:var(--orange)}
+.log-type.telegram{background:rgba(0,136,204,0.15);color:#0088cc}
 .log-message{color:var(--text2)}
 .risk-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:12px}
 .risk-item{padding:16px;background:var(--bg3);border-radius:var(--r2)}
 .risk-label{font-size:10px;font-weight:600;color:var(--text3);text-transform:uppercase;margin-bottom:6px}
 .risk-value{font-size:20px;font-weight:700}
 .risk-value.good{color:var(--green)}
+.education-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:12px}
+.edu-card{padding:20px;background:var(--bg3);border-radius:var(--r2);cursor:pointer;transition:all 0.2s}
+.edu-card:hover{background:var(--bg5);transform:translateY(-2px)}
+.edu-icon{font-size:28px;margin-bottom:10px}
+.edu-name{font-size:14px;font-weight:600;margin-bottom:4px}
+.edu-desc{font-size:11px;color:var(--text3)}
 .section{display:none}
 .section.active{display:grid;grid-template-columns:1fr 360px;gap:20px}
 ::-webkit-scrollbar{width:5px}
 ::-webkit-scrollbar-track{background:var(--bg)}
 ::-webkit-scrollbar-thumb{background:var(--bg5);border-radius:3px}
-@media(max-width:1200px){.section.active,.content{grid-template-columns:1fr}.stats-row{grid-template-columns:repeat(3,1fr)}}
+@media(max-width:1200px){.section.active,.content{grid-template-columns:1fr}.stats-row{grid-template-columns:repeat(3,1fr)}.education-grid{grid-template-columns:1fr}}
 </style>
 </head>
 <body>
@@ -164,24 +173,29 @@ body{font-family:Inter,-apple-system,sans-serif;background:var(--bg);color:var(-
 </div>
 <div class="s-section">
 <div class="s-section-title">Main</div>
-<div class="s-item active" onclick="showSection("dashboard")"><span class="s-item-icon">📊</span><span>Dashboard</span><span class="s-item-badge"></span></div>
+<div class="s-item active" data-section="dashboard"><span class="s-item-icon">📊</span><span>Dashboard</span><span class="s-item-badge"></span></div>
 </div>
 <div class="s-section">
 <div class="s-section-title">Trading</div>
-<div class="s-item" onclick="showSection("trades")"><span class="s-item-icon">📈</span><span>Trades</span></div>
-<div class="s-item" onclick="showSection("signals")"><span class="s-item-icon">🎯</span><span>Signals</span></div>
-<div class="s-item" onclick="showSection("risk")"><span class="s-item-icon">🛡️</span><span>Risk</span></div>
+<div class="s-item" data-section="trades"><span class="s-item-icon">📈</span><span>Trades</span></div>
+<div class="s-item" data-section="signals"><span class="s-item-icon">🎯</span><span>Signals</span></div>
+<div class="s-item" data-section="risk"><span class="s-item-icon">🛡️</span><span>Risk</span></div>
 </div>
 <div class="s-section">
 <div class="s-section-title">Education</div>
-<div class="s-item" onclick="showSection("education")"><span class="s-item-icon">🎓</span><span>Bitcoin Education</span></div>
-<div class="s-item" onclick="showSection("courses")"><span class="s-item-icon">📚</span><span>Courses</span></div>
+<div class="s-item" data-section="education"><span class="s-item-icon">🎓</span><span>Bitcoin Education</span></div>
+<div class="s-item" data-section="courses"><span class="s-item-icon">📚</span><span>Courses</span></div>
+</div>
+<div class="s-section">
+<div class="s-section-title">Communication</div>
+<div class="s-item" data-section="chat"><span class="s-item-icon">💬</span><span>Team Chat</span></div>
+<div class="s-item" data-section="telegram"><span class="s-item-icon">✈️</span><span>Telegram</span></div>
 </div>
 <div class="s-section">
 <div class="s-section-title">System</div>
-<div class="s-item" onclick="showSection("team")"><span class="s-item-icon">👥</span><span>Team</span></div>
-<div class="s-item" onclick="showSection("cron")"><span class="s-item-icon">⚡</span><span>Cron Jobs</span></div>
-<div class="s-item" onclick="showSection("logs")"><span class="s-item-icon">📋</span><span>Logs</span></div>
+<div class="s-item" data-section="team"><span class="s-item-icon">👥</span><span>Team</span></div>
+<div class="s-item" data-section="cron"><span class="s-item-icon">⚡</span><span>Cron Jobs</span></div>
+<div class="s-item" data-section="logs"><span class="s-item-icon">📋</span><span>Logs</span></div>
 </div>
 </aside>
 <main class="main">
@@ -189,6 +203,8 @@ body{font-family:Inter,-apple-system,sans-serif;background:var(--bg);color:var(-
 <div class="h-left"><span class="h-title" id="pageTitle">Mission Control</span><span class="h-live">LIVE</span></div>
 <div class="h-right"><span class="h-time" id="currentTime">--:-- EST</span><button class="h-btn" onclick="refreshData()">🔄 Refresh</button></div>
 </header>
+
+<!-- Dashboard -->
 <div class="content section active" id="section-dashboard">
 <div class="btc-hero"><span class="btc-icon">₿</span><div class="btc-label">Bitcoin Price</div><div class="btc-price" id="btcPrice">$--,---</div><div class="btc-change" id="btcChange">--% (24h)</div></div>
 <div class="stats-row">
@@ -204,33 +220,56 @@ body{font-family:Inter,-apple-system,sans-serif;background:var(--bg);color:var(-
 <div class="card"><div class="card-header"><span class="card-title">⚡ Cron Jobs</span><span class="card-badge">3 Active</span></div><div class="card-body"><div class="cron-grid"><div class="cron-row"><div class="cron-icon" style="background:rgba(10,132,255,0.2)">🌅</div><div class="cron-info"><div class="cron-name">Morning Briefing</div><div class="cron-schedule">8:00 AM Toronto</div></div><div class="cron-toggle active" onclick="toggleCron(this)"></div></div><div class="cron-row"><div class="cron-icon" style="background:rgba(191,90,242,0.2)">🔍</div><div class="cron-info"><div class="cron-name">System Check</div><div class="cron-schedule">8:00 AM Toronto</div></div><div class="cron-toggle active" onclick="toggleCron(this)"></div></div><div class="cron-row"><div class="cron-icon" style="background:rgba(48,209,88,0.2)">🌤️</div><div class="cron-info"><div class="cron-name">Weather Check</div><div class="cron-schedule">8:00 AM Toronto</div></div><div class="cron-toggle active" onclick="toggleCron(this)"></div></div></div></div></div>
 </div>
 <div class="right-panel">
-<div class="card chat-container"><div class="card-header"><span class="card-title">💬 Team Chat</span><span class="card-badge">Live</span></div><div class="chat-messages" id="chatMessages"><div class="chat-message ai"><div class="chat-avatar ai">O</div><div class="chat-bubble">Good morning team! Ready to crush it? 🚀</div></div><div class="chat-message ai"><div class="chat-avatar ai">M</div><div class="chat-bubble">RSI looking oversold on BTC.</div></div><div class="chat-message ai"><div class="chat-avatar ai">A</div><div class="chat-bubble">Daily analysis complete. Compliance: 33%</div></div><div class="chat-message ai"><div class="chat-avatar ai">H</div><div class="chat-bubble">Mission Control v5 deployed!</div></div></div><div class="chat-input-area"><input type="text" class="chat-input" id="chatInput" placeholder="Type message..." onkeypress="if(event.key=='Enter')sendChat()"><button class="chat-send" onclick="sendChat()">➤</button></div></div>
-<div class="card"><div class="card-header"><span class="card-title">📋 Live Logs</span><span class="card-badge" id="logCount">6</span></div><div class="card-body"><div class="logs-container" id="logsContainer"><div class="log-entry"><span class="log-time">22:18:01</span><span class="log-type success">OK</span><span class="log-message">System initialized</span></div><div class="log-entry"><span class="log-time">22:18:03</span><span class="log-type info">API</span><span class="log-message">Fetching BTC...</span></div><div class="log-entry"><span class="log-time">22:18:05</span><span class="log-type success">OK</span><span class="log-message">BTC: $71,009</span></div><div class="log-entry"><span class="log-time">22:18:06</span><span class="log-type success">OK</span><span class="log-message">Team: 5/5 online</span></div><div class="log-entry"><span class="log-time">22:18:08</span><span class="log-type success">OK</span><span class="log-message">Trade #4: +$4,000</span></div><div class="log-entry"><span class="log-time">22:18:10</span><span class="log-type warn">WARN</span><span class="log-message">RSI: 33%</span></div></div></div></div>
+<div class="card chat-container"><div class="card-header"><span class="card-title">💬 Team Chat</span><span class="card-badge">Local</span></div><div class="chat-messages" id="chatMessagesLocal"><div class="chat-message ai"><div class="chat-avatar ai">O</div><div class="chat-bubble">Good morning team! Ready to crush it? 🚀</div></div><div class="chat-message ai"><div class="chat-avatar ai">M</div><div class="chat-bubble">RSI looking oversold on BTC.</div></div><div class="chat-message ai"><div class="chat-avatar ai">A</div><div class="chat-bubble">Daily analysis complete. Compliance: 33%</div></div></div><div class="chat-input-area"><input type="text" class="chat-input" id="localChatInput" placeholder="Type message..." onkeypress="if(event.key==='Enter')sendLocalChat()"><button class="chat-send" onclick="sendLocalChat()">➤</button></div></div>
+<div class="card"><div class="card-header"><span class="card-title">📋 Live Logs</span><span class="card-badge" id="logCount">6</span></div><div class="card-body"><div class="logs-container" id="logsContainer"><div class="log-entry"><span class="log-time">22:27:01</span><span class="log-type success">OK</span><span class="log-message">System initialized</span></div><div class="log-entry"><span class="log-time">22:27:03</span><span class="log-type info">API</span><span class="log-message">Fetching BTC...</span></div></div></div></div>
 <div class="card"><div class="card-header"><span class="card-title">🛡️ Risk</span><span class="card-badge">Safe</span></div><div class="card-body"><div class="risk-grid"><div class="risk-item"><div class="risk-label">Risk/Trade</div><div class="risk-value good">2%</div></div><div class="risk-item"><div class="risk-label">Max DD</div><div class="risk-value good">0%</div></div><div class="risk-item"><div class="risk-label">Consec. Loss</div><div class="risk-value good">0</div></div><div class="risk-item"><div class="risk-label">Status</div><div class="risk-value good">SAFE</div></div></div></div></div>
 </div>
 </div>
-<div class="section" id="section-trades"><div class="card" style="grid-column:1/-1"><div class="card-header"><span class="card-title">📈 All Trades</span><span class="card-badge">4 Trades</span></div><div class="card-body" style="padding:0;"><table class="trades-table"><thead><tr><th>#</th><th>Date</th><th>Entry</th><th>Exit</th><th>RR</th><th>P&L</th><th>Status</th></tr></thead><tbody><tr><td>4</td><td>Mar 18</td><td>$66,439</td><td>$67,740</td><td>2:1</td><td style="color:var(--green)">+$4,000</td><td><span class="trade-status win">Win</span></td></tr><tr><td>3</td><td>Mar 17</td><td>$82,100</td><td>$84,500</td><td>2:1</td><td style="color:var(--green)">+$4,004</td><td><span class="trade-status win">Win</span></td></tr><tr><td>2</td><td>Mar 16</td><td>$78,500</td><td>$81,940</td><td>2:1</td><td style="color:var(--green)">+$4,930</td><td><span class="trade-status win">Win</span></td></tr><tr><td>1</td><td>Mar 15</td><td>$67,200</td><td>$69,664</td><td>2:1</td><td style="color:var(--green)">+$2,465</td><td><span class="trade-status win">Win</span></td></tr></tbody></table></div></div></div>
-<div class="section" id="section-education"><div class="card" style="grid-column:1/-1"><div class="card-header"><span class="card-title">🎓 Bitcoin Education</span><span class="card-badge">6 Modules</span></div><div class="card-body"><div class="team-grid"><div class="team-row"><div class="team-avatar" style="background:linear-gradient(135deg,#f7931a,#ff9f0a)">₿</div><div class="team-info"><div class="team-name">Bitcoin Basics</div><div class="team-role">Understanding BTC fundamentals</div></div><div class="team-status"><span class="status-dot online"></span><span class="status-text">Available</span></div></div><div class="team-row"><div class="team-avatar" style="background:linear-gradient(135deg,#0a84ff,#64d2ff)">📊</div><div class="team-info"><div class="team-name">RSI Indicator</div><div class="team-role">Relative Strength Index trading</div></div><div class="team-status"><span class="status-dot online"></span><span class="status-text">Available</span></div></div><div class="team-row"><div class="team-avatar" style="background:linear-gradient(135deg,#30d158,#00c853)">🛡️</div><div class="team-info"><div class="team-name">Risk Management</div><div class="team-role">Protect your capital</div></div><div class="team-status"><span class="status-dot online"></span><span class="status-text">Available</span></div></div><div class="team-row"><div class="team-avatar" style="background:linear-gradient(135deg,#bf5af2,#7c4dff)">🧠</div><div class="team-info"><div class="team-name">Trading Psychology</div><div class="team-role">Mindset for success</div></div><div class="team-status"><span class="status-dot online"></span><span class="status-text">Available</span></div></div><div class="team-row"><div class="team-avatar" style="background:linear-gradient(135deg,#ff9f0a,#ff6d00)">📈</div><div class="team-info"><div class="team-name">Technical Analysis</div><div class="team-role">Chart patterns & indicators</div></div><div class="team-status"><span class="status-dot online"></span><span class="status-text">Available</span></div></div><div class="team-row"><div class="team-avatar" style="background:linear-gradient(135deg,#ff453a,#d50000)">💰</div><div class="team-info"><div class="team-name">Money Management</div><div class="team-role">Position sizing & lot sizes</div></div><div class="team-status"><span class="status-dot online"></span><span class="status-text">Available</span></div></div></div></div></div></div>
+
+<!-- Trades -->
+<div class="section" id="section-trades">
+<div class="card" style="grid-column:1/-1"><div class="card-header"><span class="card-title">📈 All Trades</span><span class="card-badge">4 Trades</span></div><div class="card-body" style="padding:0;"><table class="trades-table"><thead><tr><th>#</th><th>Date</th><th>Entry</th><th>Exit</th><th>RR</th><th>P&L</th><th>Status</th></tr></thead><tbody><tr><td>4</td><td>Mar 18</td><td>$66,439</td><td>$67,740</td><td>2:1</td><td style="color:var(--green)">+$4,000</td><td><span class="trade-status win">Win</span></td></tr><tr><td>3</td><td>Mar 17</td><td>$82,100</td><td>$84,500</td><td>2:1</td><td style="color:var(--green)">+$4,004</td><td><span class="trade-status win">Win</span></td></tr><tr><td>2</td><td>Mar 16</td><td>$78,500</td><td>$81,940</td><td>2:1</td><td style="color:var(--green)">+$4,930</td><td><span class="trade-status win">Win</span></td></tr><tr><td>1</td><td>Mar 15</td><td>$67,200</td><td>$69,664</td><td>2:1</td><td style="color:var(--green)">+$2,465</td><td><span class="trade-status win">Win</span></td></tr></tbody></table></div></div>
+</div>
+
+<!-- Telegram Chat -->
+<div class="section" id="section-telegram">
+<div class="card chat-container" style="grid-column:1/-1">
+<div class="card-header"><span class="card-title">✈️ Telegram Chat</span><span class="card-badge" id="tgStatus">Connected</span></div>
+<div class="chat-messages" id="telegramMessages">
+<div class="chat-message telegram"><div class="chat-avatar telegram">✈️</div><div class="chat-bubble">Connected to Telegram! Send messages here to communicate with Telegram.</div></div>
+</div>
+<div class="chat-input-area"><input type="text" class="chat-input" id="telegramInput" placeholder="Type message for Telegram..." onkeypress="if(event.key==='Enter')sendToTelegram()"><button class="chat-send" onclick="sendToTelegram()">➤</button></div>
+</div>
+</div>
+
+<!-- Education -->
+<div class="section" id="section-education">
+<div class="card" style="grid-column:1/-1"><div class="card-header"><span class="card-title">🎓 Bitcoin Education</span><span class="card-badge">6 Modules</span></div><div class="card-body"><div class="education-grid"><div class="edu-card"><div class="edu-icon">₿</div><div class="edu-name">Bitcoin Basics</div><div class="edu-desc">Understanding BTC fundamentals</div></div><div class="edu-card"><div class="edu-icon">📊</div><div class="edu-name">RSI Indicator</div><div class="edu-desc">Relative Strength Index trading</div></div><div class="edu-card"><div class="edu-icon">🛡️</div><div class="edu-name">Risk Management</div><div class="edu-desc">Protect your capital</div></div><div class="edu-card"><div class="edu-icon">🧠</div><div class="edu-name">Trading Psychology</div><div class="edu-desc">Mindset for success</div></div><div class="edu-card"><div class="edu-icon">📈</div><div class="edu-name">Technical Analysis</div><div class="edu-desc">Chart patterns & indicators</div></div><div class="edu-card"><div class="edu-icon">💰</div><div class="edu-name">Money Management</div><div class="edu-desc">Position sizing & lot sizes</div></div></div></div></div>
+</div>
+
+<!-- Other Sections -->
 <div class="section" id="section-signals"><div class="card" style="grid-column:1/-1"><div class="card-header"><span class="card-title">🎯 Trading Signals</span></div><div class="card-body">Trading signals will appear here.</div></div></div>
-<div class="section" id="section-risk"><div class="card" style="grid-column:1/-1"><div class="card-header"><span class="card-title">🛡️ Risk Management</span></div><div class="card-body"><div class="risk-grid"><div class="risk-item"><div class="risk-label">Risk/Trade</div><div class="risk-value good">2%</div></div><div class="risk-item"><div class="risk-label">Max DD</div><div class="risk-value good">0%</div></div><div class="risk-item"><div class="risk-label">Consec. Loss</div><div class="risk-value good">0</div></div><div class="risk-item"><div class="risk-label">Status</div><div class="risk-value good">SAFE</div></div></div></div></div></div>
+<div class="section" id="section-risk"><div class="card" style="grid-column:1/-1"><div class="card-header"><span class="card-title">🛡️ Risk Management</span></div><div class="card-body"><div classrisk-grid"><div class="risk-item"><div class="risk-label">Risk/Trade</div><div class="risk-value good">2%</div></div><div class="risk-item"><div class="risk-label">Max DD</div><div class="risk-value good">0%</div></div><div class="risk-item"><div class="risk-label">Consec. Loss</div><div class="risk-value good">0</div></div><div class="risk-item"><div class="risk-label">Status</div><div class="risk-value good">SAFE</div></div></div></div></div>
 <div class="section" id="section-courses"><div class="card" style="grid-column:1/-1"><div class="card-header"><span class="card-title">📚 Courses</span></div><div class="card-body">Course content coming soon.</div></div></div>
-<div class="section" id="section-team"><div class="card" style="grid-column:1/-1"><div class="card-header"><span class="card-title">👥 Team</span></div><div class="card-body"><div class="team-grid"><div class="team-row"><div class="team-avatar" style="background:linear-gradient(135deg,#0a84ff,#0066cc)">O</div><div class="team-info"><div class="team-name">Ollie (CEO)</div><div class="team-role">Chief of Command</div></div><div class="team-status"><span class="status-dot online"></span><span class="status-text">Online</span></div></div></div></div></div></div>
-<div class="section" id="section-cron"><div class="card" style="grid-column:1/-1"><div class="card-header"><span class="card-title">⚡ Cron Jobs</span></div><div class="card-body"><div class="cron-grid"><div class="cron-row"><div class="cron-icon" style="background:rgba(10,132,255,0.2)">🌅</div><div class="cron-info"><div class="cron-name">Morning Briefing</div><div class="cron-schedule">8:00 AM Toronto</div></div><div class="cron-toggle active"></div></div><div class="cron-row"><div class="cron-icon" style="background:rgba(191,90,242,0.2)">🔍</div><div class="cron-info"><div class="cron-name">System Check</div><div class="cron-schedule">8:00 AM Toronto</div></div><div class="cron-toggle active"></div></div><div class="cron-row"><div class="cron-icon" style="background:rgba(48,209,88,0.2)">🌤️</div><div class="cron-info"><div class="cron-name">Weather Check</div><div class="cron-schedule">8:00 AM Toronto</div></div><div class="cron-toggle active"></div></div></div></div></div></div>
+<div class="section" id="section-team"><div class="card" style="grid-column:1/-1"><div class="card-header"><span class="card-title">👥 Team</span></div><div class="card-body"><div class="team-grid"><div class="team-row"><div class="team-avatar" style="background:linear-gradient(135deg,#0a84ff,#0066cc)">O</div><div class="team-info"><div class="team-name">Ollie (CEO)</div><div class="team-role">Chief of Command</div></div><div class="team-status"><span class="status-dot online"></span><span class="status-text">Online</span></div></div></div></div></div>
+<div class="section" id="section-cron"><div class="card" style="grid-column:1/-1"><div class="card-header"><span class="card-title">⚡ Cron Jobs</span></div><div class="card-body"><div class="cron-grid"><div class="cron-row"><div class="cron-icon" style="background:rgba(10,132,255,0.2)">🌅</div><div class="cron-info"><div class="cron-name">Morning Briefing</div><div class="cron-schedule">8:00 AM Toronto</div></div><div class="cron-toggle active"></div></div><div class="cron-row"><div class="cron-icon" style="background:rgba(191,90,242,0.2)">🔍</div><div class="cron-info"><div class="cron-name">System Check</div><div class="cron-schedule">8:00 AM Toronto</div></div><div class="cron-toggle active"></div></div><div class="cron-row"><div class="cron-icon" style="background:rgba(48,209,88,0.2)">🌤️</div><div class="cron-info"><div class="cron-name">Weather Check</div><div class="cron-schedule">8:00 AM Toronto</div></div><div class="cron-toggle active"></div></div></div></div></div>
 <div class="section" id="section-logs"><div class="card" style="grid-column:1/-1"><div class="card-header"><span class="card-title">📋 System Logs</span></div><div class="card-body"><div class="logs-container" id="fullLogs"></div></div></div></div>
 </main>
 </div>
 <script>
-const AUTH_USER="Ollie",AUTH_PASS="Skater49$";
+const AUTH_USER="Ollie",AUTH_PASS="Skater49$",TELEGRAM_CHAT_ID="7140076919";
 if(sessionStorage.getItem("hifty_mc_logged_in")){document.getElementById("loginScreen").classList.add("hide");document.getElementById("appContainer").classList.add("on");}
 function doLogin(){const u=document.getElementById("username").value;const p=document.getElementById("password").value;if(u===AUTH_USER&&p===AUTH_PASS){sessionStorage.setItem("hifty_mc_logged_in","true");document.getElementById("loginScreen").classList.add("hide");setTimeout(()=>document.getElementById("appContainer").classList.add("on"),150);confetti({particleCount:120,spread:70,origin:{y:0.6},colors:["#0a84ff","#bf5af2","#30d158"]});addLog("OK","User logged in: "+u);}else{document.getElementById("loginError").classList.add("show");}}
-function showSection(s){document.querySelectorAll(".section").forEach(x=>x.classList.remove("active"));document.getElementById("section-"+s).classList.add("active");document.querySelectorAll(".s-item").forEach(x=>x.classList.remove("active"));event.target.closest(".s-item").classList.add("active");const t={dashboard:"Mission Control",trades:"Trading",signals:"Signals",risk:"Risk Management",education:"Bitcoin Education",courses:"Courses",team:"Team",cron:"Cron Jobs",logs:"System Logs"};document.getElementById("pageTitle").textContent=t[s]||"Mission Control";addLog("INFO","Navigated to: "+s);}
+document.querySelectorAll(".s-item").forEach(item=>{item.addEventListener("click",function(){const section=this.getAttribute("data-section");showSection(section);});});
+function showSection(section){document.querySelectorAll(".section").forEach(x=>x.classList.remove("active"));document.getElementById("section-"+section).classList.add("active");document.querySelectorAll(".s-item").forEach(x=>x.classList.remove("active"));document.querySelector('[data-section="'+section+'"]').classList.add("active");const t={dashboard:"Mission Control",trades:"Trading",signals:"Signals",risk:"Risk Management",education:"Bitcoin Education",courses:"Courses",team:"Team",cron:"Cron Jobs",logs:"System Logs",chat:"Team Chat",telegram:"Telegram"};document.getElementById("pageTitle").textContent=t[section]||"Mission Control";addLog("INFO","Navigated to: "+section);}
 function updateTime(){document.getElementById("currentTime").textContent=new Date().toLocaleTimeString("en-US",{hour:"2-digit",minute:"2-digit",timeZone:"America/New_York"})+" EST";}
 updateTime();setInterval(updateTime,1000);
 async function fetchBTC(){try{const r=await fetch("https://api.coingecko.com/api/v3/simple/price?ids=bitcoin&vs_currencies=usd&include_24hr_change=true");const d=await r.json();document.getElementById("btcPrice").textContent="$"+d.bitcoin.usd.toLocaleString();const c=d.bitcoin.usd_24h_change;document.getElementById("btcChange").textContent=(c>=0?"+":"")+c.toFixed(2)+"% (24h)";addLog("API","BTC: $"+d.bitcoin.usd.toLocaleString());}catch(e){addLog("ERR","BTC fetch failed");}}
 fetchBTC();setInterval(fetchBTC,30000);
 function refreshData(){fetchBTC();addLog("INFO","Manual refresh");}
-function sendChat(){const i=document.getElementById("chatInput");const t=i.value.trim();if(!t)return;const m=document.getElementById("chatMessages");m.innerHTML+=`<div class="chat-message user"><div class="chat-avatar user">M</div><div class="chat-bubble">${t}</div></div>`;i.value="";m.scrollTop=m.scrollHeight;addLog("CHAT","Message sent");setTimeout(()=>{const r=["Got it!","Working on it.","Done!","On it!"];m.innerHTML+=`<div class="chat-message ai"><div class="chat-avatar ai">O</div><div class="chat-bubble">${r[Math.floor(Math.random()*r.length)]}</div></div>`;m.scrollTop=m.scrollHeight;},600);}
-function addLog(type,msg){const c=document.getElementById("logsContainer");const ti=new Date().toLocaleTimeString("en-US",{hour12:false});const cls=type==="OK"||type==="SUCCESS"?"success":type==="WARN"?"warn":type==="ERR"||type==="ERROR"?"error":"info";c.innerHTML=`<div class="log-entry"><span class="log-time">${ti}</span><span class="log-type ${cls}">${type}</span><span class="log-message">${msg}</span></div>`+c.innerHTML;document.getElementById("logCount").textContent=parseInt(document.getElementById("logCount").textContent)+1;}
+function sendLocalChat(){const i=document.getElementById("localChatInput");const t=i.value.trim();if(!t)return;const m=document.getElementById("chatMessagesLocal");m.innerHTML+=`<div class="chat-message user"><div class="chat-avatar user">M</div><div class="chat-bubble">${t}</div></div>`;i.value="";m.scrollTop=m.scrollHeight;addLog("CHAT","Message sent");setTimeout(()=>{const r=["Got it!","Working on it.","Done!","On it!"];m.innerHTML+=`<div class="chat-message ai"><div class="chat-avatar ai">O</div><div class="chat-bubble">${r[Math.floor(Math.random()*r.length)]}</div></div>`;m.scrollTop=m.scrollHeight;},600);}
+async function sendToTelegram(){const i=document.getElementById("telegramInput");const text=i.value.trim();if(!text)return;const m=document.getElementById("telegramMessages");m.innerHTML+=`<div class="chat-message user"><div class="chat-avatar user">M</div><div class="chat-bubble">${text}</div></div>`;i.value="";m.scrollTop=m.scrollHeight;addLog("TG","Sending to Telegram...");try{const response=await fetch("/api/telegram/send",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({chat_id:TELEGRAM_CHAT_ID,text:text})});if(response.ok){addLog("TG","Message sent to Telegram");m.innerHTML+=`<div class="chat-message telegram"><div class="chat-avatar telegram">✈️</div><div class="chat-bubble">Sent to Telegram!</div></div>`;}else{addLog("ERR","Telegram send failed");}}catch(e){addLog("ERR","Telegram error");}m.scrollTop=m.scrollHeight;}
+function addLog(type,msg){const c=document.getElementById("logsContainer");const ti=new Date().toLocaleTimeString("en-US",{hour12:false});const cls=type==="OK"||type==="SUCCESS"?"success":type==="WARN"?"warn":type==="ERR"||type==="ERROR"?"error":type==="TG"?"telegram":"info";c.innerHTML=`<div class="log-entry"><span class="log-time">${ti}</span><span class="log-type ${cls}">${type}</span><span class="log-message">${msg}</span></div>`+c.innerHTML;document.getElementById("logCount").textContent=parseInt(document.getElementById("logCount").textContent)+1;}
 function toggleCron(el){el.classList.toggle("active");addLog("CRON",el.classList.contains("active")?"Job enabled":"Job disabled");}
 </script>
 </body>
