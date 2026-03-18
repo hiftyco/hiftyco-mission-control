@@ -1,0 +1,335 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>OpenClaw Chat</title>
+<style>
+:root{
+--bg:#0a0a0f;--bg1:#111118;--bg2:#18181f;--bg3:#1f1f28;--bg4:#26262f;
+--border:rgba(255,255,255,0.07);--border2:rgba(255,255,255,0.14);
+--text:#f0f0f5;--muted:#8e8ea8;--hint:#4a4a60;
+--blue:#0a84ff;--green:#30d158;--orange:#ff9f0a;--red:#ff453a;
+--mono:'SF Mono',Monaco,Menlo,monospace;
+}
+*{margin:0;padding:0;box-sizing:border-box}
+html,body{height:100%}
+body{font-family:-apple-system,BlinkMacSystemFont,'SF Pro Text',sans-serif;background:var(--bg);color:var(--text);-webkit-font-smoothing:antialiased;position:relative}
+body::before{content:'';position:fixed;inset:0;background-image:radial-gradient(circle at 1px 1px,rgba(255,255,255,0.03) 1px,transparent 0);background-size:32px 32px;pointer-events:none;z-index:0}
+
+/* Layout */
+.app{display:flex;flex-direction:column;height:100vh;position:relative;z-index:1}
+.header{height:56px;background:var(--bg1);border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;padding:0 16px;flex-shrink:0}
+.h-left{display:flex;align-items:center;gap:12px}
+.h-logo{width:34px;height:34px;background:rgba(10,132,255,0.15);border-radius:9px;display:flex;align-items:center;justify-content:center;font-size:18px}
+.h-title{font-size:15px;font-weight:600}
+.h-subtitle{font-size:11px;font-family:var(--mono);color:var(--hint)}
+.h-center{display:flex;align-items:center;gap:8px}
+.status-pill{padding:5px 12px;border-radius:20px;font-size:11px;font-weight:500;display:flex;align-items:center;gap:6px}
+.status-pill.online{background:rgba(48,209,88,0.15);color:var(--green)}
+.status-pill.offline{background:rgba(255,69,58,0.15);color:var(--red)}
+.status-dot{width:6px;height:6px;border-radius:50%;background:currentColor;animation:pulse 2s infinite}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:0.5}}
+.status-time{font-size:10px;color:var(--hint);margin-left:4px}
+.h-right{display:flex;align-items:center;gap:8px}
+.h-btn{width:32px;height:32px;background:var(--bg2);border:1px solid var(--border);border-radius:8px;display:flex;align-items:center;justify-content:center;cursor:pointer;color:var(--muted);transition:all 0.15s}
+.h-btn:hover{background:var(--bg3);color:var(--text)}
+.h-link{font-size:12px;color:var(--blue);text-decoration:none;padding:6px 10px}
+
+/* Messages */
+.messages{f flex:1;overflow-y:auto;padding:16px 20px;display:flex;flex-direction:column;gap:8px;scroll-behavior:smooth}
+.msg{display:flex;gap:10px;max-width:85%;animation:fadeIn 0.2s ease}
+.msg.me{flex-direction:row-reverse;align-self:flex-end}
+.msg-avatar{width:32px;height:32px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:600;flex-shrink:0}
+.msg.me .msg-avatar{background:linear-gradient(135deg,var(--blue),#0066cc)}
+.msg.them .msg-avatar{background:linear-gradient(135deg,var(--green),#00a854)}
+.msg-content{display:flex;flex-direction:column;gap:3px}
+.msg.me .msg-content{align-items:flex-end}
+.msg-bubble{padding:10px 14px;border-radius:16px;font-size:14px;line-height:1.45;white-space:pre-wrap;word-break:break-word}
+.msg.me .msg-bubble{background:var(--blue);border-bottom-right-radius:4px}
+.msg.them .msg-bubble{background:var(--bg3);border-bottom-left-radius:4px}
+.msg-time{font-size:10px;color:var(--hint);padding:0 4px}
+.date-sep{display:flex;align-items:center;gap:12px;margin:12px 0;color:var(--hint);font-size:11px}
+.date-sep::before,.date-sep::after{content:'';flex:1;height:1px;background:var(--border)}
+@keyframes fadeIn{from{opacity:0;transform:translateY(8px)}}
+
+/* Input */
+.input-bar{height:64px;background:var(--bg1);border-top:1px solid var(--border);display:flex;align-items:center;gap:10px;padding:0 16px;flex-shrink:0}
+.input-bar textarea{flex:1;background:var(--bg2);border:1px solid var(--border);border-radius:12px;padding:12px 16px;color:var(--text);font-size:14px;font-family:inherit;resize:none;outline:none;max-height:48px;line-height:1.3}
+.input-bar textarea::placeholder{color:var(--hint)}
+.input-bar textarea:focus{border-color:var(--blue)}
+.input-bar button{height:40px;padding:0 16px;background:var(--bg3);border:1px solid var(--border);border-radius:10px;color:var(--muted);font-size:13px;font-weight:500;cursor:pointer;transition:all 0.15s;display:flex;align-items:center;gap:6px}
+.input-bar button:hover{background:var(--bg4);color:var(--text)}
+.input-bar button.send{background:var(--blue);border-color:var(--blue);color:#fff}
+.input-bar button.send:hover{background:#0095ff}
+
+/* Modal */
+.modal{position:fixed;inset:0;background:rgba(0,0,0,0.7);backdrop-filter:blur(8px);display:flex;align-items:center;justify-content:center;z-index:100;opacity:0;pointer-events:none;transition:opacity 0.2s}
+.modal.show{opacity:1;pointer-events:auto}
+.modal-card{width:380px;background:var(--bg2);border:1px solid var(--border);border-radius:16px;padding:24px;transform:scale(0.95);transition:transform 0.2s}
+.modal.show .modal-card{transform:scale(1)}
+.modal-title{font-size:18px;font-weight:600;margin-bottom:6px}
+.modal-desc{font-size:13px;color:var(--muted);margin-bottom:20px}
+.modal-field{margin-bottom:16px}
+.modal-label{font-size:11px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:8px;display:block}
+.modal-input{width:100%;padding:12px 14px;background:var(--bg1);border:1px solid var(--border);border-radius:10px;color:var(--text);font-size:14px;outline:none}
+.modal-input:focus{border-color:var(--blue)}
+.modal-link{font-size:12px;color:var(--blue);text-decoration:none;display:inline-flex;align-items:center;gap:4px;margin-top:8px}
+.modal-link:hover{text-decoration:underline}
+.modal-btn{width:100%;padding:14px;background:var(--blue);border:none;border-radius:10px;color:#fff;font-size:14px;font-weight:600;cursor:pointer;margin-top:8px}
+.modal-btn:hover{background:#0095ff}
+.modal-error{color:var(--red);font-size:12px;margin-top:10px;text-align:center}
+
+/* Empty State */
+.empty{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;color:var(--muted);gap:12px}
+.empty-icon{font-size:48px;opacity:0.5}
+.empty-text{font-size:14px}
+
+/* Typing */
+.typing{font-size:12px;color:var(--hint);padding:8px 0;display:none}
+.typing.show{display:block}
+.typing span{width:6px;height:6px;background:var(--hint);border-radius:50%;display:inline-block;margin:0 2px;animation:typing 1.4s infinite}
+.typing span:nth-child(2){animation-delay:0.2s}
+.typing span:nth-child(3){animation-delay:0.4s}
+@keyframes typing{0%,60%,100%{transform:translateY(0);opacity:0.4}30%{transform:translateY(-4px);opacity:1}}
+
+/* Responsive */
+@media(max-width:500px){
+.header{padding:0 12px}
+.h-subtitle,.status-time,.h-link{display:none}
+.messages{padding:12px}
+.msg{max-width:90%}
+}
+</style>
+</head>
+<body>
+<div class="app" id="app">
+<!-- Header -->
+<header class="header">
+<div class="h-left">
+<div class="h-logo">🦞</div>
+<div>
+<div class="h-title">OpenClaw Chat</div>
+<div class="h-subtitle">via Telegram</div>
+</div>
+</div>
+<div class="h-center">
+<div class="status-pill offline" id="statusPill"><span class="status-dot"></span><span id="statusText">Offline</span><span class="status-time" id="statusTime"></span></div>
+</div>
+<div class="h-right">
+<a href="index.html" class="h-link">← Dashboard</a>
+<button class="h-btn" onclick="showSettings()">⚙️</button>
+</div>
+</header>
+
+<!-- Messages -->
+<div class="messages" id="messages">
+<div class="empty" id="emptyState">
+<div class="empty-icon">💬</div>
+<div class="empty-text">No messages yet</div>
+</div>
+<div class="typing" id="typing"><span></span><span></span><span></span></div>
+</div>
+
+<!-- Input -->
+<div class="input-bar">
+<textarea id="input" placeholder="Type a message..." rows="1" onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();sendMessage()}"></textarea>
+<button id="abortBtn" onclick="abortPolling()">⏹️</button>
+<button class="send" onclick="sendMessage()">Send ↑</button>
+</div>
+</div>
+
+<!-- Settings Modal -->
+<div class="modal" id="settingsModal">
+<div class="modal-card">
+<div class="modal-title">🔧 Connect Telegram</div>
+<div class="modal-desc">Enter your bot token and chat ID to enable messaging</div>
+<div class="modal-field">
+<label class="modal-label">Bot Token</label>
+<input type="password" class="modal-input" id="botToken" placeholder="1234567890:ABCdefGHIjklMNOpqrsTUVwxyz">
+</div>
+<div class="modal-field">
+<label class="modal-label">Chat ID</label>
+<input type="text" class="modal-input" id="chatId" placeholder="7140076919">
+</div>
+<div class="modal-field">
+<label class="modal-label">Your Name</label>
+<input type="text" class="modal-input" id="userName" placeholder="Mango">
+</div>
+<a href="https://t.me/userinfobot" target="_blank" class="modal-link">How to get Chat ID →</a>
+<button class="modal-btn" onclick="saveSettings()">Connect</button>
+<div class="modal-error" id="modalError"></div>
+</div>
+</div>
+
+<script>
+// Config
+const API_URL='https://api.telegram.org/bot';
+let config={token:'',chatId:'',name:'User'};
+let lastUpdateId=0;
+let pollingInterval=null;
+let isPolling=false;
+
+// Load config
+function loadConfig(){
+config.token=localStorage.getItem('oc_bot_token')||'';
+config.chatId=localStorage.getItem('oc_chat_id')||'';
+config.name=localStorage.getItem('oc_user_name')||'User';
+if(config.token&&config.chatId){
+document.getElementById('botToken').value=config.token;
+document.getElementById('chatId').value=config.chatId;
+document.getElementById('userName').value=config.name;
+startPolling();
+}
+}
+
+// Save settings
+function saveSettings(){
+const token=document.getElementById('botToken').value.trim();
+const chatId=document.getElementById('chatId').value.trim();
+const name=document.getElementById('userName').value.trim()||'User';
+if(!token||!chatId){
+document.getElementById('modalError').textContent='Please fill in all fields';
+return;
+}
+config.token=token;
+config.chatId=chatId;
+config.name=name;
+localStorage.setItem('oc_bot_token',token);
+localStorage.setItem('oc_chat_id',chatId);
+localStorage.setItem('oc_user_name',name);
+document.getElementById('settingsModal').classList.remove('show');
+startPolling();
+}
+
+// Show settings
+function showSettings(){
+document.getElementById('settingsModal').classList.add('show');
+document.getElementById('modalError').textContent='';
+}
+
+// Close modal on backdrop click
+document.getElementById('settingsModal').addEventListener('click',e=>{
+if(e.target.id==='settingsModal')document.getElementById('settingsModal').classList.remove('show');
+});
+
+// Send message via Telegram Bot API
+async function sendMessage(){
+const input=document.getElementById('input');
+const text=input.value.trim();
+if(!text||!config.token||!config.chatId)return;
+
+addMessage(text,true);
+input.value='';
+
+// Send via Telegram
+try{
+const response=await fetch(`${API_URL}${config.token}/sendMessage`,{
+method:'POST',
+headers:{'Content-Type':'application/json'},
+body:JSON.stringify({chat_id:config.chatId,text:`${config.name}: ${text}`})
+});
+if(!response.ok)throw new Error('Failed to send');
+}catch(e){
+addMessage('Failed to send: '+e.message,false,true);
+}
+}
+
+// Add message to UI
+function addMessage(text,isMe,isError=false){
+const empty=document.getElementById('emptyState');
+if(empty)empty.style.display='none';
+
+const container=document.getElementById('messages');
+const typing=document.getElementById('typing');
+
+const msg=document.createElement('div');
+msg.className=`msg ${isMe?'me':'them'}`;
+msg.innerHTML=`
+<div class="msg-avatar">${isMe?config.name.charAt(0).toUpperCase():'O'}</div>
+<div class="msg-content">
+<div class="msg-bubble">${escapeHtml(text)}</div>
+<div class="msg-time">${new Date().toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'})}</div>
+</div>
+`;
+container.insertBefore(msg,typing);
+container.scrollTop=container.scrollHeight;
+}
+
+// Escape HTML
+function escapeHtml(text){
+const div=document.createElement('div');
+div.textContent=text;
+return div.innerHTML;
+}
+
+// Start polling for updates
+async function startPolling(){
+if(isPolling)return;
+isPolling=true;
+updateStatus(true);
+poll();
+pollingInterval=setInterval(poll,3000);
+}
+
+// Stop polling
+function abortPolling(){
+if(pollingInterval){
+clearInterval(pollingInterval);
+pollingInterval=null;
+}
+isPolling=false;
+updateStatus(false);
+}
+
+// Poll for messages
+async function poll(){
+if(!config.token||!config.chatId)return;
+try{
+const response=await fetch(`${API_URL}${config.token}/getUpdates?offset=${lastUpdateId+1}&timeout=2`);
+const data=await response.json();
+if(data.ok&&data.result){
+for(const update of data.result){
+if(update.message){
+const text=update.message.text;
+if(text&&!text.startsWith(config.name+':')){
+addMessage(text,false);
+}
+lastUpdateId=update.update_id;
+}
+}
+}
+updateStatus(true);
+}catch(e){
+updateStatus(false);
+}
+}
+
+// Update status
+function updateStatus(online){
+const pill=document.getElementById('statusPill');
+const text=document.getElementById('statusText');
+const time=document.getElementById('statusTime');
+if(online){
+pill.className='status-pill online';
+text.textContent='Polling';
+time.textContent='Updated just now';
+}else{
+pill.className='status-pill offline';
+text.textContent='Offline';
+time.textContent='';
+}
+}
+
+// Update time every 10s
+setInterval(()=>{
+if(isPolling){
+document.getElementById('statusTime').textContent='Updated '+Math.floor(Math.random()*3)+'s ago';
+}
+},10000);
+
+// Init
+loadConfig();
+</script>
+</body>
+</html>
