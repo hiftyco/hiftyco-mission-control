@@ -16,146 +16,159 @@
 body{font-family:var(--font);background:var(--bg);color:var(--text);line-height:1.4;font-size:14px;-webkit-font-smoothing:antialiased}
 html,body{height:100%}
 
-/* Grid Layout */
-.dashboard{display:grid;grid-template-columns:280px 1fr;grid-template-rows:auto 1fr;gap:16px;padding:16px;height:100vh;overflow:hidden}
-.header{grid-column:1/-1;display:flex;align-items:center;justify-content:space-between;padding:12px 20px;background:var(--bg2);border-radius:var(--radius);border:1px solid var(--border)}
-.sidebar{background:var(--bg2);border-radius:var(--radius);border:1px solid var(--border);padding:16px;overflow-y:auto}
-.main{background:var(--bg2);border-radius:var(--radius);border:1px solid var(--border);padding:20px;overflow-y:auto;display:flex;flex-direction:column;gap:20px}
+.dashboard{display:grid;grid-template-columns:260px 1fr;grid-template-rows:auto 1fr;gap:14px;padding:14px;height:100vh;overflow:hidden}
+.header{grid-column:1/-1;display:flex;align-items:center;justify-content:space-between;padding:10px 18px;background:var(--bg2);border-radius:var(--radius);border:1px solid var(--border)}
+.sidebar{background:var(--bg2);border-radius:var(--radius);border:1px solid var(--border);padding:14px;overflow-y:auto}
+.main{background:var(--bg2);border-radius:var(--radius);border:1px solid var(--border);padding:16px;overflow-y:auto;display:flex;flex-direction:column;gap:14px}
 
-/* Header */
-.h-left{display:flex;align-items:center;gap:16px}
-.h-title{font-size:18px;font-weight:600}
-.h-url{font-size:12px;color:var(--text2);background:var(--bg3);padding:4px 10px;border-radius:6px}
-.h-center{display:flex;align-items:center;gap:24px}
-.h-clock{font-size:28px;font-weight:300;font-variant-numeric:tabular-nums;letter-spacing:-1px}
-.h-resources{display:flex;gap:16px}
+.h-left{display:flex;align-items:center;gap:14px}
+.h-title{font-size:17px;font-weight:600}
+.h-url{font-size:11px;color:var(--text2);background:var(--bg3);padding:4px 9px;border-radius:5px}
+.h-center{display:flex;align-items:center;gap:20px}
+.h-clock{font-size:26px;font-weight:300;font-variant-numeric:tabular-nums;letter-spacing:-1px}
+.h-resources{display:flex;gap:14px}
 .res-item{text-align:center}
-.res-label{font-size:10px;color:var(--text3);text-transform:uppercase;margin-bottom:4px}
-.res-bar{width:60px;height:6px;background:var(--bg3);border-radius:3px;overflow:hidden}
+.res-label{font-size:9px;color:var(--text3);text-transform:uppercase;margin-bottom:3px}
+.res-bar{width:50px;height:5px;background:var(--bg3);border-radius:3px;overflow:hidden}
 .res-fill{height:100%;border-radius:3px;transition:width 0.3s,background 0.3s}
 .res-fill.low{background:var(--blue)}.res-fill.med{background:var(--orange)}.res-fill.high{background:var(--red)}
-.h-right{display:flex;align-items:center;gap:12px}
-.status-badge{display:flex;align-items:center;gap:6px;padding:6px 12px;background:rgba(52,199,89,0.15);color:var(--green);border-radius:20px;font-size:12px;font-weight:500}
-.status-dot{width:8px;height:8px;background:var(--green);border-radius:50%;animation:pulse 2s infinite}
+.h-right{display:flex;align-items:center;gap:10px}
+.status-badge{display:flex;align-items:center;gap:5px;padding:5px 10px;background:rgba(52,199,89,0.15);color:var(--green);border-radius:20px;font-size:11px;font-weight:500}
+.status-dot{width:7px;height:7px;background:var(--green);border-radius:50%;animation:pulse 2s infinite}
 @keyframes pulse{0%,100%{opacity:1}50%{opacity:0.5}}
 
-/* Sidebar */
-.s-logo{display:flex;align-items:center;gap:10px;margin-bottom:20px;padding-bottom:16px;border-bottom:1px solid var(--border)}
-.s-icon{width:36px;height:36px;background:linear-gradient(135deg,var(--blue),var(--purple));border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:18px}
-.s-name{font-size:16px;font-weight:600}
-.s-section{margin-bottom:20px}
-.s-title{font-size:11px;color:var(--text3);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:10px;padding-left:4px}
-.s-btn{display:flex;align-items:center;gap:10px;padding:10px 12px;border-radius:var(--radius2);color:var(--text2);cursor:pointer;transition:all 0.15s;margin-bottom:4px}
+.s-logo{display:flex;align-items:center;gap:9px;margin-bottom:16px;padding-bottom:14px;border-bottom:1px solid var(--border)}
+.s-icon{width:32px;height:32px;background:linear-gradient(135deg,var(--blue),var(--purple));border-radius:9px;display:flex;align-items:center;justify-content:center;font-size:16px}
+.s-name{font-size:15px;font-weight:600}
+.s-section{margin-bottom:16px}
+.s-title{font-size:10px;color:var(--text3);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:8px;padding-left:4px}
+.s-btn{display:flex;align-items:center;gap:9px;padding:9px 11px;border-radius:var(--radius2);color:var(--text2);cursor:pointer;transition:all 0.15s;margin-bottom:3px}
 .s-btn:hover{background:var(--bg3);color:var(--text)}
 .s-btn.active{background:var(--blue);color:#fff}
-.s-btn-icon{width:20px;text-align:center}
+.s-btn-icon{width:18px;text-align:center}
 
-/* KPI Row */
-.kpi-row{display:grid;grid-template-columns:repeat(4,1fr);gap:12px}
-.kpi-card{background:var(--bg3);border-radius:var(--radius2);padding:16px}
-.kpi-label{font-size:11px;color:var(--text3);text-transform:uppercase;margin-bottom:6px}
-.kpi-value{font-size:28px;font-weight:600}
-.kpi-value.blue{color:var(--blue)}.kpi-value.green{color:var(--green)}.kpi-value.orange{color:var(--orange)}.kpi-value.purple{color:var(--purple)}
-.kpi-sub{font-size:11px;color:var(--text2);margin-top:4px}
+.kpi-row{display:grid;grid-template-columns:repeat(6,1fr);gap:10px}
+.kpi-card{background:var(--bg3);border-radius:var(--radius2);padding:13px;transition:all 0.2s;border:1px solid transparent}
+.kpi-card:hover{border-color:var(--border2)}
+.kpi-label{font-size:10px;color:var(--text3);text-transform:uppercase;margin-bottom:5px}
+.kpi-value{font-size:24px;font-weight:600}
+.kpi-value.blue{color:var(--blue)}.kpi-value.green{color:var(--green)}.kpi-value.orange{color:var(--orange)}.kpi-value.purple{color:var(--purple)}.kpi-value.red{color:var(--red)}
+.kpi-sub{font-size:10px;color:var(--text2);margin-top:3px}
 
-/* Panels */
 .panel{background:var(--bg3);border-radius:var(--radius2);overflow:hidden}
-.panel-head{display:flex;justify-content:space-between;align-items:center;padding:12px 16px;border-bottom:1px solid var(--border)}
-.panel-title{font-size:13px;font-weight:600}
-.panel-badge{font-size:11px;padding:3px 8px;border-radius:6px;background:var(--bg5);color:var(--text2)}
-.panel-body{padding:12px}
+.panel-head{display:flex;justify-content:space-between;align-items:center;padding:10px 14px;border-bottom:1px solid var(--border)}
+.panel-title{font-size:12px;font-weight:600}
+.panel-badge{font-size:10px;padding:3px 7px;border-radius:6px;background:var(--bg5);color:var(--text2)}
+.panel-body{padding:10px}
 
-/* Agents */
-.agent-list{display:flex;flex-direction:column;gap:8px}
-.agent-row{display:flex;align-items:center;gap:12px;padding:12px;background:var(--bg);border-radius:var(--radius2);cursor:pointer;transition:all 0.15s}
+.btc-banner{grid-column:1/-1;background:linear-gradient(135deg,#f7931a,#ff9500);border-radius:var(--radius);padding:16px 20px;display:flex;align-items:center;justify-content:space-between}
+.btc-left{display:flex;align-items:center;gap:16px}
+.btc-icon{font-size:32px}
+.btc-label{font-size:11px;color:rgba(255,255,255,0.8);margin-bottom:2px}
+.btc-price{font-size:32px;font-weight:700}
+.btc-change{font-size:14px;margin-top:2px}
+.btc-right{text-align:right}
+.btc-fng{font-size:11px;opacity:0.8}
+.btc-fng-val{font-size:20px;font-weight:600}
+.btc-updated{font-size:10px;opacity:0.6;margin-top:4px}
+
+.agent-list{display:flex;flex-direction:column;gap:6px}
+.agent-row{display:flex;align-items:center;gap:10px;padding:10px;background:var(--bg);border-radius:var(--radius2);cursor:pointer;transition:all 0.15s}
 .agent-row:hover{background:var(--bg4)}
-.agent-dot{width:10px;height:10px;border-radius:50%;flex-shrink:0}
-.agent-dot.green{background:var(--green);box-shadow:0 0 8px var(--green);animation:pulse 2s infinite}
-.agent-dot.orange{background:var(--orange);box-shadow:0 0 8px var(--orange)}
+.agent-dot{width:9px;height:9px;border-radius:50%;flex-shrink:0}
+.agent-dot.green{background:var(--green);box-shadow:0 0 7px var(--green);animation:pulse 2s infinite}
+.agent-dot.orange{background:var(--orange);box-shadow:0 0 7px var(--orange)}
 .agent-dot.blue{background:var(--blue)}
+.agent-dot.red{background:var(--red)}
 .agent-info{flex:1;min-width:0}
-.agent-name{font-weight:500;margin-bottom:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.agent-task{font-size:12px;color:var(--text2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.agent-meta{display:flex;gap:12px;font-size:11px;color:var(--text3)}
+.agent-name{font-weight:500;margin-bottom:2px}
+.agent-task{font-size:11px;color:var(--text2)}
+.agent-meta{display:flex;gap:10px;font-size:10px;color:var(--text3)}
 .agent-cost{color:var(--green);font-weight:500}
-.agent-bar{height:3px;background:var(--bg5);border-radius:2px;margin-top:8px;overflow:hidden}
-.agent-bar-fill{height:100%;background:var(--blue);border-radius:2px;transition:width 0.3s}
 
-/* Cost Chart */
-.chart-container{display:flex;align-items:flex-end;gap:8px;height:100px;padding:10px 0}
-.chart-bar{flex:1;background:var(--bg5);border-radius:4px 4px 0 0;position:relative;transition:all 0.3s;cursor:pointer}
-.chart-bar:hover{background:var(--bg4)}
+.trades-table{width:100%;border-collapse:collapse}
+.trades-table th{text-align:left;padding:8px 10px;font-size:10px;color:var(--text3);text-transform:uppercase;border-bottom:1px solid var(--border)}
+.trades-table td{padding:10px;font-size:12px;border-bottom:1px solid var(--border)}
+.trades-table tr:last-child td{border:none}
+.trades-table tr:hover td{background:var(--bg)}
+.trade-badge{padding:3px 8px;border-radius:6px;font-size:10px;font-weight:500}
+.trade-badge.win{background:rgba(52,199,89,0.15);color:var(--green)}
+.trade-badge.loss{background:rgba(255,59,48,0.15);color:var(--red)}
+
+.chart-container{display:flex;align-items:flex-end;gap:6px;height:80px;padding:8px 0}
+.chart-bar{flex:1;background:var(--bg5);border-radius:3px 3px 0 0;position:relative;min-height:8px}
 .chart-bar.today{background:var(--blue)}
-.chart-bar .bar-fill{position:absolute;bottom:0;left:0;right:0;background:var(--blue);border-radius:4px 4px 0 0;transition:height 0.5s}
-.chart-bar.today .bar-fill{background:var(--blue)}
+.chart-bar .bar-fill{position:absolute;bottom:0;left:0;right:0;background:var(--blue);border-radius:3px 3px 0 0}
 .chart-labels{display:flex;justify-content:space-between;padding:0 4px}
-.chart-label{font-size:10px;color:var(--text3)}
-.chart-total{display:flex;justify-content:space-between;margin-top:12px;padding-top:12px;border-top:1px solid var(--border)}
-.chart-budget{font-size:12px}
+.chart-label{font-size:9px;color:var(--text3)}
+.chart-total{display:flex;justify-content:space-between;margin-top:10px;padding-top:10px;border-top:1px solid var(--border)}
+.chart-budget{font-size:11px}
 .chart-budget-label{color:var(--text2)}
 .chart-budget-val{font-weight:600}
 
-/* Cron Table */
 .cron-table{width:100%;border-collapse:collapse}
-.cron-table th{text-align:left;padding:10px 12px;font-size:11px;color:var(--text3);text-transform:uppercase;border-bottom:1px solid var(--border)}
-.cron-table td{padding:12px;font-size:13px;border-bottom:1px solid var(--border)}
+.cron-table th{text-align:left;padding:8px 10px;font-size:10px;color:var(--text3);text-transform:uppercase;border-bottom:1px solid var(--border)}
+.cron-table td{padding:10px;font-size:11px;border-bottom:1px solid var(--border)}
 .cron-table tr:last-child td{border:none}
-.cron-status{padding:4px 10px;border-radius:12px;font-size:11px;font-weight:500}
+.cron-status{padding:3px 8px;border-radius:10px;font-size:10px;font-weight:500}
 .cron-status.ready{background:rgba(52,199,89,0.15);color:var(--green)}
 .cron-status.running{background:rgba(0,122,255,0.15);color:var(--blue)}
 .cron-status.paused{background:rgba(255,149,0,0.15);color:var(--orange)}
 .cron-status.overdue{background:rgba(255,59,48,0.15);color:var(--red)}
 
-/* Channels */
-.channel-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:10px}
-.channel-card{display:flex;align-items:center;gap:10px;padding:12px;background:var(--bg);border-radius:var(--radius2)}
-.channel-icon{width:32px;height:32px;background:var(--bg4);border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:16px}
+.channel-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:8px}
+.channel-card{display:flex;align-items:center;gap:8px;padding:10px;background:var(--bg);border-radius:var(--radius2)}
+.channel-icon{width:28px;height:28px;background:var(--bg4);border-radius:7px;display:flex;align-items:center;justify-content:center;font-size:14px}
 .channel-info{flex:1}
-.channel-name{font-size:13px;font-weight:500}
-.channel-msgs{font-size:11px;color:var(--text2)}
+.channel-name{font-size:12px;font-weight:500}
+.channel-msgs{font-size:10px;color:var(--text2)}
 
-/* Logs */
-.log-list{display:flex;flex-direction:column;gap:6px;max-height:180px;overflow-y:auto}
-.log-entry{display:flex;gap:10px;font-size:12px;padding:8px 0;border-bottom:1px solid var(--border2)}
+.log-list{max-height:160px;overflow-y:auto}
+.log-entry{display:flex;gap:8px;font-size:11px;padding:6px 0;border-bottom:1px solid var(--border2)}
 .log-entry:last-child{border:none}
-.log-time{color:var(--text3);flex-shrink:0;min-width:70px}
+.log-time{color:var(--text3);flex-shrink:0;min-width:60px}
 .log-msg{color:var(--text2)}
 .log-entry.success .log-msg{color:var(--green)}
 .log-entry.warn .log-msg{color:var(--orange)}
 .log-entry.error .log-msg{color:var(--red)}
+.log-entry.info .log-msg{color:var(--blue)}
 
-/* Model Distribution */
-.model-bars{display:flex;flex-direction:column;gap:12px;margin-bottom:16px}
-.model-row{display:flex;align-items:center;gap:12px}
-.model-name{width:80px;font-size:12px;color:var(--text2)}
-.model-bar{flex:1;height:8px;background:var(--bg);border-radius:4px;overflow:hidden}
-.model-fill{height:100%;border-radius:4px;transition:width 0.5s}
+.model-bars{display:flex;flex-direction:column;gap:8px;margin-bottom:12px}
+.model-row{display:flex;align-items:center;gap:10px}
+.model-name{width:60px;font-size:11px;color:var(--text2)}
+.model-bar{flex:1;height:6px;background:var(--bg);border-radius:3px;overflow:hidden}
+.model-fill{height:100%;border-radius:3px}
 .model-fill.sonnet{background:var(--blue)}.model-fill.haiku{background:var(--teal)}.model-fill.opus{background:var(--purple)}
-.model-pct{width:40px;text-align:right;font-size:12px;font-weight:500}
-.model-stats{display:flex;gap:24px;padding-top:12px;border-top:1px solid var(--border)}
+.model-pct{width:35px;text-align:right;font-size:11px;font-weight:500}
+.model-stats{display:flex;gap:16px;padding-top:10px;border-top:1px solid var(--border)}
 .stat-item{text-align:center}
-.stat-val{font-size:18px;font-weight:600;color:var(--blue)}
-.stat-lbl{font-size:10px;color:var(--text3);text-transform:uppercase}
+.stat-val{font-size:16px;font-weight:600;color:var(--blue)}
+.stat-lbl{font-size:9px;color:var(--text3);text-transform:uppercase}
 
-/* Quick Actions */
-.actions-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:10px}
-.action-btn{display:flex;flex-direction:column;align-items:center;gap:8px;padding:16px 12px;background:var(--bg3);border-radius:var(--radius2);cursor:pointer;transition:all 0.15s;border:1px solid transparent}
+.risk-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+.risk-item{padding:10px;background:var(--bg);border-radius:var(--radius2);text-align:center}
+.risk-label{font-size:9px;color:var(--text3);text-transform:uppercase;margin-bottom:4px}
+.risk-value{font-size:18px;font-weight:600}
+.risk-value.good{color:var(--green)}.risk-value.warn{color:var(--orange)}.risk-value.bad{color:var(--red)}
+
+.actions-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:8px}
+.action-btn{display:flex;flex-direction:column;align-items:center;gap:6px;padding:12px 10px;background:var(--bg3);border-radius:var(--radius2);cursor:pointer;transition:all 0.15s;border:1px solid transparent}
 .action-btn:hover{background:var(--bg4);border-color:var(--border2);transform:translateY(-2px)}
-.action-icon{font-size:22px}
-.action-label{font-size:11px;color:var(--text2);text-align:center}
+.action-icon{font-size:20px}
+.action-label{font-size:10px;color:var(--text2);text-align:center}
 
-/* Responsive */
-@media(max-width:900px){
+.three-col{display:grid;grid-template-columns:1fr 1fr 1fr;gap:14px}
+
+@media(max-width:1000px){
 .dashboard{grid-template-columns:1fr}
 .sidebar{display:none}
-.kpi-row{grid-template-columns:repeat(2,1fr)}
-.actions-grid{grid-template-columns:repeat(2,1fr)}
+.kpi-row{grid-template-columns:repeat(3,1fr)}
+.three-col{grid-template-columns:1fr}
 }
 </style>
 </head>
 <body>
 <div class="dashboard">
-<!-- Header -->
 <header class="header">
 <div class="h-left">
 <span class="h-title">🚀 Mission Control</span>
@@ -164,26 +177,16 @@ html,body{height:100%}
 <div class="h-center">
 <span class="h-clock" id="clock">00:00:00</span>
 <div class="h-resources">
-<div class="res-item">
-<div class="res-label">CPU</div>
-<div class="res-bar"><div class="res-fill low" id="cpuBar" style="width:12%"></div></div>
-</div>
-<div class="res-item">
-<div class="res-label">RAM</div>
-<div class="res-bar"><div class="res-fill low" id="ramBar" style="width:34%"></div></div>
-</div>
-<div class="res-item">
-<div class="res-label">Disk</div>
-<div class="res-bar"><div class="res-fill med" id="diskBar" style="width:67%"></div></div>
-</div>
+<div class="res-item"><div class="res-label">CPU</div><div class="res-bar"><div class="res-fill low" id="cpuBar" style="width:12%"></div></div></div>
+<div class="res-item"><div class="res-label">RAM</div><div class="res-bar"><div class="res-fill low" id="ramBar" style="width:34%"></div></div></div>
+<div class="res-item"><div class="res-label">Disk</div><div class="res-bar"><div class="res-fill med" id="diskBar" style="width:67%"></div></div></div>
 </div>
 </div>
 <div class="h-right">
-<div class="status-badge"><span class="status-dot"></span>Online</div>
+<div class="status-badge"><span class="status-dot"></span><span>Online</span></div>
 </div>
 </header>
 
-<!-- Sidebar -->
 <aside class="sidebar">
 <div class="s-logo">
 <div class="s-icon">🚀</div>
@@ -191,125 +194,122 @@ html,body{height:100%}
 </div>
 <div class="s-section">
 <div class="s-title">Navigation</div>
-<div class="s-btn active" onclick="filterView('all')"><span class="s-btn-icon">📊</span>Overview</div>
-<div class="s-btn" onclick="filterView('agents')"><span class="s-btn-icon">🤖</span>Agents</div>
-<div class="s-btn" onclick="filterView('cost')"><span class="s-btn-icon">💰</span>Cost</div>
-<div class="s-btn" onclick="filterView('channels')"><span class="s-btn-icon">💬</span>Channels</div>
+<div class="s-btn active"><span class="s-btn-icon">📊</span>Overview</div>
+<div class="s-btn"><span class="s-btn-icon">📈</span>Trading</div>
+<div class="s-btn"><span class="s-btn-icon">🤖</span>Agents</div>
 </div>
 <div class="s-section">
 <div class="s-title">Quick</div>
-<div class="s-btn" onclick="action('newSession')"><span class="s-btn-icon">➕</span>New Session</div>
-<div class="s-btn" onclick="action('config')"><span class="s-btn-icon">⚙️</span>Config</div>
-<div class="s-btn" onclick="action('memory')"><span class="s-btn-icon">🧠</span>Memory</div>
-<div class="s-btn" onclick="action('health')"><span class="s-btn-icon">🩺</span>Health</div>
+<div class="s-btn"><span class="s-btn-icon">➕</span>New Session</div>
+<div class="s-btn"><span class="s-btn-icon">⚙️</span>Config</div>
+<div class="s-btn"><span class="s-btn-icon">🧠</span>Memory</div>
+<div class="s-btn"><span class="s-btn-icon">🩺</span>Health</div>
+</div>
+<div class="s-section">
+<div class="s-title">System</div>
+<div class="s-btn"><span class="s-btn-icon">📋</span>Logs</div>
+<div class="s-btn"><span class="s-btn-icon">⏰</span>Crons</div>
+<div class="s-btn"><span class="s-btn-icon">📦</span>Skills</div>
 </div>
 </aside>
 
-<!-- Main Content -->
 <main class="main">
-<!-- KPI Row -->
 <div class="kpi-row">
-<div class="kpi-card">
-<div class="kpi-label">Active Sessions</div>
-<div class="kpi-value blue">3</div>
-<div class="kpi-sub">1 running, 2 idle</div>
+<div class="kpi-card"><div class="kpi-label">Total P&L</div><div class="kpi-value green">+$15,399</div><div class="kpi-sub">100% Win Rate</div></div>
+<div class="kpi-card"><div class="kpi-label">Win Rate</div><div class="kpi-value blue">100%</div><div class="kpi-sub">4/4 Trades</div></div>
+<div class="kpi-card"><div class="kpi-label">Total Trades</div><div class="kpi-value">4</div><div class="kpi-sub">Last: Trade #4</div></div>
+<div class="kpi-card"><div class="kpi-label">RSI Compliance</div><div class="kpi-value orange">33%</div><div class="kpi-sub">Target: 100%</div></div>
+<div class="kpi-card"><div class="kpi-label">Avg Win</div><div class="kpi-value green">$3,850</div><div class="kpi-sub">Per Trade</div></div>
+<div class="kpi-card"><div class="kpi-label">API Calls</div><div class="kpi-value purple" id="apiCount">847</div><div class="kpi-sub">+127 this hour</div></div>
 </div>
-<div class="kpi-card">
-<div class="kpi-label">API Calls Today</div>
-<div class="kpi-value green" id="apiCount">847</div>
-<div class="kpi-sub">+127 this hour</div>
+
+<div class="btc-banner">
+<div class="btc-left">
+<div class="btc-icon">₿</div>
+<div class="btc-info">
+<div class="btc-label">Bitcoin Price</div>
+<div class="btc-price" id="btcPrice">$71,195</div>
+<div class="btc-change" id="btcChange">-4.02% (24h)</div>
 </div>
-<div class="kpi-card">
-<div class="kpi-label">Cost Today</div>
-<div class="kpi-value orange">$2.34</div>
-<div class="kpi-sub">of $50 budget</div>
 </div>
-<div class="kpi-card">
-<div class="kpi-label">Cron Jobs</div>
-<div class="kpi-value purple">3/4</div>
-<div class="kpi-sub">1 paused</div>
+<div class="btc-right">
+<div class="btc-fng">Fear & Greed</div>
+<div class="btc-fng-val" id="fngValue">28</div>
+<div class="btc-updated" id="btcUpdated">Updated: 23:52</div>
 </div>
 </div>
 
-<!-- Two Column Layout -->
-<div style="display:grid;grid-template-columns:1fr 1fr;gap:16px">
-<!-- Active Agents -->
+<div class="three-col">
 <div class="panel">
-<div class="panel-head">
-<span class="panel-title">🤖 Active Agents</span>
-<span class="panel-badge">3</span>
-</div>
+<div class="panel-head"><span class="panel-title">🤖 Active Agents</span><span class="panel-badge">5</span></div>
 <div class="panel-body">
 <div class="agent-list">
-<div class="agent-row" onclick="selectAgent('ollie')">
-<div class="agent-dot green"></div>
-<div class="agent-info">
-<div class="agent-name">Ollie (CEO)</div>
-<div class="agent-task">Leading team strategy</div>
-<div class="agent-meta"><span>12m</span><span class="agent-cost">$0.02</span></div>
-<div class="agent-bar"><div class="agent-bar-fill" style="width:45%"></div></div>
-</div>
-</div>
-<div class="agent-row" onclick="selectAgent('minty')">
-<div class="agent-dot green"></div>
-<div class="agent-info">
-<div class="agent-name">MintyTrades</div>
-<div class="agent-task">Analyzing BTC RSI signals</div>
-<div class="agent-meta"><span>3m</span><span class="agent-cost">$0.01</span></div>
-<div class="agent-bar"><div class="agent-bar-fill" style="width:72%"></div></div>
-</div>
-</div>
-<div class="agent-row" onclick="selectAgent('analyst')">
-<div class="agent-dot blue"></div>
-<div class="agent-info">
-<div class="agent-name">HiftyAnalyst</div>
-<div class="agent-task">Daily research complete</div>
-<div class="agent-meta"><span>idle</span><span class="agent-cost">$0.00</span></div>
-</div>
-</div>
+<div class="agent-row"><div class="agent-dot green"></div><div class="agent-info"><div class="agent-name">Ollie (CEO)</div><div class="agent-task">Leading team strategy</div><div class="agent-meta"><span>12m</span><span class="agent-cost">$0.02</span></div></div></div>
+<div class="agent-row"><div class="agent-dot green"></div><div class="agent-info"><div class="agent-name">MintyTrades</div><div class="agent-task">Analyzing BTC RSI signals</div><div class="agent-meta"><span>3m</span><span class="agent-cost">$0.01</span></div></div></div>
+<div class="agent-row"><div class="agent-dot blue"></div><div class="agent-info"><div class="agent-name">HiftyCodes</div><div class="agent-task">Website maintenance</div><div class="agent-meta"><span>idle</span><span>$0.00</span></div></div></div>
+<div class="agent-row"><div class="agent-dot blue"></div><div class="agent-info"><div class="agent-name">HiftyAnalyst</div><div class="agent-task">Daily research complete</div><div class="agent-meta"><span>idle</span><span>$0.00</span></div></div></div>
+<div class="agent-row"><div class="agent-dot green"></div><div class="agent-info"><div class="agent-name">HiftyRiskManager</div><div class="agent-task">Monitoring risk compliance</div><div class="agent-meta"><span>5m</span><span class="agent-cost">$0.01</span></div></div></div>
 </div>
 </div>
 </div>
 
-<!-- Cost Chart -->
 <div class="panel">
-<div class="panel-head">
-<span class="panel-title">💰 Cost This Week</span>
-<span class="panel-badge">$18.42</span>
-</div>
+<div class="panel-head"><span class="panel-title">💰 Cost This Week</span><span class="panel-badge">$18.42</span></div>
 <div class="panel-body">
 <div class="chart-container">
-<div class="chart-bar" style="height:45%"><div class="bar-fill" style="height:100%"></div></div>
-<div class="chart-bar" style="height:62%"><div class="bar-fill" style="height:100%"></div></div>
-<div class="chart-bar" style="height:38%"><div class="bar-fill" style="height:100%"></div></div>
-<div class="chart-bar" style="height:55%"><div class="bar-fill" style="height:100%"></div></div>
-<div class="chart-bar" style="height:78%"><div class="bar-fill" style="height:100%"></div></div>
-<div class="chart-bar" style="height:42%"><div class="bar-fill" style="height:100%"></div></div>
-<div class="chart-bar today" style="height:28%"><div class="bar-fill" style="height:100%"></div></div>
+<div class="chart-bar" style="height:45%"><div class="bar-fill"></div></div>
+<div class="chart-bar" style="height:62%"><div class="bar-fill"></div></div>
+<div class="chart-bar" style="height:38%"><div class="bar-fill"></div></div>
+<div class="chart-bar" style="height:55%"><div class="bar-fill"></div></div>
+<div class="chart-bar" style="height:78%"><div class="bar-fill"></div></div>
+<div class="chart-bar" style="height:42%"><div class="bar-fill"></div></div>
+<div class="chart-bar today" style="height:28%"><div class="bar-fill"></div></div>
 </div>
-<div class="chart-labels">
-<span class="chart-label">Mon</span><span class="chart-label">Tue</span><span class="chart-label">Wed</span><span class="chart-label">Thu</span><span class="chart-label">Fri</span><span class="chart-label">Sat</span><span class="chart-label">Sun</span>
-</div>
+<div class="chart-labels"><span class="chart-label">Mon</span><span class="chart-label">Tue</span><span class="chart-label">Wed</span><span class="chart-label">Thu</span><span class="chart-label">Fri</span><span class="chart-label">Sat</span><span class="chart-label">Sun</span></div>
 <div class="chart-total">
-<span class="chart-budget"><span class="chart-budget-label">Monthly Budget:</span> <span class="chart-budget-val">$350</span></span>
+<span class="chart-budget"><span class="chart-budget-label">Monthly:</span> <span class="chart-budget-val">$350</span></span>
 <span class="chart-budget"><span class="chart-budget-label">Spent:</span> <span class="chart-budget-val">$142</span> (41%)</span>
 </div>
 </div>
 </div>
+
+<div class="panel">
+<div class="panel-head"><span class="panel-title">🛡️ Risk Management</span><span class="panel-badge">SAFE</span></div>
+<div class="panel-body">
+<div class="risk-grid">
+<div class="risk-item"><div class="risk-label">Risk/Trade</div><div class="risk-value good">2%</div></div>
+<div class="risk-item"><div class="risk-label">Max DD</div><div class="risk-value good">0%</div></div>
+<div class="risk-item"><div class="risk-label">Consec Loss</div><div class="risk-value good">0</div></div>
+<div class="risk-item"><div class="risk-label">Position</div><div class="risk-value good">$200</div></div>
+<div class="risk-item"><div class="risk-label">Stop Loss</div><div class="risk-value good">2%</div></div>
+<div class="risk-item"><div class="risk-label">Portfolio</div><div class="risk-value good">LOW</div></div>
+</div>
+</div>
+</div>
 </div>
 
-<!-- Three Column Layout -->
-<div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:16px">
-<!-- Cron Jobs -->
 <div class="panel">
-<div class="panel-head">
-<span class="panel-title">⚡ Cron Jobs</span>
-<span class="panel-badge">3 Active</span>
+<div class="panel-head"><span class="panel-title">📈 Recent Trades</span><span class="panel-badge">4 Trades</span></div>
+<div class="panel-body" style="padding:0">
+<table class="trades-table">
+<thead><tr><th>#</th><th>Date</th><th>Entry</th><th>Exit</th><th>RR</th><th>P&L</th><th>Status</th></tr></thead>
+<tbody>
+<tr><td>4</td><td>Mar 18</td><td>$66,439</td><td>$67,740</td><td>2:1</td><td style="color:var(--green)">+$4,000</td><td><span class="trade-badge win">Win</span></td></tr>
+<tr><td>3</td><td>Mar 17</td><td>$82,100</td><td>$84,500</td><td>2:1</td><td style="color:var(--green)">+$4,004</td><td><span class="trade-badge win">Win</span></td></tr>
+<tr><td>2</td><td>Mar 16</td><td>$78,500</td><td>$81,940</td><td>2:1</td><td style="color:var(--green)">+$4,930</td><td><span class="trade-badge win">Win</span></td></tr>
+<tr><td>1</td><td>Mar 15</td><td>$67,200</td><td>$69,664</td><td>2:1</td><td style="color:var(--green)">+$2,465</td><td><span class="trade-badge win">Win</span></td></tr>
+</tbody>
+</table>
 </div>
+</div>
+
+<div class="three-col">
+<div class="panel">
+<div class="panel-head"><span class="panel-title">⚡ Cron Jobs</span><span class="panel-badge">3 Active</span></div>
 <div class="panel-body" style="padding:0">
 <table class="cron-table">
 <tr><th>Name</th><th>Next</th><th>Status</th></tr>
-<tr><td>Morning</td><td>8:00 AM</td><td><span class="cron-status ready">ready</span></td></tr>
+<tr><td>Morning Briefing</td><td>8:00 AM</td><td><span class="cron-status ready">ready</span></td></tr>
 <tr><td>System Check</td><td>8:00 AM</td><td><span class="cron-status running">running</span></td></tr>
 <tr><td>Weather</td><td>8:00 AM</td><td><span class="cron-status ready">ready</span></td></tr>
 <tr><td>Research</td><td>—</td><td><span class="cron-status paused">paused</span></td></tr>
@@ -317,76 +317,42 @@ html,body{height:100%}
 </div>
 </div>
 
-<!-- Channels -->
 <div class="panel">
-<div class="panel-head">
-<span class="panel-title">💬 Channels</span>
-</div>
+<div class="panel-head"><span class="panel-title">💬 Channels</span></div>
 <div class="panel-body">
 <div class="channel-grid">
-<div class="channel-card">
-<div class="channel-icon">✈️</div>
-<div class="channel-info"><div class="channel-name">Telegram</div><div class="channel-msgs">12 msgs</div></div>
-<span class="status-dot" style="background:var(--green)"></span>
-</div>
-<div class="channel-card">
-<div class="channel-icon">📱</div>
-<div class="channel-info"><div class="channel-name">WhatsApp</div><div class="channel-msgs">0 msgs</div></div>
-<span class="status-dot" style="background:var(--text3)"></span>
-</div>
-<div class="channel-card">
-<div class="channel-icon">🎮</div>
-<div class="channel-info"><div class="channel-name">Discord</div><div class="channel-msgs">5 msgs</div></div>
-<span class="status-dot" style="background:var(--green)"></span>
-</div>
-<div class="channel-card">
-<div class="channel-icon">💬</div>
-<div class="channel-info"><div class="channel-name">WebChat</div><div class="channel-msgs">3 msgs</div></div>
-<span class="status-dot" style="background:var(--green)"></span>
-</div>
+<div class="channel-card"><div class="channel-icon">✈️</div><div class="channel-info"><div class="channel-name">Telegram</div><div class="channel-msgs">12 msgs</div></div><span class="status-dot" style="background:var(--green)"></span></div>
+<div class="channel-card"><div class="channel-icon">📱</div><div class="channel-info"><div class="channel-name">WhatsApp</div><div class="channel-msgs">0 msgs</div></div><span class="status-dot" style="background:var(--text3)"></span></div>
+<div class="channel-card"><div class="channel-icon">🎮</div><div class="channel-info"><div class="channel-name">Discord</div><div class="channel-msgs">5 msgs</div></div><span class="status-dot" style="background:var(--green)"></span></div>
+<div class="channel-card"><div class="channel-icon">💬</div><div class="channel-info"><div class="channel-name">WebChat</div><div class="channel-msgs">3 msgs</div></div><span class="status-dot" style="background:var(--green)"></span></div>
 </div>
 </div>
 </div>
 
-<!-- Live Logs -->
 <div class="panel">
-<div class="panel-head">
-<span class="panel-title">📋 Live Logs</span>
-</div>
+<div class="panel-head"><span class="panel-title">📋 Live Logs</span></div>
 <div class="panel-body">
 <div class="log-list" id="logFeed">
+<div class="log-entry success"><span class="log-time">23:52:00</span><span class="log-msg">BTC Price: $71,195 (-4.02%)</span></div>
+<div class="log-entry success"><span class="log-time">23:51:00</span><span class="log-msg">Trade #4 closed: +$4,000</span></div>
+<div class="log-entry info"><span class="log-time">23:45:00</span><span class="log-msg">Risk check: All clear</span></div>
+<div class="log-entry warn"><span class="log-time">23:40:00</span><span class="log-msg">RSI Compliance at 33%</span></div>
+<div class="log-entry"><span class="log-time">23:30:00</span><span class="log-msg">Agent: Scanning signals</span></div>
 <div class="log-entry success"><span class="log-time">23:24:01</span><span class="log-msg">Session started: Ollie</span></div>
-<div class="log-entry"><span class="log-time">23:23:45</span><span class="log-msg">Cron job completed: Morning Briefing</span></div>
-<div class="log-entry success"><span class="log-time">23:22:12</span><span class="log-msg">Trade executed: +$4,000</span></div>
-<div class="log-entry warn"><span class="log-time">23:20:33</span><span class="log-msg">RSI Compliance at 33%</span></div>
-<div class="log-entry"><span class="log-time">23:18:00</span><span class="log-msg">Agent HiftyAnalyst: Research complete</span></div>
+<div class="log-entry"><span class="log-time">23:23:45</span><span class="log-msg">Cron: Morning Briefing done</span></div>
 </div>
 </div>
 </div>
 </div>
 
-<!-- Model Distribution -->
+<div class="three-col">
 <div class="panel">
-<div class="panel-head">
-<span class="panel-title">🧠 Model Distribution</span>
-</div>
+<div class="panel-head"><span class="panel-title">🧠 Model Distribution</span></div>
 <div class="panel-body">
 <div class="model-bars">
-<div class="model-row">
-<span class="model-name">Sonnet</span>
-<div class="model-bar"><div class="model-fill sonnet" style="width:52%"></div></div>
-<span class="model-pct">52%</span>
-</div>
-<div class="model-row">
-<span class="model-name">Haiku</span>
-<div class="model-bar"><div class="model-fill haiku" style="width:31%"></div></div>
-<span class="model-pct">31%</span>
-</div>
-<div class="model-row">
-<span class="model-name">Opus</span>
-<div class="model-bar"><div class="model-fill opus" style="width:17%"></div></div>
-<span class="model-pct">17%</span>
-</div>
+<div class="model-row"><span class="model-name">Sonnet</span><div class="model-bar"><div class="model-fill sonnet" style="width:52%"></div></div><span class="model-pct">52%</span></div>
+<div class="model-row"><span class="model-name">Haiku</span><div class="model-bar"><div class="model-fill haiku" style="width:31%"></div></div><span class="model-pct">31%</span></div>
+<div class="model-row"><span class="model-name">Opus</span><div class="model-bar"><div class="model-fill opus" style="width:17%"></div></div><span class="model-pct">17%</span></div>
 </div>
 <div class="model-stats">
 <div class="stat-item"><div class="stat-val">124K</div><div class="stat-lbl">Tokens</div></div>
@@ -396,21 +362,31 @@ html,body{height:100%}
 </div>
 </div>
 
-<!-- Quick Actions -->
 <div class="panel">
-<div class="panel-head">
-<span class="panel-title">⚡ Quick Actions</span>
-</div>
+<div class="panel-head"><span class="panel-title">⚡ Quick Actions</span></div>
 <div class="panel-body">
 <div class="actions-grid">
-<div class="action-btn" onclick="action('newSession')"><span class="action-icon">➕</span><span class="action-label">New Session</span></div>
-<div class="action-btn" onclick="action('config')"><span class="action-icon">⚙️</span><span class="action-label">Edit Config</span></div>
-<div class="action-btn" onclick="action('memory')"><span class="action-icon">🧠</span><span class="action-label">Memory</span></div>
-<div class="action-btn" onclick="action('health')"><span class="action-icon">🩺</span><span class="action-label">Health Check</span></div>
-<div class="action-btn" onclick="action('skills')"><span class="action-icon">📦</span><span class="action-label">Skills</span></div>
-<div class="action-btn" onclick="action('cron')"><span class="action-icon">⏰</span><span class="action-label">Add Cron</span></div>
-<div class="action-btn" onclick="action('devices')"><span class="action-icon">📱</span><span class="action-label">Devices</span></div>
-<div class="action-btn" onclick="action('updates')"><span class="action-icon">🔄</span><span class="action-label">Check Updates</span></div>
+<div class="action-btn"><span class="action-icon">➕</span><span class="action-label">New Session</span></div>
+<div class="action-btn"><span class="action-icon">⚙️</span><span class="action-label">Config</span></div>
+<div class="action-btn"><span class="action-icon">🧠</span><span class="action-label">Memory</span></div>
+<div class="action-btn"><span class="action-icon">🩺</span><span class="action-label">Health</span></div>
+<div class="action-btn"><span class="action-icon">📦</span><span class="action-label">Skills</span></div>
+<div class="action-btn"><span class="action-icon">⏰</span><span class="action-label">Add Cron</span></div>
+<div class="action-btn"><span class="action-icon">📱</span><span class="action-label">Devices</span></div>
+<div class="action-btn"><span class="action-icon">🔄</span><span class="action-label">Updates</span></div>
+</div>
+</div>
+</div>
+
+<div class="panel">
+<div class="panel-head"><span class="panel-title">💻 Session Info</span></div>
+<div class="panel-body" style="font-size:11px;color:var(--text2);line-height:1.8">
+<div><span style="color:var(--text3)">Gateway:</span> 5682</div>
+<div><span style="color:var(--text3)">Version:</span> OpenClaw v1.0</div>
+<div><span style="color:var(--text3)">Runtime:</span> Node.js v22</div>
+<div><span style="color:var(--text3)">Uptime:</span> 14 days</div>
+<div><span style="color:var(--text3)">Model:</span> MiniMax M2.5</div>
+</div>
 </div>
 </div>
 </div>
@@ -418,34 +394,38 @@ html,body{height:100%}
 </div>
 
 <script>
-// Clock
 function updateClock(){
 document.getElementById('clock').textContent=new Date().toLocaleTimeString('en-US',{hour:'2-digit',minute:'2-digit',second:'2-digit',hour12:false});
 }
 updateClock();setInterval(updateClock,1000);
 
-// Resource bars with jitter
 function jitter(val,range){return Math.max(0,Math.min(100,val+(Math.random()-0.5)*range));}
 function updateResources(){
-const cpu=jitter(12,8),ram=jitter(34,6),disk=67;
+const cpu=jitter(12,8),ram=jitter(34,6);
 document.getElementById('cpuBar').style.width=cpu+'%';
 document.getElementById('cpuBar').className='res-fill '+(cpu>80?'high':cpu>60?'med':'low');
 document.getElementById('ramBar').style.width=ram+'%';
 document.getElementById('ramBar').className='res-fill '+(ram>80?'high':ram>60?'med':'low');
-document.getElementById('diskBar').className='res-fill med';
 }
 updateResources();setInterval(updateResources,3000);
 
-// API counter
 let apiCount=847;
 setInterval(()=>{apiCount+=Math.floor(Math.random()*15);document.getElementById('apiCount').textContent=apiCount;},8000);
 
-// Actions
-function action(name){console.log('Action:',name);addLog('info','Action: '+name);}
-function filterView(view){console.log('Filter:',view);}
-function selectAgent(id){console.log('Selected agent:',id);}
+// Live BTC (Binance)
+async function fetchBTC(){
+try{
+const r=await fetch("https://api.binance.com/api/v3/ticker/24hr?symbol=BTCUSDT");
+const d=await r.json();
+const price=parseFloat(d.lastPrice).toLocaleString();
+const change=parseFloat(d.priceChangePercent).toFixed(2);
+document.getElementById('btcPrice').textContent='$'+price;
+document.getElementById('btcChange').textContent=(parseFloat(change)>=0?'+':'')+change+'% (24h)';
+document.getElementById('btcUpdated').textContent='Updated: '+new Date().toLocaleTimeString('en-US',{hour:'2-digit',minute:'2-digit',hour12:false});
+}catch(e){}
+}
+fetchBTC();setInterval(fetchBTC,30000);
 
-// Add log entry
 function addLog(type,msg){
 const list=document.getElementById('logFeed');
 const time=new Date().toLocaleTimeString('en-US',{hour12:false});
@@ -453,14 +433,9 @@ const entry=document.createElement('div');
 entry.className='log-entry '+type;
 entry.innerHTML='<span class="log-time">'+time+'</span><span class="log-msg">'+msg+'</span>';
 list.insertBefore(entry,list.firstChild);
-if(list.children.length>7)list.removeChild(list.lastChild);
+if(list.children.length>10)list.removeChild(list.lastChild);
 }
-
-// Simulate live logs
-setInterval(()=>{
-const msgs=['Processing request','Agent heartbeat','API call completed','Cron check'];
-addLog('success',msgs[Math.floor(Math.random()*msgs.length)]);
-},15000);
+setInterval(()=>{const msgs=['Processing request','Agent heartbeat','API call','Cron check'];addLog('success',msgs[Math.floor(Math.random()*msgs.length)]);},15000);
 </script>
 </body>
 </html>
