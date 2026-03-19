@@ -379,8 +379,13 @@ html,body{height:100%}
 </div>
 
 <div class="panel" style="display:flex;flex-direction:column;min-height:400px">
+<div class="panel-head"><span class="panel-title">💬 Telegram Chat</span><span class="panel-badge" id="chatStatus">Offline</span></div>
+<div class="chat-messages" id="chatMessages" style="flex:1;overflow-y:auto;padding:12px;display:flex;flex-direction:column;gap:8px;min-height:200px;max-height:280px">
+<div class="chat-empty" id="chatEmpty" style="flex:1;display:flex;align-items:center;justify-content:center;color:var(--text3);font-size:13px">Loading chat...</div>
 </div>
 <div class="chat-input-wrap" style="padding:12px;border-top:1px solid var(--border);display:flex;gap:8px">
+<input type="text" id="chatInput" placeholder="Message..." style="flex:1;background:var(--bg);border:1px solid var(--border);border-radius:20px;padding:10px 14px;color:var(--text);font-size:13px;outline:none" onkeypress="if(event.key==='Enter')chatSend()">
+<button onclick="chatSend()" style="width:40px;height:40px;background:var(--blue);border:none;border-radius:50%;color:#fff;font-size:16px;cursor:pointer">↑</button>
 </div>
 </div>
 
@@ -442,6 +447,42 @@ if(list.children.length>10)list.removeChild(list.lastChild);
 }
 setInterval(()=>{const msgs=['Processing request','Agent heartbeat','API call','Cron check'];addLog('success',msgs[Math.floor(Math.random()*msgs.length)]);},15000);
 
+// Telegram Chat Integration
+const TG_API='https://api.telegram.org/bot';
+let chatOffset=0;
+let chatPolling=false;
+let chatMessageIds=new Set();
+
+function initChat(){
+const token='8336220320:AAEdlKG4WO7AZW10WT_Ab8v6KQSi58VHeWY';
+const chatId='7140076919';
+if(token&&chatId){
+document.getElementById('chatStatus').textContent='Polling';
+document.getElementById('chatStatus').style.background='rgba(52,199,89,0.15)';
+document.getElementById('chatStatus').style.color='var(--green)';
+loadChatHistory();
+chatPoll();
+setInterval(chatPoll,10000); // Poll every 10s to avoid conflict with gateway
+}else{
+document.getElementById('chatEmpty').innerHTML='<a href="telegram-chat.html" style="color:var(--blue)">Open Telegram Chat →</a><br><span style="font-size:11px">to configure</span>';
+}
+}
+
+function loadChatHistory(){
+try{
+const msgs=JSON.parse(localStorage.getItem('oc_messages')||'[]');
+const container=document.getElementById('chatMessages');
+msgs.forEach(m=>{appendChatMsg(m.role,m.text,false);});
+}catch(e){}
+}
+
+function appendChatMsg(role,text,save=true){
+const container=document.getElementById('chatMessages');
+const empty=document.getElementById('chatEmpty');
+if(empty)empty.style.display='none';
+const msg=document.createElement('div');
+msg.style.cssText=role==='user'?'align-self:flex-end;max-width:80%':'align-self:flex-start;max-width:80%';
+msg.innerHTML=`<div style="padding:8px 12px;border-radius:14px;font-size:13px;line-height:1.4;${role==='user'?'background:var(--blue);color:#fff;border-bottom-right-radius:4px':'background:var(--bg);border:1px solid var(--border);border-bottom-left-radius:4px'}">${escapeHtml(text)}</div>`;
 container.appendChild(msg);
 container.scrollTop=container.scrollHeight;
 if(save)saveChatHistory();
@@ -450,6 +491,7 @@ if(save)saveChatHistory();
 function escapeHtml(t){return t.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')}
 
 function saveChatHistory(){
+const container=document.getElementById('chatMessages');
 const msgs=[];
 container.querySelectorAll('div[style*="align-self"]').forEach(el=>{
 const text=el.textContent;
@@ -460,33 +502,48 @@ if(msgs.length>50)msgs.splice(0,msgs.length-50);
 localStorage.setItem('oc_messages',JSON.stringify(msgs));
 }
 
+async function chatSend(){
+const input=document.getElementById('chatInput');
 const text=input.value.trim();
 if(!text)return;
-const token=localStorage.getItem('oc_bot_token');
-const chatId=localStorage.getItem('oc_chat_id');
+const token='8336220320:AAEdlKG4WO7AZW10WT_Ab8v6KQSi58VHeWY';
+const chatId='7140076919';
 if(!token||!chatId){alert('Configure Telegram chat first');return;}
 appendChatMsg('user',text);
 input.value='';
 try{
+const res=await fetch(TG_API+token+'/sendMessage',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({chat_id:chatId,text:text})});
 const data=await res.json();
+if(data.result)chatMessageIds.add(data.result.message_id);
 }catch(e){alert('Send failed');}
 }
 
-const token=localStorage.getItem('oc_bot_token');
-const chatId=localStorage.getItem('oc_chat_id');
+async function chatPoll(){
+if(chatPolling)return;
+chatPolling=true;
+const token='8336220320:AAEdlKG4WO7AZW10WT_Ab8v6KQSi58VHeWY';
+const chatId='7140076919';
+if(!token||!chatId){chatPolling=false;return;}
 try{
+const res=await fetch(TG_API+token+'/getUpdates?offset='+(chatOffset||0)+'&timeout=3&allowed_updates=["message"]');
+if(res.status===409){document.getElementById('chatStatus').textContent='Gateway';document.getElementById('chatStatus').style.background='rgba(48,209,88,0.15)';document.getElementById('chatStatus').style.color='var(--green)';chatPolling=false;return;}
 const data=await res.json();
 if(data.ok){
+document.getElementById('chatStatus').textContent='Active';
 data.result.forEach(u=>{
+chatOffset=u.update_id+1;
 const m=u.message;
 if(!m)return;
+if(chatMessageIds.has(m.message_id)){chatMessageIds.delete(m.message_id);return;}
 if(String(m.chat.id)!=String(chatId))return;
 appendChatMsg('openclaw',m.text);
 });
 }
 }catch(e){}
+chatPolling=false;
 }
 
+initChat();
 </script>
 </body>
 </html>
