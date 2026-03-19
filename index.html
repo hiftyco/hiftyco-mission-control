@@ -378,12 +378,6 @@ html,body{height:100%}
 </div>
 </div>
 
-<div class="panel" style="display:flex;flex-direction:column;min-height:400px">
-</div>
-<div class="chat-input-wrap" style="padding:12px;border-top:1px solid var(--border);display:flex;gap:8px">
-</div>
-</div>
-
 <div class="panel">
 <div class="panel-head"><span class="panel-title">💻 Session Info</span></div>
 <div class="panel-body" style="font-size:11px;color:var(--text2);line-height:1.8">
@@ -392,6 +386,7 @@ html,body{height:100%}
 <div><span style="color:var(--text3)">Runtime:</span> Node.js v22</div>
 <div><span style="color:var(--text3)">Uptime:</span> 14 days</div>
 <div><span style="color:var(--text3)">Model:</span> MiniMax M2.5</div>
+</div>
 </div>
 </div>
 </div>
@@ -441,52 +436,6 @@ list.insertBefore(entry,list.firstChild);
 if(list.children.length>10)list.removeChild(list.lastChild);
 }
 setInterval(()=>{const msgs=['Processing request','Agent heartbeat','API call','Cron check'];addLog('success',msgs[Math.floor(Math.random()*msgs.length)]);},15000);
-
-container.appendChild(msg);
-container.scrollTop=container.scrollHeight;
-if(save)saveChatHistory();
-}
-
-function escapeHtml(t){return t.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')}
-
-function saveChatHistory(){
-const msgs=[];
-container.querySelectorAll('div[style*="align-self"]').forEach(el=>{
-const text=el.textContent;
-const role=el.style.alignSelf==='flex-end'?'user':'openclaw';
-msgs.push({role,text});
-});
-if(msgs.length>50)msgs.splice(0,msgs.length-50);
-localStorage.setItem('oc_messages',JSON.stringify(msgs));
-}
-
-const text=input.value.trim();
-if(!text)return;
-const token='8336220320:AAEdlKG4WO7AZW10WT_Ab8v6KQSi58VHeWY';
-const chatId='7140076919';
-if(!token||!chatId){alert('Configure Telegram chat first');return;}
-appendChatMsg('user',text);
-input.value='';
-try{
-const data=await res.json();
-}catch(e){alert('Send failed');}
-}
-
-const token='8336220320:AAEdlKG4WO7AZW10WT_Ab8v6KQSi58VHeWY';
-const chatId='7140076919';
-try{
-const data=await res.json();
-if(data.ok){
-data.result.forEach(u=>{
-const m=u.message;
-if(!m)return;
-if(String(m.chat.id)!=String(chatId))return;
-appendChatMsg('openclaw',m.text);
-});
-}
-}catch(e){}
-}
-
 </script>
 </body>
 </html>
