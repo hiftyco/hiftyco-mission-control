@@ -1,0 +1,294 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>OLLIE // Command Center</title>
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;500;700&family=Syne:wght@700;800&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{--void:#020304;--bg0:#060a0d;--bg1:#0a1014;--bg2:#0f161b;--bg3:#141e24;--g:#00ff88;--amber:#ffb800;--red:#ff3b5c;--blue:#38bdf8;--purple:#c084fc;--text:#b8d4c8;--muted:#4d7060;--hint:#253830;--border:rgba(0,255,136,0.08);--border2:rgba(0,255,136,0.18);--display:'Syne',sans-serif;--mono:'JetBrains Mono',monospace}
+html,body{background:var(--void);color:var(--text);min-height:100vh;overflow-x:hidden}
+body{font-family:var(--mono);font-size:12px;cursor:crosshair}
+#matrix-canvas{position:fixed;inset:0;z-index:0;opacity:0.06;pointer-events:none}
+.scanline{position:fixed;top:-2px;left:0;right:0;height:1px;z-index:2;background:linear-gradient(90deg,transparent,var(--g),transparent);animation:scanDown 12s linear infinite}
+@keyframes scanDown{0%{transform:translateY(-10px)}100%{transform:translateY(100vh)}}
+#boot{position:fixed;inset:0;z-index:999;background:var(--void);display:flex;align-items:center;justify-content:center;flex-direction:column;gap:16px;transition:opacity 0.6s}
+#boot.gone{opacity:0;pointer-events:none}
+#boot-logo{font-family:var(--display);font-size:56px;font-weight:800;color:var(--g);letter-spacing:8px;text-shadow:0 0 40px var(--g)}
+#boot-tag{font-size:10px;color:var(--muted);letter-spacing:4px;text-transform:uppercase}
+#boot-terminal{font-size:10px;color:var(--muted);width:440px;min-height:100px;text-align:left}
+#boot-bar{width:440px;height:2px;background:var(--hint)}
+#boot-fill{height:100%;width:0;background:var(--g);transition:width 0.1s}
+.shell{position:relative;z-index:1;max-width:1400px;margin:0 auto;padding:16px;display:flex;flex-direction:column;gap:10px}
+.topbar{display:flex;align-items:center;justify-content:space-between;padding:10px 16px;background:linear-gradient(90deg,rgba(0,255,136,0.04),rgba(0,255,136,0.02));border:1px solid var(--border2);border-radius:2px;position:sticky;top:10px;z-index:50}
+.ollie-orb{width:36px;height:36px;border-radius:50%;position:relative;cursor:pointer}
+.ollie-orb::before{content:'';position:absolute;inset:0;border-radius:50%;border:2px solid var(--g);animation:spin 4s linear infinite}
+.orb-core{width:14px;height:14px;border-radius:50%;background:var(--g);box-shadow:0 0 12px var(--g);position:absolute;top:50%;left:50%;transform:translate(-50%,-50%)}
+@keyframes spin{to{transform:rotate(360deg)}}
+.t-brand{font-family:var(--display);font-size:16px;font-weight:800;color:var(--g);letter-spacing:3px}
+.t-sub{font-size:7px;color:var(--muted)}
+.topbar-center{display:flex;gap:12px}
+.res-item{display:flex;align-items:center;gap:4px}
+.res-lbl{font-size:7px;color:var(--muted);text-transform:uppercase}
+.res-track{width:36px;height:2px;background:var(--hint)}
+.res-fill{height:100%;border-radius:1px;transition:width 0.3s}
+.res-val{font-size:8px;min-width:24px}
+.topbar-right{display:flex;align-items:center;gap:8px}
+.chip{font-size:7px;padding:3px 6px;border-radius:2px;display:flex;align-items:center;gap:3px}
+.chip.green{background:rgba(0,255,136,0.1);color:var(--g)}
+.chip.purple{background:rgba(192,132,252,0.1);color:var(--purple)}
+.dot{width:4px;height:4px;border-radius:50%;background:currentColor}
+.clock{font-family:var(--display);font-size:14px;color:var(--g)}
+.date{font-size:7px;color:var(--muted)}
+.kpi-row{display:grid;grid-template-columns:repeat(6,1fr);gap:8px}
+.kpi{background:var(--bg1);border:1px solid var(--border);border-radius:2px;padding:10px}
+.kpi-lbl{font-size:8px;color:var(--muted);text-transform:uppercase;margin-bottom:4px}
+.kpi-val{font-family:var(--display);font-size:22px;font-weight:800;color:var(--g)}
+.kpi-val.amber{color:var(--amber)}
+.kpi-val.purple{color:var(--purple)}
+.kpi-sub{font-size:7px;color:var(--muted);margin-top:2px}
+.main-grid{display:grid;grid-template-columns:2fr 1fr 1fr;gap:10px}
+.panel{background:var(--bg1);border:1px solid var(--border);border-radius:2px;padding:12px}
+.panel-title{font-size:8px;color:var(--muted);text-transform:uppercase;letter-spacing:2px;margin-bottom:8px}
+.agent-row{display:grid;grid-template-columns:12px 1fr auto auto;gap:8px;padding:6px;border-radius:2px;align-items:center}
+.agent-row:hover{background:var(--bg2)}
+.a-dot{width:6px;height:6px;border-radius:50%}
+.a-dot.green{background:var(--g)}.a-dot.purple{background:var(--purple)}.a-dot.amber{background:var(--amber)}
+.a-name{font-size:10px;color:var(--g)}
+.a-model{font-size:7px;color:var(--muted);background:var(--bg3);padding:1px 4px;border-radius:2px;margin-left:4px}
+.a-task{font-size:8px;color:var(--muted)}
+.a-tag{font-size:7px;padding:2px 4px;border-radius:2px}
+.tag-run{background:rgba(0,255,136,0.1);color:var(--g)}.tag-auto{background:rgba(192,132,252,0.1);color:var(--purple)}
+.a-time,.a-cost{font-size:8px}
+.a-cost{color:var(--amber)}
+.timeline{display:flex;flex-direction:column;gap:4px}
+.tl-row{display:flex;gap:6px;padding:4px}
+.tl-dot{width:5px;height:5px;border-radius:50%;margin-top:3px}
+.tl-title{font-size:9px;color:var(--g)}
+.tl-meta{font-size:7px;color:var(--muted)}
+.mem-grid{display:grid;grid-template-columns:1fr 1fr;gap:6px}
+.mem-tile{background:var(--bg2);padding:8px;border-radius:2px}
+.mem-name{font-size:7px;color:var(--muted);text-transform:uppercase}
+.mem-val{font-family:var(--display);font-size:16px;color:var(--g)}
+.health-grid{display:grid;grid-template-columns:1fr 1fr;gap:6px}
+.h-item{background:var(--bg2);padding:8px;border-radius:2px;display:flex;gap:6px}
+.h-name{font-size:7px;color:var(--muted);text-transform:uppercase}
+.h-val{font-family:var(--display);font-size:12px;color:var(--g)}
+.lower-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:10px}
+.cron-row{display:flex;justify-content:space-between;padding:6px;background:var(--bg2);border-radius:2px}
+.cr-name{font-size:9px}
+.cr-next{font-size:8px;color:var(--muted)}
+.pill{font-size:7px;padding:2px 4px;border-radius:2px}
+.pill.ready{background:rgba(0,255,136,0.1);color:var(--g)}.pill.run{background:rgba(56,189,248,0.1);color:var(--blue)}.pill.auto{background:rgba(192,132,252,0.1);color:var(--purple)}
+.chan-row{display:flex;justify-content:space-between;padding:6px;background:var(--bg2);border-radius:2px}
+.ch-name{font-size:9px}
+.ch-dot{width:5px;height:5px;border-radius:50%;display:inline-block;margin-right:4px}
+.ch-dot.on{background:var(--g)}.ch-dot.off{background:var(--hint)}
+.log-list{display:flex;flex-direction:column;max-height:200px;overflow:hidden}
+.log-row{display:flex;gap:6px;padding:4px;font-size:8px}
+.log-ts{color:var(--hint);min-width:32px}
+.log-lvl{padding:1px 3px;border-radius:2px;font-size:6px}
+.lvl-ok{background:rgba(0,255,136,0.1);color:var(--g)}.lvl-inf{background:rgba(56,189,248,0.1);color:var(--blue)}.lvl-wrn{background:rgba(255,184,0,0.1);color:var(--amber)}.lvl-err{background:rgba(255,59,92,0.1);color:var(--red)}.lvl-auto{background:rgba(192,132,252,0.1);color:var(--purple)}
+.log-msg{color:var(--muted)}
+.qa-grid{display:grid;grid-template-columns:1fr 1fr;gap:4px}
+.qa-btn{background:var(--bg2);border:1px solid var(--border);padding:8px;border-radius:2px;cursor:pointer;font-size:9px;color:var(--g)}
+.qa-btn:hover{background:var(--bg3)}
+.bottom-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
+.sys-metrics{display:grid;grid-template-columns:1fr 1fr;gap:6px}
+.m-tile{background:var(--bg2);padding:8px;border-radius:2px}
+.m-val{font-family:var(--display);font-size:12px;color:var(--g)}
+.m-lbl{font-size:7px;color:var(--muted)}
+.cost-chart{display:flex;align-items:flex-end;gap:2px;height:30px}
+.c-bar{flex:1;background:var(--g);opacity:0.3;border-radius:1px 1px 0 0}
+.c-bar.today{opacity:1}
+.auto-list{display:flex;flex-direction:column;gap:4px}
+.auto-row{display:flex;gap:6px;padding:4px}
+.auto-icon{width:14px;height:14px;border-radius:50%;background:rgba(192,132,252,0.2);color:var(--purple);font-size:7px;display:flex;align-items:center;justify-content:center}
+.auto-name{font-size:9px;color:var(--purple)}
+.auto-desc{font-size:7px;color:var(--muted)}
+#ollie-modal{position:fixed;inset:0;z-index:900;background:rgba(2,3,4,0.9);display:none;align-items:center;justify-content:center}
+#ollie-modal.show{display:flex}
+.modal-card{background:var(--bg1);border:1px solid var(--border2);padding:20px;width:350px;border-radius:2px}
+.modal-title{font-family:var(--display);font-size:18px;color:var(--g);letter-spacing:3px}
+.modal-stat{background:var(--bg2);padding:10px;text-align:center;border-radius:2px;margin:10px 0}
+.modal-stat-val{font-family:var(--display);font-size:16px;color:var(--purple)}
+.modal-log{background:var(--bg0);padding:8px;max-height:100px;overflow-y:auto;font-size:8px}
+.modal-btn{background:var(--bg2);border:1px solid var(--border);color:var(--g);padding:8px;cursor:pointer;width:100%;margin-top:10px}
+#toast{position:fixed;top:16px;right:16px;z-index:800;display:flex;flex-direction:column;gap:6px}
+.toast{background:var(--bg1);border-left:2px solid var(--g);padding:10px;max-width:280px;border-radius:2px}
+.toast-label{font-size:7px;color:var(--g);text-transform:uppercase}
+.toast-msg{font-size:10px;margin-top:2px}
+@media(max-width:1200px){.main-grid{grid-template-columns:1fr 1fr}.lower-grid{grid-template-columns:1fr 1fr}}
+@media(max-width:768px){.kpi-row{grid-template-columns:repeat(2,1fr)}.topbar-center{display:none}}
+</style>
+</head>
+<body>
+<canvas id="matrix-canvas"></canvas>
+<div class="scanline"></div>
+<div id="boot">
+<div id="boot-logo">OLLIE</div>
+<div id="boot-tag">Autonomous Operations System</div>
+<div id="boot-terminal"></div>
+<div id="boot-bar"><div id="boot-fill"></div></div>
+</div>
+<div id="toast"></div>
+<div id="ollie-modal">
+<div class="modal-card">
+<div class="modal-title">OLLIE</div>
+<div style="font-size:8px;color:var(--muted);margin-top:4px">AUTONOMOUS OPERATIONS</div>
+<div class="modal-stat"><div class="modal-stat-val" id="om-auto">0</div><div style="font-size:7px;color:var(--muted)">AUTO TASKS</div></div>
+<div class="modal-stat"><div class="modal-stat-val" id="om-uptime">0h</div><div style="font-size:7px;color:var(--muted)">UPTIME</div></div>
+<div class="modal-log" id="ollie-log"></div>
+<button class="modal-btn" onclick="closeOllieModal()">CLOSE</button>
+</div>
+</div>
+<div class="shell">
+<div class="topbar">
+<div style="display:flex;align-items:center;gap:10px">
+<div class="ollie-orb" onclick="openOllieModal()"><div class="orb-core"></div></div>
+<div><div class="t-brand">OLLIE</div><div class="t-sub">v1.0.0 · Autonomous</div></div>
+</div>
+<div class="topbar-center">
+<div class="res-item"><div class="res-lbl">CPU</div><div class="res-track"><div class="res-fill" id="r-cpu" style="width:35%;background:var(--g)"></div></div><div class="res-val" id="v-cpu">35%</div></div>
+<div class="res-item"><div class="res-lbl">RAM</div><div class="res-track"><div class="res-fill" id="r-ram" style="width:52%;background:var(--g)"></div></div><div class="res-val" id="v-ram">52%</div></div>
+<div class="res-item"><div class="res-lbl">DISK</div><div class="res-track"><div class="res-fill" id="r-disk" style="width:41%;background:var(--g)"></div></div><div class="res-val" id="v-disk">41%</div></div>
+<div class="res-item"><div class="res-lbl">NET</div><div class="res-track"><div class="res-fill" id="r-net" style="width:22%;background:var(--blue)"></div></div><div class="res-val" id="v-net">22%</div></div>
+<div class="res-item"><div class="res-lbl">TEMP</div><div class="res-track"><div class="res-fill" id="r-temp" style="width:48%;background:var(--amber)"></div></div><div class="res-val" id="v-temp">48°C</div></div>
+</div>
+<div class="topbar-right">
+<div class="chip purple"><div class="dot"></div>BRIDGE</div>
+<div class="chip green"><div class="dot"></div>LIVE</div>
+<div class="chip purple"><div class="dot"></div>AUTO</div>
+<div><div class="clock" id="clock">00:00:00</div><div class="date" id="date">--- -- ----</div></div>
+</div>
+</div>
+<div style="font-size:8px;color:var(--muted);text-transform:uppercase;letter-spacing:2px;margin:4px 0">OPERATIONAL METRICS</div>
+<div class="kpi-row">
+<div class="kpi"><div class="kpi-lbl">Active Sessions</div><div class="kpi-val" id="kv-sessions">4</div><div class="kpi-sub">+2 since 09:00</div></div>
+<div class="kpi"><div class="kpi-lbl">API Calls</div><div class="kpi-val" id="kv-calls">1,284</div><div class="kpi-sub">+12% vs yesterday</div></div>
+<div class="kpi"><div class="kpi-lbl">Cost Today</div><div class="kpi-val amber" id="kv-cost">$2.41</div><div class="kpi-sub">48% of $5 cap</div></div>
+<div class="kpi"><div class="kpi-lbl">Tokens/Min</div><div class="kpi-val" id="kv-tpm">847</div><div class="kpi-sub">live burn rate</div></div>
+<div class="kpi"><div class="kpi-lbl">OLLIE Auto</div><div class="kpi-val purple" id="kv-auto">12</div><div class="kpi-sub">today</div></div>
+<div class="kpi"><div class="kpi-lbl">Error Rate</div><div class="kpi-val" id="kv-err">0.4%</div><div class="kpi-sub">stable 24h</div></div>
+</div>
+<div style="font-size:8px;color:var(--muted);text-transform:uppercase;letter-spacing:2px;margin:4px 0">AGENT OPERATIONS</div>
+<div class="main-grid">
+<div class="panel">
+<div class="panel-title">// Active Agents</div>
+<div class="agent-row"><div class="a-dot purple"></div><div><div class="a-name">OLLIE <span class="a-model">haiku</span></div><div class="a-task">Autonomous scheduler</div></div><div class="a-tag tag-auto">AUTO</div><div class="a-time">∞</div></div>
+<div class="agent-row"><div class="a-dot green"></div><div><div class="a-name">main <span class="a-model">sonnet</span></div><div class="a-task">Building dashboard</div></div><div class="a-tag tag-run">RUN</div><div class="a-time">14m</div></div>
+<div class="agent-row"><div class="a-dot green"></div><div><div class="a-name">worker-1 <span class="a-model">haiku</span></div><div class="a-task">Processing inbox</div></div><div class="a-tag tag-run">RUN</div><div class="a-time">6m</div></div>
+</div>
+<div class="panel">
+<div class="panel-title">// Session Timeline</div>
+<div class="timeline">
+<div class="tl-row"><div class="tl-dot" style="background:var(--purple)"></div><div><div class="tl-title">OLLIE self-check</div><div class="tl-meta">09:45 · AUTO</div></div></div>
+<div class="tl-row"><div class="tl-dot" style="background:var(--g)"></div><div><div class="tl-title">Gateway connected</div><div class="tl-meta">09:30 · OK</div></div>
+<div class="tl-row"><div class="tl-dot" style="background:var(--blue)"></div><div><div class="tl-title">Cron: morning-briefing</div><div class="tl-meta">09:00 · RUN</div></div>
+</div>
+<div class="divider" style="height:1px;background:var(--border);margin:8px 0"></div>
+<div class="mem-grid">
+<div class="mem-tile"><div class="mem-name">Sessions</div><div class="mem-val">4</div></div>
+<div class="mem-tile"><div class="mem-name">Cron Jobs</div><div class="mem-val">4</div></div>
+</div>
+</div>
+<div class="panel">
+<div class="panel-title">// Gateway Health</div>
+<div class="health-grid">
+<div class="h-item"><div><div class="h-name">UPTIME</div><div class="h-val">4h 32m</div></div><div><div class="h-name">LATENCY</div><div class="h-val">12ms</div></div>
+<div class="h-item"><div><div class="h-name">DEVICES</div><div class="h-val">2</div></div><div><div class="h-name">NODES</div><div class="h-val">1</div></div>
+</div>
+</div>
+</div>
+<div class="lower-grid">
+<div class="panel">
+<div class="panel-title">// Cron Jobs</div>
+<div class="cron-row"><div class="cr-name">morning-briefing</div><div class="pill ready">READY</div></div>
+<div class="cron-row"><div class="cr-name">system-check</div><div class="pill run">RUN</div></div>
+<div class="cron-row"><div class="cr-name">weather-check</div><div class="pill ready">READY</div></div>
+<div class="cron-row"><div class="cr-name">ollie-health</div><div class="pill auto">AUTO</div></div>
+</div>
+<div class="panel">
+<div class="panel-title">// Channels</div>
+<div class="chan-row"><div><span class="ch-dot on"></span><span class="ch-name">Telegram</span></div><div style="color:var(--muted)">12ms</div></div>
+<div class="chan-row"><div><span class="ch-dot on"></span><span class="ch-name">Discord</span></div><div style="color:var(--muted)">24ms</div></div>
+<div class="chan-row"><div><span class="ch-dot on"></span><span class="ch-name">WebChat</span></div><div style="color:var(--muted)">8ms</div></div>
+<div class="chan-row"><div><span class="ch-dot off"></span><span class="ch-name">Email</span></div><div style="color:var(--muted)">--</div></div>
+</div>
+<div class="panel">
+<div class="panel-title">// Log Feed</div>
+<div class="log-list" id="log-feed">
+<div class="log-row"><div class="log-ts">09:47</div><div class="log-lvl lvl-auto">AUTO</div><div class="log-msg">self-check complete</div></div>
+<div class="log-row"><div class="log-ts">09:45</div><div class="log-lvl lvl-ok">OK</div><div class="log-msg">Gateway heartbeat</div></div>
+<div class="log-row"><div class="log-ts">09:30</div><div class="log-lvl lvl-inf">INF</div><div class="log-msg">Bridge connected</div></div>
+<div class="log-row"><div class="log-ts">09:00</div><div class="log-lvl lvl-wrn">WRN</div><div class="log-msg">RSI compliance low</div></div>
+</div>
+</div>
+<div class="panel">
+<div class="panel-title">// Quick Commands</div>
+<div class="qa-grid">
+<button class="qa-btn" onclick="act('new session')">▶ New Session</button>
+<button class="qa-btn" onclick="act('show status')">⚙ Status</button>
+<button class="qa-btn" onclick="act('check memory')">◈ Memory</button>
+<button class="qa-btn" onclick="act('health check')">♥ Health</button>
+</div>
+</div>
+</div>
+<div class="bottom-grid">
+<div class="panel">
+<div class="panel-title">// System Metrics</div>
+<div class="sys-metrics">
+<div class="m-tile"><div class="m-lbl">CPU</div><div class="m-val">35%</div></div>
+<div class="m-tile"><div class="m-lbl">RAM</div><div class="m-val">4.2 / 8 GB</div></div>
+<div class="m-tile"><div class="m-lbl">DISK</div><div class="m-val">41%</div></div>
+<div class="m-tile"><div class="m-lbl">TEMP</div><div class="m-val">48°C</div></div>
+</div>
+</div>
+<div class="panel">
+<div class="panel-title">// Cost (7 Days)</div>
+<div class="cost-chart" id="cost-chart"></div>
+</div>
+<div class="panel">
+<div class="panel-title">// OLLIE Autonomous</div>
+<div class="auto-list">
+<div class="auto-row"><div class="auto-icon">◈</div><div><div class="auto-name">Self Health Check</div><div class="auto-desc">Every 15 min</div></div></div>
+<div class="auto-row"><div class="auto-icon">◈</div><div><div class="auto-name">Memory Compaction</div><div class="auto-desc">Periodic</div></div></div>
+<div class="auto-row"><div class="auto-icon">▶</div><div><div class="auto-name">Inbox Processing</div><div class="auto-desc">Ongoing</div></div></div>
+</div>
+</div>
+</div>
+</div>
+<script>
+var ollieTasks=0,startTime=Date.now();
+// Boot
+(function(){
+var lines=['INITIALIZING OLLIE AUTONOMOUS OPERATIONS SYSTEM...','LOADING OPENCLAW GATEWAY INTERFACE...','AUTHENTICATING OPERATOR — PROTOCOL v3...','CONNECTING SYSTEM BRIDGE...','STARTING OLLIE AUTONOMOUS SCHEDULER...','SYNCING AGENT SESSIONS...','CALIBRATING SYSTEM METRICS...','OLLIE IS ONLINE. ALL SYSTEMS AUTONOMOUS.'];
+var term=document.getElementById('boot-terminal'),bar=document.getElementById('boot-fill'),boot=document.getElementById('boot'),i=0;
+function next(){if(i>=lines.length){setTimeout(function(){boot.classList.add('gone');ollieLogEntry('System boot complete');},700);return;}
+var d=document.createElement('div');d.textContent='> '+lines[i];d.style.opacity='0';d.style.marginBottom='2px';term.appendChild(d);requestAnimationFrame(function(){d.style.opacity='1';});
+bar.style.width=Math.round(((i+1)/lines.length)*100)+'%';i++;setTimeout(next,i>=lines.length?700:260);}
+setTimeout(next,400);})();
+// Matrix
+(function(){var c=document.getElementById('matrix-canvas'),x=c.getContext('2d'),chars='OLLIEAUTONOMOUS01',w,h,cols,drops=[];function r(){w=c.width=window.innerWidth;h=c.height=window.innerHeight;cols=Math.floor(w/14);drops=Array(cols).fill(1)}r();window.addEventListener('resize',r);setInterval(function(){x.fillStyle='rgba(2,3,4,0.05)';x.fillRect(0,0,w,h);x.fillStyle='#00ff88';x.font='14px monospace';for(var i=0;i<cols;i++){var ch=chars[Math.floor(Math.random()*chars.length)];x.fillText(ch,i*14,drops[i]*14);if(drops[i]*14>h&&Math.random()>0.975)drops[i]=0;drops[i]++;}},80);})();
+// Clock
+(function(){function t(){var n=new Date(),d=['SUN','MON','TUE','WED','THU','FRI','SAT'],m=['JAN','FEB','MAR','APR','MAY','JUN','JUL','AUG','SEP','OCT','NOV','DEC'];document.getElementById('clock').textContent=n.toISOString().slice(11,19);document.getElementById('date').textContent=d[n.getDay()]+' '+n.getDate()+' '+m[n.getMonth()]+' '+n.getFullYear();}t();setInterval(t,1000);})();
+// Resource bars
+(function(){setInterval(function(){var cpu=30+Math.floor(Math.random()*20),ram=40+Math.floor(Math.random()*20),disk=35+Math.floor(Math.random()*10),net=10+Math.floor(Math.random()*30),tmp=40+Math.floor(Math.random()*20);document.getElementById('r-cpu').style.width=cpu+'%';document.getElementById('v-cpu').textContent=cpu+'%';document.getElementById('r-ram').style.width=ram+'%';document.getElementById('v-ram').textContent=ram+'%';document.getElementById('r-disk').style.width=disk+'%';document.getElementById('v-disk').textContent=disk+'%';document.getElementById('r-net').style.width=net+'%';document.getElementById('v-net').textContent=net+'%';document.getElementById('r-temp').style.width=tmp+'%';document.getElementById('v-temp').textContent=tmp+'°C';},3000);})();
+// Cost chart
+(function(){var c=document.getElementById('cost-chart');for(var i=0;i<7;i++){var b=document.createElement('div');b.className='c-bar'+(i===6?' today':'');b.style.height=(20+Math.floor(Math.random()*60))+'%';c.appendChild(b)}})();
+// OLLIE log
+function ollieLogEntry(msg){var l=document.getElementById('log-feed'),e=document.createElement('div');e.className='log-row';e.innerHTML='<div class="log-ts">'+new Date().toISOString().slice(11,16)+'</div><div class="log-lvl lvl-auto">AUTO</div><div class="log-msg">'+msg+'</div>';l.insertBefore(e,l.firstChild);if(l.children.length>6)l.removeChild(l.lastChild);var ol=document.getElementById('ollie-log');if(ol){var oe=document.createElement('div');oe.className='modal-log-entry';oe.innerHTML='<span>['+new Date().toISOString().slice(11,16)+']</span> '+msg;ol.insertBefore(oe,ol.firstChild);if(ol.children.length>8)ol.removeChild(ol.lastChild);}ollieTasks++;document.getElementById('kv-auto').textContent=ollieTasks;document.getElementById('om-auto').textContent=ollieTasks;document.getElementById('sb-auto').textContent=ollieTasks;}
+// Toast
+function act(prompt){var t=document.getElementById('toast'),tst=document.createElement('div');tst.className='toast';tst.innerHTML='<div class="toast-label">OLLIE</div><div class="toast-msg">'+prompt+'</div>';t.appendChild(tst);setTimeout(function(){tst.classList.add('out');setTimeout(function(){tst.remove()},200)},5000);ollieLogEntry('Command: '+prompt);}
+// Modal
+function openOllieModal(){document.getElementById('ollie-modal').classList.add('show');var up=Math.floor((Date.now()-startTime)/60000);document.getElementById('om-uptime').textContent=up+'h';}
+function closeOllieModal(){document.getElementById('ollie-modal').classList.remove('show');}
+// OLLIE auto check
+setTimeout(function(){setInterval(function(){var msgs=['self-check complete — all systems nominal','memory compaction: merged 12 stale entries','session prune: context trimmed','channel probe: all connected','cron audit: schedules verified'];ollieLogEntry(msgs[Math.floor(Math.random()*msgs.length)]);},900000);},30000);
+// Init
+ollieLogEntry('System initialized');
+// OLLIE SYSTEMS ONLINE. READY, SIR.
+</script>
+</body>
+</html>
