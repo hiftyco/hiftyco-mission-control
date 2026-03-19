@@ -282,9 +282,9 @@ function simpleHash(str) {
     return Math.abs(hash).toString(36);
 }
 
-// Encrypted credentials (hash of actual values)
-const VALID_USER_HASH = simpleHash('Ollie');
-const VALID_PASS_HASH = simpleHash('Skater49$');
+// Encrypted credentials (pre-hashed values)
+const VALID_USER_HASH = '19f04r';
+const VALID_PASS_HASH = 'ndk4h3';
 const SESSION_KEY = 'hifty_mc_session';
 
 // Check if logged in
