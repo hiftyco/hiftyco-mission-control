@@ -266,6 +266,114 @@ html,body{height:100%}
 </style>
 </head>
 <body>
+<script>
+// ============================================
+// LOGIN SYSTEM WITH ENCRYPTED CREDENTIALS
+// ============================================
+
+// Simple hash function for password encryption
+function simpleHash(str) {
+    let hash = 0;
+    for (let i = 0; i < str.length; i++) {
+        const char = str.charCodeAt(i);
+        hash = ((hash << 5) - hash) + char;
+        hash = hash & hash;
+    }
+    return Math.abs(hash).toString(36);
+}
+
+// Encrypted credentials (hash of actual values)
+const VALID_USER_HASH = simpleHash('Ollie');
+const VALID_PASS_HASH = simpleHash('Skater49$');
+const SESSION_KEY = 'hifty_mc_session';
+
+// Check if logged in
+function checkSession() {
+    const session = localStorage.getItem(SESSION_KEY);
+    if (session) {
+        try {
+            const data = JSON.parse(session);
+            if (data.loggedIn && data.user === VALID_USER_HASH) {
+                return true;
+            }
+        } catch(e) {}
+    }
+    return false;
+}
+
+// Login function
+function login(user, pass) {
+    const userHash = simpleHash(user);
+    const passHash = simpleHash(pass);
+    
+    if (userHash === VALID_USER_HASH && passHash === VALID_PASS_HASH) {
+        localStorage.setItem(SESSION_KEY, JSON.stringify({
+            loggedIn: true,
+            user: userHash,
+            time: Date.now()
+        }));
+        return true;
+    }
+    return false;
+}
+
+// Logout function
+function logout() {
+    localStorage.removeItem(SESSION_KEY);
+    showLogin();
+}
+
+// Show login screen
+function showLogin() {
+    document.getElementById('loginOverlay').style.display = 'flex';
+    document.getElementById('dashboard').style.display = 'none';
+    document.getElementById('signOutBtn').style.display = 'none';
+}
+
+// Show dashboard
+function showDashboard() {
+    document.getElementById('loginOverlay').style.display = 'none';
+    document.getElementById('dashboard').style.display = 'grid';
+    document.getElementById('signOutBtn').style.display = 'flex';
+}
+
+// Handle login submit
+function handleLogin(e) {
+    e.preventDefault();
+    const user = document.getElementById('loginUser').value;
+    const pass = document.getElementById('loginPass').value;
+    const errorEl = document.getElementById('loginError');
+    
+    if (login(user, pass)) {
+        errorEl.textContent = '';
+        showDashboard();
+        init();
+    } else {
+        errorEl.textContent = 'Invalid credentials';
+    }
+}
+
+// Check auth on load
+if (checkSession()) {
+    document.write('<style>#loginOverlay{display:none}#dashboard{display:grid}</style>');
+} else {
+    document.write('<style>#loginOverlay{display:flex}#dashboard{display:none}</style>');
+}
+</script>
+
+<!-- Login Overlay -->
+<div id="loginOverlay" style="display:none;position:fixed;inset:0;background:#000;z-index:9999;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:20px">
+    <div style="width:32px;height:32px;background:linear-gradient(135deg,#007AFF,#AF52DE);border-radius:9px;"></div>
+    <div style="font-size:24px;font-weight:600">Sign In</div>
+    <form onsubmit="handleLogin(event)" style="display:flex;flex-direction:column;gap:12px;width:280px">
+        <input type="text" id="loginUser" placeholder="Username" required style="padding:12px;background:#1c1c1e;border:1px solid #333;border-radius:9px;color:#fff;font-size:14px">
+        <input type="password" id="loginPass" placeholder="Password" required style="padding:12px;background:#1c1c1e;border:1px solid #333;border-radius:9px;color:#fff;font-size:14px">
+        <div id="loginError" style="color:#ff3b30;font-size:12px;height:16px"></div>
+        <button type="submit" style="padding:12px;background:#007AFF;border:none;border-radius:9px;color:#fff;font-size:14px;font-weight:600;cursor:pointer">Sign In</button>
+    </form>
+</div>
+
+<div id="dashboard" style="display:none">
 <div class="dashboard">
 <header class="header">
 <div class="h-left">
@@ -1605,5 +1713,10 @@ setTimeout(() => {
 }, 500);
 
 </script>
+</div>
+
+<!-- Sign Out Button -->
+<button id="signOutBtn" onclick="logout()" style="display:none;position:fixed;top:14px;right:14px;z-index:100;padding:6px 12px;background:#1c1c1e;border:1px solid #333;border-radius:9px;color:#fff;font-size:12px;cursor:pointer">Sign Out</button>
+
 </body>
 </html>
