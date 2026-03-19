@@ -220,6 +220,40 @@
         .toast-title { font-family: 'Orbitron', sans-serif; font-size: 0.8rem; font-weight: 700; margin-bottom: 0.3rem; }
         .toast-msg { font-size: 0.75rem; color: var(--cyan-dim); }
         
+        /* TEAM WORKFLOW PANEL STYLES */
+        .workflow-hierarchy { display: flex; justify-content: center; padding: 0.5rem 0; }
+        .hierarchy-level { display: flex; flex-direction: column; align-items: center; gap: 0.2rem; }
+        .hierarchy-role { padding: 0.4rem 0.8rem; border-radius: 4px; font-size: 0.7rem; font-weight: 600; letter-spacing: 0.05rem; }
+        .hierarchy-role.ceo { background: linear-gradient(135deg, rgba(240, 165, 0, 0.2) 0%, rgba(240, 165, 0, 0.1) 100%); border: 1px solid var(--gold); color: var(--gold); text-shadow: 0 0 10px var(--gold); }
+        .hierarchy-role.team-lead { background: rgba(0, 212, 255, 0.1); border: 1px solid var(--cyan-dim); color: var(--cyan); }
+        .hierarchy-role.tasks { background: rgba(0, 255, 136, 0.1); border: 1px solid var(--green); color: var(--green); }
+        .hierarchy-arrow { color: var(--cyan-dim); font-size: 0.8rem; animation: arrowPulse 1.5s ease-in-out infinite; }
+        @keyframes arrowPulse { 0%, 100% { opacity: 0.5; transform: translateY(0); } 50% { opacity: 1; transform: translateY(3px); } }
+        .role-icon { margin-right: 0.3rem; }
+        
+        .workflow-timeline { display: flex; flex-wrap: wrap; gap: 0.5rem; justify-content: center; }
+        .timeline-item { display: flex; align-items: flex-start; gap: 0.4rem; padding: 0.4rem; background: rgba(0, 212, 255, 0.05); border-left: 2px solid var(--cyan); min-width: 140px; }
+        .timeline-item.ongoing { border-left-color: var(--gold); background: rgba(240, 165, 0, 0.05); animation: ongoingPulse 2s ease-in-out infinite; }
+        @keyframes ongoingPulse { 0%, 100% { background: rgba(240, 165, 0, 0.05); } 50% { background: rgba(240, 165, 0, 0.1); } }
+        .timeline-marker { font-size: 0.9rem; }
+        .timeline-content { display: flex; flex-direction: column; }
+        .timeline-time { font-family: 'Orbitron', sans-serif; font-size: 0.6rem; color: var(--gold); font-weight: 700; }
+        .timeline-task { font-size: 0.65rem; color: var(--cyan); }
+        .timeline-agent { font-size: 0.55rem; color: var(--cyan-dim); }
+        
+        .team-status-grid { display: flex; flex-direction: column; gap: 0.4rem; }
+        .team-member { display: flex; align-items: center; gap: 0.5rem; padding: 0.4rem; background: rgba(0, 212, 255, 0.05); border-left: 3px solid var(--cyan-dim); transition: all 0.3s ease; }
+        .team-member:hover { background: rgba(0, 212, 255, 0.12); border-left-color: var(--gold); }
+        .team-member.active { border-left-color: var(--green); background: rgba(0, 255, 136, 0.08); }
+        .member-avatar { font-size: 1.2rem; width: 30px; text-align: center; }
+        .member-info { flex: 1; }
+        .member-name { font-weight: 700; font-size: 0.8rem; color: var(--cyan); }
+        .member-role { font-size: 0.55rem; color: var(--cyan-dim); }
+        .member-task { font-size: 0.6rem; color: var(--gold); font-family: 'Share Tech Mono', monospace; }
+        .member-status { width: 8px; height: 8px; border-radius: 50%; background: var(--cyan-dim); }
+        .member-status.online { background: var(--green); box-shadow: 0 0 8px var(--green); }
+        .member-status.busy { background: var(--gold); box-shadow: 0 0 8px var(--gold); animation: busyPulse 1s ease-in-out infinite; }
+        
         ::-webkit-scrollbar { width: 6px; }
         ::-webkit-scrollbar-track { background: var(--void); }
         ::-webkit-scrollbar-thumb { background: var(--cyan-dim); border-radius: 3px; }
@@ -388,6 +422,132 @@
                         </div>
                     </div>
                 </div>
+                
+                <!-- TEAM WORKFLOW PANEL -->
+                <div class="panel jarvis-panel" style="grid-column: span 2;">
+                    <div class="panel-header"><div class="panel-title">◈ TEAM WORKFLOW — HIFTY CO OPERATIONS</div><div class="panel-status online">ONLINE</div></div>
+                    
+                    <!-- Hierarchy -->
+                    <div class="jarvis-section">
+                        <div class="jarvis-section-title">◈ COMMAND HIERARCHY</div>
+                        <div class="workflow-hierarchy">
+                            <div class="hierarchy-level">
+                                <div class="hierarchy-role ceo"><span class="role-icon">👑</span>OLLIE — Chief of Command (CEO)</div>
+                                <div class="hierarchy-arrow">↓</div>
+                                <div class="hierarchy-role team-lead">TEAM LEADS</div>
+                                <div class="hierarchy-arrow">↓</div>
+                                <div class="hierarchy-role tasks">TASKS</div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Daily Schedule -->
+                    <div class="jarvis-section">
+                        <div class="jarvis-section-title">◈ DAILY SCHEDULE (TORONTO TIME)</div>
+                        <div class="workflow-timeline">
+                            <div class="timeline-item" data-time="06:00">
+                                <div class="timeline-marker">🕕</div>
+                                <div class="timeline-content">
+                                    <div class="timeline-time">06:00 AM</div>
+                                    <div class="timeline-task">HiftyAnalyst runs research</div>
+                                    <div class="timeline-agent">Agent: HiftyAnalyst</div>
+                                </div>
+                            </div>
+                            <div class="timeline-item" data-time="07:00">
+                                <div class="timeline-marker">🕖</div>
+                                <div class="timeline-content">
+                                    <div class="timeline-time">07:00 AM</div>
+                                    <div class="timeline-task">Morning meeting</div>
+                                    <div class="timeline-agent">Host: Ollie (CEO)</div>
+                                </div>
+                            </div>
+                            <div class="timeline-item" data-time="08:00">
+                                <div class="timeline-marker">🕗</div>
+                                <div class="timeline-content">
+                                    <div class="timeline-time">08:00 AM</div>
+                                    <div class="timeline-task">Cron jobs: briefing, system check, weather</div>
+                                    <div class="timeline-agent">System automated</div>
+                                </div>
+                            </div>
+                            <div class="timeline-item ongoing" data-time="ongoing">
+                                <div class="timeline-marker">⚡</div>
+                                <div class="timeline-content">
+                                    <div class="timeline-time">ONGOING</div>
+                                    <div class="timeline-task">MintyTrades finds trade setups</div>
+                                    <div class="timeline-agent">Agent: MintyTrades</div>
+                                </div>
+                            </div>
+                            <div class="timeline-item ongoing" data-time="ongoing">
+                                <div class="timeline-marker">⚡</div>
+                                <div class="timeline-content">
+                                    <div class="timeline-time">ONGOING</div>
+                                    <div class="timeline-task">HiftyRiskManager verifies risk rules</div>
+                                    <div class="timeline-agent">Agent: HiftyRiskManager</div>
+                                </div>
+                            </div>
+                            <div class="timeline-item ongoing" data-time="ongoing">
+                                <div class="timeline-marker">⚡</div>
+                                <div class="timeline-content">
+                                    <div class="timeline-time">ONGOING</div>
+                                    <div class="timeline-task">Ollie delegates tasks & makes decisions</div>
+                                    <div class="timeline-agent">Chief: Ollie</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Team Status -->
+                    <div class="jarvis-section">
+                        <div class="jarvis-section-title">◈ TEAM STATUS</div>
+                        <div class="team-status-grid">
+                            <div class="team-member active">
+                                <div class="member-avatar">👑</div>
+                                <div class="member-info">
+                                    <div class="member-name">Ollie</div>
+                                    <div class="member-role">Chief of Command</div>
+                                    <div class="member-task">Delegating tasks</div>
+                                </div>
+                                <div class="member-status online"></div>
+                            </div>
+                            <div class="team-member">
+                                <div class="member-avatar">📈</div>
+                                <div class="member-info">
+                                    <div class="member-name">MintyTrades</div>
+                                    <div class="member-role">Trading Research</div>
+                                    <div class="member-task">Finding RSI signals</div>
+                                </div>
+                                <div class="member-status"></div>
+                            </div>
+                            <div class="team-member">
+                                <div class="member-avatar">💻</div>
+                                <div class="member-info">
+                                    <div class="member-name">HiftyCodes</div>
+                                    <div class="member-role">Website Dev</div>
+                                    <div class="member-task">Building features</div>
+                                </div>
+                                <div class="member-status"></div>
+                            </div>
+                            <div class="team-member active">
+                                <div class="member-avatar">📊</div>
+                                <div class="member-info">
+                                    <div class="member-name">HiftyAnalyst</div>
+                                    <div class="member-role">Data Analysis</div>
+                                    <div class="member-task">Analyzing KPIs</div>
+                                </div>
+                                <div class="member-status busy"></div>
+                            </div>
+                            <div class="team-member">
+                                <div class="member-avatar">🛡️</div>
+                                <div class="member-info">
+                                    <div class="member-name">HiftyRiskManager</div>
+                                    <div class="member-role">Risk Management</div>
+                                    <div class="member-task">Verifying risk rules</div>
+                                </div>
+                                <div class="member-status"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
             </div>
             
             <!-- LOWER GRID -->
@@ -529,27 +689,8 @@ var SFX = (function() {
       var c = init();
       if (!c) return false;
       enabled = true;
-      // Ambient hum
-      ambientOsc = c.createOscillator();
-      ambientGain = c.createGain();
-      ambientOsc.type = 'sine';
-      ambientOsc.frequency.value = 55;
-      ambientGain.gain.value = 0.008;
-      ambientOsc.connect(ambientGain);
-      ambientGain.connect(c.destination);
-      ambientOsc.start();
-      
-      // Layer with soft pad sound
-      var padOsc = c.createOscillator();
-      var padGain = c.createGain();
-      padOsc.type = 'sine';
-      padOsc.frequency.value = 110;
-      padGain.gain.setValueAtTime(0.001, c.currentTime);
-      padGain.gain.linearRampToValueAtTime(0.004, c.currentTime + 3);
-      padOsc.connect(padGain);
-      padGain.connect(c.destination);
-      padOsc.start();
-      
+      // NO ambient background hum - sounds only on direct interaction
+      // Removed: ambientOsc and padOsc that auto-played in background
       return true;
     },
     disable: function() {
