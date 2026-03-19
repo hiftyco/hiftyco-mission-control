@@ -479,6 +479,20 @@
     </div>
     
     <script>
+// Preload voices for speech synthesis
+        var voicesLoaded = false;
+        function loadVoices() {
+          if ('speechSynthesis' in window) {
+            window.speechSynthesis.getVoices();
+            voicesLoaded = true;
+          }
+        }
+        if ('speechSynthesis' in window) {
+          window.speechSynthesis.onvoiceschanged = loadVoices;
+          loadVoices();
+        }
+        
+
         // ==================== JARVIS AUDIO ENGINE ====================
         // FIX: Proper Web Audio API initialization on user interaction
 var SFX = (function() {
@@ -491,6 +505,13 @@ var SFX = (function() {
     if (!ctx) {
       try {
         ctx = new (window.AudioContext || window.webkitAudioContext)();
+        // Create delay for reverb/echo
+        window.delayNode = ctx.createDelay();
+        window.delayNode.delayTime.value = 0.25;
+        window.delayFeedback = ctx.createGain();
+        window.delayFeedback.gain.value = 0.15;
+        window.delayNode.connect(window.delayFeedback);
+        window.delayFeedback.connect(window.delayNode);
       } catch(e) {
         console.log('Web Audio API not supported:', e);
         return null;
@@ -511,17 +532,30 @@ var SFX = (function() {
       // Ambient hum
       ambientOsc = c.createOscillator();
       ambientGain = c.createGain();
-      ambientOsc.type = 'sawtooth';
+      ambientOsc.type = 'sine';
       ambientOsc.frequency.value = 55;
-      ambientGain.gain.value = 0.015;
+      ambientGain.gain.value = 0.008;
       ambientOsc.connect(ambientGain);
       ambientGain.connect(c.destination);
       ambientOsc.start();
+      
+      // Layer with soft pad sound
+      var padOsc = c.createOscillator();
+      var padGain = c.createGain();
+      padOsc.type = 'sine';
+      padOsc.frequency.value = 110;
+      padGain.gain.setValueAtTime(0.001, c.currentTime);
+      padGain.gain.linearRampToValueAtTime(0.004, c.currentTime + 3);
+      padOsc.connect(padGain);
+      padGain.connect(c.destination);
+      padOsc.start();
+      
       return true;
     },
     disable: function() {
       enabled = false;
       if (ambientOsc) { ambientOsc.stop(); ambientOsc = null; }
+      if (padOsc) { padOsc.stop(); padOsc = null; }
     },
     isEnabled: function() { return enabled; },
     click: function() {
@@ -530,10 +564,11 @@ var SFX = (function() {
       if (!c) return;
       var osc = c.createOscillator();
       var gain = c.createGain();
-      osc.type = 'square';
-      osc.frequency.value = 800;
-      gain.gain.setValueAtTime(0.08, c.currentTime);
-      gain.gain.exponentialRampToValueAtTime(0.001, c.currentTime + 0.06);
+      osc.type = 'sine';
+      osc.frequency.value = 660;
+      gain.gain.setValueAtTime(0.001, c.currentTime);
+      gain.gain.linearRampToValueAtTime(0.03, c.currentTime + 0.01);
+      gain.gain.exponentialRampToValueAtTime(0.001, c.currentTime + 0.08);
       osc.connect(gain);
       gain.connect(c.destination);
       osc.start();
@@ -548,32 +583,36 @@ var SFX = (function() {
         var gain = c.createGain();
         osc.type = 'sine';
         osc.frequency.value = freq;
-        gain.gain.setValueAtTime(0.05, c.currentTime);
+        gain.gain.setValueAtTime(0.04, c.currentTime);
         gain.gain.exponentialRampToValueAtTime(0.001, c.currentTime + 0.08);
         osc.connect(gain);
         gain.connect(c.destination);
         osc.start();
-        osc.stop(c.currentTime + 0.08);
+        osc.stop(c.currentTime + 0.15);
+        gain.connect(window.delayNode);
       });
     },
     bootChime: function() {
       if (!enabled) return;
       var c = init();
       if (!c) return;
-      var notes = [523, 659, 784, 880, 1047, 1318, 1568];
+      var notes = [523.25, 659.25, 783.99, 1046.50]; // Bell tones
       notes.forEach(function(freq, i) {
         setTimeout(function() {
           var osc = c.createOscillator();
           var gain = c.createGain();
           osc.type = 'sine';
           osc.frequency.value = freq;
-          gain.gain.setValueAtTime(0.12, c.currentTime);
-          gain.gain.exponentialRampToValueAtTime(0.001, c.currentTime + 0.3);
+          gain.gain.setValueAtTime(0.001, c.currentTime);
+          gain.gain.linearRampToValueAtTime(0.05, c.currentTime + 0.05);
+          gain.gain.linearRampToValueAtTime(0.03, c.currentTime + 0.4);
+          gain.gain.exponentialRampToValueAtTime(0.001, c.currentTime + 0.8);
           osc.connect(gain);
           gain.connect(c.destination);
           osc.start();
-          osc.stop(c.currentTime + 0.3);
-        }, i * 80);
+          osc.stop(c.currentTime + 0.8);
+          gain.connect(window.delayNode);
+        }, i * 250);
       });
     },
     alert: function() {
@@ -586,7 +625,7 @@ var SFX = (function() {
           var gain = c.createGain();
           osc.type = 'square';
           osc.frequency.value = freq;
-          gain.gain.setValueAtTime(0.1, c.currentTime);
+          gain.gain.setValueAtTime(0.04, c.currentTime);
           gain.gain.exponentialRampToValueAtTime(0.001, c.currentTime + 0.15);
           osc.connect(gain);
           gain.connect(c.destination);
@@ -605,7 +644,7 @@ var SFX = (function() {
           var gain = c.createGain();
           osc.type = 'sine';
           osc.frequency.value = freq;
-          gain.gain.setValueAtTime(0.06, c.currentTime);
+          gain.gain.setValueAtTime(0.03, c.currentTime);
           gain.gain.exponentialRampToValueAtTime(0.001, c.currentTime + 0.05);
           osc.connect(gain);
           gain.connect(c.destination);
@@ -640,7 +679,110 @@ var SFX = (function() {
 })();
 
 // Sound toggle
-function toggleSound() {
+// ==================== JARVIS TTS - Speech Synthesis ====================
+        // Queue for managing speech messages
+        var TTS_QUEUE = [];
+        var TTS_SPEAKING = false;
+        
+        function jarvisSpeak(text) {
+          // Add to queue
+          TTS_QUEUE.push(text);
+          processTTSQueue();
+        }
+        
+        function processTTSQueue() {
+          if (TTS_SPEAKING || TTS_QUEUE.length === 0) return;
+          
+          var text = TTS_QUEUE.shift();
+          TTS_SPEAKING = true;
+          
+          // Show speech bubble
+          showSpeechBubble(text);
+          
+          // Use Web Speech API
+          if ('speechSynthesis' in window) {
+            // Cancel any ongoing speech
+            window.speechSynthesis.cancel();
+            
+            var utterance = new SpeechSynthesisUtterance(text);
+            // Soft, calm voice settings
+            utterance.rate = 0.9;  // Slightly slower
+            utterance.pitch = 1.1; // Slightly higher for JARVIS-like
+            utterance.volume = 0.8;
+            
+            // Try to find Google US English voice
+            var voices = window.speechSynthesis.getVoices();
+            var preferredVoice = voices.find(function(v) { 
+              return v.name.includes('Google') && v.name.includes('US English'); 
+            }) || voices.find(function(v) { 
+              return v.name.includes('English') && v.name.includes('US'); 
+            }) || voices[0];
+            
+            if (preferredVoice) {
+              utterance.voice = preferredVoice;
+            }
+            
+            utterance.onend = function() {
+              TTS_SPEAKING = false;
+              // Process next in queue
+              setTimeout(processTTSQueue, 300);
+            };
+            
+            utterance.onerror = function() {
+              TTS_SPEAKING = false;
+              setTimeout(processTTSQueue, 300);
+            };
+            
+            window.speechSynthesis.speak(utterance);
+          } else {
+            // Fallback - just play soft tones
+            var c = SFX.isEnabled() ? (window.AudioContext || window.webkitAudioContext) : null;
+            if (c) {
+              var notes = [440, 554, 659, 880];
+              notes.forEach(function(freq, i) {
+                setTimeout(function() {
+                  var osc = c.createOscillator();
+                  var gain = c.createGain();
+                  osc.type = 'sine';
+                  osc.frequency.value = freq;
+                  gain.gain.setValueAtTime(0.04, c.currentTime);
+                  gain.gain.exponentialRampToValueAtTime(0.001, c.currentTime + 0.2);
+                  osc.connect(gain);
+                  gain.connect(c.destination);
+                  osc.start();
+                  osc.stop(c.currentTime + 0.2);
+                }, i * 150);
+              });
+            }
+            setTimeout(function() {
+              TTS_SPEAKING = false;
+              processTTSQueue();
+            }, 800);
+          }
+        }
+        
+        function showSpeechBubble(text) {
+          // Remove existing speech bubble
+          var existing = document.querySelector('.jarvis-speech');
+          if (existing) existing.remove();
+          
+          // Add new one to JARVIS panel
+          var jarvisPanel = document.querySelector('.jarvis-panel');
+          if (!jarvisPanel) return;
+          
+          var bubble = document.createElement('div');
+          bubble.className = 'jarvis-speech';
+          bubble.textContent = text.substring(0, 50) + (text.length > 50 ? '...' : '');
+          jarvisPanel.appendChild(bubble);
+          
+          // Remove after a few seconds
+          setTimeout(function() {
+            bubble.style.animation = 'speechPop 0.3s ease reverse';
+            setTimeout(function() { bubble.remove(); }, 300);
+          }, 4000);
+        }
+
+        function toggleSound() {
   if (SFX.isEnabled()) {
     SFX.disable();
     document.getElementById('sound-toggle').classList.remove('active');
@@ -680,7 +822,8 @@ function startBootSequence() {
     if (i >= lines.length) {
       setTimeout(function() { 
         overlay.classList.add('hidden'); 
-        SFX.jarvisSpeak('systems online');
+        jarvisSpeak('Systems online. Good to go, sir.');
+            console.log('// SYSTEMS ONLINE. GOOD TO GO, SIR.');
       }, 600);
       return;
     }
@@ -924,7 +1067,7 @@ function startBootSequence() {
             const cmd = input.value.trim().toLowerCase();
             if (!cmd) return;
             
-            SFX.jarvisSpeak('command received');
+            jarvisSpeak('Command received.');
             
             const responses = {
                 'status': 'All systems operational. Gateway uptime at 99.8%.',
@@ -1035,6 +1178,7 @@ function startBootSequence() {
             setInterval(fetchMarketData, 30000);
             animateParticles();
             
+            console.log('// SYSTEMS ONLINE. GOOD TO GO, SIR.');
             // Initialize audio context on first interaction (fix for autoplay policy)
             document.addEventListener('click', function initAudioOnce() {
                 if (!SFX.isEnabled()) {
