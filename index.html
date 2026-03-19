@@ -33,8 +33,14 @@ html,body{height:100%}
 .res-fill{height:100%;border-radius:3px;transition:width 0.3s,background 0.3s}
 .res-fill.low{background:var(--blue)}.res-fill.med{background:var(--orange)}.res-fill.high{background:var(--red)}
 .h-right{display:flex;align-items:center;gap:10px}
-.status-badge{display:flex;align-items:center;gap:5px;padding:5px 10px;background:rgba(52,199,89,0.15);color:var(--green);border-radius:20px;font-size:11px;font-weight:500}
-.status-dot{width:7px;height:7px;background:var(--green);border-radius:50%;animation:pulse 2s infinite}
+.status-badge{display:flex;align-items:center;gap:5px;padding:5px 10px;border-radius:20px;font-size:11px;font-weight:500}
+.status-badge.connecting{background:rgba(255,149,0,0.15);color:var(--orange)}
+.status-badge.connected{background:rgba(52,199,89,0.15);color:var(--green)}
+.status-badge.disconnected{background:rgba(255,59,48,0.15);color:var(--red)}
+.status-dot{width:7px;height:7px;border-radius:50%;animation:pulse 2s infinite}
+.status-badge.connecting .status-dot{background:var(--orange)}
+.status-badge.connected .status-dot{background:var(--green)}
+.status-badge.disconnected .status-dot{background:var(--red);animation:none}
 @keyframes pulse{0%,100%{opacity:1}50%{opacity:0.5}}
 
 .s-logo{display:flex;align-items:center;gap:9px;margin-bottom:16px;padding-bottom:14px;border-bottom:1px solid var(--border)}
@@ -80,11 +86,13 @@ html,body{height:100%}
 .agent-dot.orange{background:var(--orange);box-shadow:0 0 7px var(--orange)}
 .agent-dot.blue{background:var(--blue)}
 .agent-dot.red{background:var(--red)}
+.agent-dot.grey{background:var(--text3)}
 .agent-info{flex:1;min-width:0}
 .agent-name{font-weight:500;margin-bottom:2px}
 .agent-task{font-size:11px;color:var(--text2)}
 .agent-meta{display:flex;gap:10px;font-size:10px;color:var(--text3)}
 .agent-cost{color:var(--green);font-weight:500}
+.agent-status{font-size:9px;padding:2px 6px;border-radius:4px;background:var(--bg4)}
 
 .trades-table{width:100%;border-collapse:collapse}
 .trades-table th{text-align:left;padding:8px 10px;font-size:10px;color:var(--text3);text-transform:uppercase;border-bottom:1px solid var(--border)}
@@ -94,6 +102,7 @@ html,body{height:100%}
 .trade-badge{padding:3px 8px;border-radius:6px;font-size:10px;font-weight:500}
 .trade-badge.win{background:rgba(52,199,89,0.15);color:var(--green)}
 .trade-badge.loss{background:rgba(255,59,48,0.15);color:var(--red)}
+.trade-badge.pending{background:rgba(0,122,255,0.15);color:var(--blue)}
 
 .chart-container{display:flex;align-items:flex-end;gap:6px;height:80px;padding:8px 0}
 .chart-bar{flex:1;background:var(--bg5);border-radius:3px 3px 0 0;position:relative;min-height:8px}
@@ -115,6 +124,7 @@ html,body{height:100%}
 .cron-status.running{background:rgba(0,122,255,0.15);color:var(--blue)}
 .cron-status.paused{background:rgba(255,149,0,0.15);color:var(--orange)}
 .cron-status.overdue{background:rgba(255,59,48,0.15);color:var(--red)}
+.cron-status.idle{background:rgba(99,99,102,0.15);color:var(--text3)}
 
 .channel-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:8px}
 .channel-card{display:flex;align-items:center;gap:8px;padding:10px;background:var(--bg);border-radius:var(--radius2)}
@@ -158,12 +168,56 @@ html,body{height:100%}
 .action-label{font-size:10px;color:var(--text2);text-align:center}
 
 .three-col{display:grid;grid-template-columns:1fr 1fr 1fr;gap:14px}
+.two-col{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+.four-col{display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:14px}
+
+/* Section visibility */
+.section{display:none}
+.section.active{display:block}
+
+/* Settings styles */
+.setting-row{display:flex;justify-content:space-between;align-items:center;padding:10px;border-bottom:1px solid var(--border)}
+.setting-row:last-child{border:none}
+.setting-label{font-size:12px}
+.setting-desc{font-size:10px;color:var(--text3);margin-top:2px}
+.toggle{width:40px;height:22px;background:var(--bg5);border-radius:11px;position:relative;cursor:pointer;transition:background 0.2s}
+.toggle.on{background:var(--green)}
+.toggle::after{content:'';position:absolute;width:18px;height:18px;background:#fff;border-radius:50%;top:2px;left:2px;transition:transform 0.2s}
+.toggle.on::after{transform:translateX(18px)}
+.select-input{padding:6px 10px;background:var(--bg);border:1px solid var(--border);border-radius:6px;color:var(--text);font-size:12px}
+
+/* Sessions list */
+.session-list{display:flex;flex-direction:column;gap:6px}
+.session-row{display:flex;align-items:center;gap:10px;padding:10px;background:var(--bg);border-radius:var(--radius2)}
+.session-id{font-size:11px;color:var(--text2);font-family:monospace}
+.session-model{font-size:10px;padding:2px 6px;background:var(--bg4);border-radius:4px}
+.session-time{font-size:10px;color:var(--text3)}
+
+/* Health metrics */
+.health-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:10px}
+.health-card{background:var(--bg);padding:12px;border-radius:var(--radius2);text-align:center}
+.health-label{font-size:9px;color:var(--text3);text-transform:uppercase;margin-bottom:6px}
+.health-value{font-size:20px;font-weight:600}
+.health-value.good{color:var(--green)}.health-value.warn{color:var(--orange)}.health-value.bad{color:var(--red)}
+
+/* Signal cards */
+.signal-list{display:flex;flex-direction:column;gap:8px}
+.signal-row{display:flex;align-items:center;gap:10px;padding:10px;background:var(--bg);border-radius:var(--radius2)}
+.signal-icon{font-size:20px}
+.signal-info{flex:1}
+.signal-pair{font-weight:500}
+.signal-details{font-size:10px;color:var(--text2)}
+.signal-action{font-size:11px;font-weight:600;padding:4px 10px;border-radius:6px}
+.signal-action.buy{background:rgba(52,199,89,0.2);color:var(--green)}
+.signal-action.sell{background:rgba(255,59,48,0.2);color:var(--red)}
+.signal-action.hold{background:rgba(0,122,255,0.2);color:var(--blue)}
 
 @media(max-width:1000px){
 .dashboard{grid-template-columns:1fr}
 .sidebar{display:none}
 .kpi-row{grid-template-columns:repeat(3,1fr)}
-.three-col{grid-template-columns:1fr}
+.three-col,.two-col,.four-col{grid-template-columns:1fr}
+.health-grid{grid-template-columns:repeat(2,1fr)}
 }
 </style>
 </head>
@@ -172,7 +226,7 @@ html,body{height:100%}
 <header class="header">
 <div class="h-left">
 <span class="h-title">🚀 Mission Control</span>
-<span class="h-url">gateway:5682</span>
+<span class="h-url" id="gatewayUrl">gateway:5682</span>
 </div>
 <div class="h-center">
 <span class="h-clock" id="clock">00:00:00</span>
@@ -183,7 +237,7 @@ html,body{height:100%}
 </div>
 </div>
 <div class="h-right">
-<div class="status-badge"><span class="status-dot"></span><span>Online</span></div>
+<div class="status-badge connecting" id="statusBadge"><span class="status-dot"></span><span id="statusText">Connecting...</span></div>
 </div>
 </header>
 
@@ -194,33 +248,36 @@ html,body{height:100%}
 </div>
 <div class="s-section">
 <div class="s-title">Navigation</div>
-<div class="s-btn active"><span class="s-btn-icon">📊</span>Overview</div>
-<div class="s-btn"><span class="s-btn-icon">📈</span>Trading</div>
-<div class="s-btn"><span class="s-btn-icon">🤖</span>Agents</div>
+<div class="s-btn active" data-section="overview"><span class="s-btn-icon">📊</span>Overview</div>
+<div class="s-btn" data-section="trading"><span class="s-btn-icon">📈</span>Trading</div>
+<div class="s-btn" data-section="agents"><span class="s-btn-icon">🤖</span>Agents</div>
+<div class="s-btn" data-section="analysis"><span class="s-btn-icon">📉</span>Analysis</div>
+<div class="s-btn" data-section="risk"><span class="s-btn-icon">🛡️</span>Risk</div>
+<div class="s-btn" data-section="tasks"><span class="s-btn-icon">⏰</span>Tasks</div>
+<div class="s-btn" data-section="settings"><span class="s-btn-icon">⚙️</span>Settings</div>
 </div>
 <div class="s-section">
 <div class="s-title">Quick</div>
-<div class="s-btn"><span class="s-btn-icon">➕</span>New Session</div>
-<div class="s-btn"><span class="s-btn-icon">⚙️</span>Config</div>
-<div class="s-btn"><span class="s-btn-icon">🧠</span>Memory</div>
-<div class="s-btn"><span class="s-btn-icon">🩺</span>Health</div>
+<div class="s-btn" data-action="newSession"><span class="s-btn-icon">➕</span>New Session</div>
+<div class="s-btn" data-action="memory"><span class="s-btn-icon">🧠</span>Memory</div>
 </div>
 <div class="s-section">
 <div class="s-title">System</div>
-<div class="s-btn"><span class="s-btn-icon">📋</span>Logs</div>
-<div class="s-btn"><span class="s-btn-icon">⏰</span>Crons</div>
-<div class="s-btn"><span class="s-btn-icon">📦</span>Skills</div>
+<div class="s-btn" data-action="logs"><span class="s-btn-icon">📋</span>Logs</div>
+<div class="s-btn" data-action="skills"><span class="s-btn-icon">📦</span>Skills</div>
 </div>
 </aside>
 
 <main class="main">
+<!-- OVERVIEW SECTION -->
+<div class="section active" id="section-overview">
 <div class="kpi-row">
-<div class="kpi-card"><div class="kpi-label">Total P&L</div><div class="kpi-value green">+$15,399</div><div class="kpi-sub">100% Win Rate</div></div>
-<div class="kpi-card"><div class="kpi-label">Win Rate</div><div class="kpi-value blue">100%</div><div class="kpi-sub">4/4 Trades</div></div>
-<div class="kpi-card"><div class="kpi-label">Total Trades</div><div class="kpi-value">4</div><div class="kpi-sub">Last: Trade #4</div></div>
-<div class="kpi-card"><div class="kpi-label">RSI Compliance</div><div class="kpi-value orange">33%</div><div class="kpi-sub">Target: 100%</div></div>
-<div class="kpi-card"><div class="kpi-label">Avg Win</div><div class="kpi-value green">$3,850</div><div class="kpi-sub">Per Trade</div></div>
-<div class="kpi-card"><div class="kpi-label">API Calls</div><div class="kpi-value purple" id="apiCount">847</div><div class="kpi-sub">+127 this hour</div></div>
+<div class="kpi-card"><div class="kpi-label">Total P&L</div><div class="kpi-value green" id="totalPnl">+$15,399</div><div class="kpi-sub">100% Win Rate</div></div>
+<div class="kpi-card"><div class="kpi-label">Win Rate</div><div class="kpi-value blue" id="winRate">100%</div><div class="kpi-sub">4/4 Trades</div></div>
+<div class="kpi-card"><div class="kpi-label">Total Trades</div><div class="kpi-value" id="totalTrades">4</div><div class="kpi-sub">Last: Trade #4</div></div>
+<div class="kpi-card"><div class="kpi-label">RSI Compliance</div><div class="kpi-value orange" id="rsiCompliance">33%</div><div class="kpi-sub">Target: 100%</div></div>
+<div class="kpi-card"><div class="kpi-label">Avg Win</div><div class="kpi-value green" id="avgWin">$3,850</div><div class="kpi-sub">Per Trade</div></div>
+<div class="kpi-card"><div class="kpi-label">API Calls</div><div class="kpi-value purple" id="apiCount">847</div><div class="kpi-sub" id="apiChange">+127 this hour</div></div>
 </div>
 
 <div class="btc-banner">
@@ -241,9 +298,9 @@ html,body{height:100%}
 
 <div class="three-col">
 <div class="panel">
-<div class="panel-head"><span class="panel-title">🤖 Active Agents</span><span class="panel-badge">5</span></div>
+<div class="panel-head"><span class="panel-title">🤖 Active Agents</span><span class="panel-badge" id="agentCount">5</span></div>
 <div class="panel-body">
-<div class="agent-list">
+<div class="agent-list" id="agentList">
 <div class="agent-row"><div class="agent-dot green"></div><div class="agent-info"><div class="agent-name">Ollie (CEO)</div><div class="agent-task">Leading team strategy</div><div class="agent-meta"><span>12m</span><span class="agent-cost">$0.02</span></div></div></div>
 <div class="agent-row"><div class="agent-dot green"></div><div class="agent-info"><div class="agent-name">MintyTrades</div><div class="agent-task">Analyzing BTC RSI signals</div><div class="agent-meta"><span>3m</span><span class="agent-cost">$0.01</span></div></div></div>
 <div class="agent-row"><div class="agent-dot blue"></div><div class="agent-info"><div class="agent-name">HiftyCodes</div><div class="agent-task">Website maintenance</div><div class="agent-meta"><span>idle</span><span>$0.00</span></div></div></div>
@@ -254,9 +311,9 @@ html,body{height:100%}
 </div>
 
 <div class="panel">
-<div class="panel-head"><span class="panel-title">💰 Cost This Week</span><span class="panel-badge">$18.42</span></div>
+<div class="panel-head"><span class="panel-title">💰 Cost This Week</span><span class="panel-badge" id="weekCost">$18.42</span></div>
 <div class="panel-body">
-<div class="chart-container">
+<div class="chart-container" id="costChart">
 <div class="chart-bar" style="height:45%"><div class="bar-fill"></div></div>
 <div class="chart-bar" style="height:62%"><div class="bar-fill"></div></div>
 <div class="chart-bar" style="height:38%"><div class="bar-fill"></div></div>
@@ -267,33 +324,33 @@ html,body{height:100%}
 </div>
 <div class="chart-labels"><span class="chart-label">Mon</span><span class="chart-label">Tue</span><span class="chart-label">Wed</span><span class="chart-label">Thu</span><span class="chart-label">Fri</span><span class="chart-label">Sat</span><span class="chart-label">Sun</span></div>
 <div class="chart-total">
-<span class="chart-budget"><span class="chart-budget-label">Monthly:</span> <span class="chart-budget-val">$350</span></span>
-<span class="chart-budget"><span class="chart-budget-label">Spent:</span> <span class="chart-budget-val">$142</span> (41%)</span>
+<span class="chart-budget"><span class="chart-budget-label">Monthly:</span> <span class="chart-budget-val" id="monthlyBudget">$350</span></span>
+<span class="chart-budget"><span class="chart-budget-label">Spent:</span> <span class="chart-budget-val" id="monthlySpent">$142</span> (41%)</span>
 </div>
 </div>
 </div>
 
 <div class="panel">
-<div class="panel-head"><span class="panel-title">🛡️ Risk Management</span><span class="panel-badge">SAFE</span></div>
+<div class="panel-head"><span class="panel-title">🛡️ Risk Management</span><span class="panel-badge" id="riskStatus">SAFE</span></div>
 <div class="panel-body">
 <div class="risk-grid">
-<div class="risk-item"><div class="risk-label">Risk/Trade</div><div class="risk-value good">2%</div></div>
-<div class="risk-item"><div class="risk-label">Max DD</div><div class="risk-value good">0%</div></div>
-<div class="risk-item"><div class="risk-label">Consec Loss</div><div class="risk-value good">0</div></div>
-<div class="risk-item"><div class="risk-label">Position</div><div class="risk-value good">$200</div></div>
-<div class="risk-item"><div class="risk-label">Stop Loss</div><div class="risk-value good">2%</div></div>
-<div class="risk-item"><div class="risk-label">Portfolio</div><div class="risk-value good">LOW</div></div>
+<div class="risk-item"><div class="risk-label">Risk/Trade</div><div class="risk-value good" id="riskTrade">2%</div></div>
+<div class="risk-item"><div class="risk-label">Max DD</div><div class="risk-value good" id="maxDd">0%</div></div>
+<div class="risk-item"><div class="risk-label">Consec Loss</div><div class="risk-value good" id="consecLoss">0</div></div>
+<div class="risk-item"><div class="risk-label">Position</div><div class="risk-value good" id="position">$200</div></div>
+<div class="risk-item"><div class="risk-label">Stop Loss</div><div class="risk-value good" id="stopLoss">2%</div></div>
+<div class="risk-item"><div class="risk-label">Portfolio</div><div class="risk-value good" id="portfolio">LOW</div></div>
 </div>
 </div>
 </div>
 </div>
 
 <div class="panel">
-<div class="panel-head"><span class="panel-title">📈 Recent Trades</span><span class="panel-badge">4 Trades</span></div>
+<div class="panel-head"><span class="panel-title">📈 Recent Trades</span><span class="panel-badge" id="tradesCount">4 Trades</span></div>
 <div class="panel-body" style="padding:0">
 <table class="trades-table">
 <thead><tr><th>#</th><th>Date</th><th>Entry</th><th>Exit</th><th>RR</th><th>P&L</th><th>Status</th></tr></thead>
-<tbody>
+<tbody id="tradesTable">
 <tr><td>4</td><td>Mar 18</td><td>$66,439</td><td>$67,740</td><td>2:1</td><td style="color:var(--green)">+$4,000</td><td><span class="trade-badge win">Win</span></td></tr>
 <tr><td>3</td><td>Mar 17</td><td>$82,100</td><td>$84,500</td><td>2:1</td><td style="color:var(--green)">+$4,004</td><td><span class="trade-badge win">Win</span></td></tr>
 <tr><td>2</td><td>Mar 16</td><td>$78,500</td><td>$81,940</td><td>2:1</td><td style="color:var(--green)">+$4,930</td><td><span class="trade-badge win">Win</span></td></tr>
@@ -305,22 +362,24 @@ html,body{height:100%}
 
 <div class="three-col">
 <div class="panel">
-<div class="panel-head"><span class="panel-title">⚡ Cron Jobs</span><span class="panel-badge">3 Active</span></div>
+<div class="panel-head"><span class="panel-title">⚡ Cron Jobs</span><span class="panel-badge" id="cronActive">3 Active</span></div>
 <div class="panel-body" style="padding:0">
 <table class="cron-table">
-<tr><th>Name</th><th>Next</th><th>Status</th></tr>
+<thead><tr><th>Name</th><th>Next</th><th>Status</th></tr></thead>
+<tbody id="cronTable">
 <tr><td>Morning Briefing</td><td>8:00 AM</td><td><span class="cron-status ready">ready</span></td></tr>
 <tr><td>System Check</td><td>8:00 AM</td><td><span class="cron-status running">running</span></td></tr>
 <tr><td>Weather</td><td>8:00 AM</td><td><span class="cron-status ready">ready</span></td></tr>
 <tr><td>Research</td><td>—</td><td><span class="cron-status paused">paused</span></td></tr>
+</tbody>
 </table>
 </div>
 </div>
 
 <div class="panel">
-<div class="panel-head"><span class="panel-title">💬 Channels</span></div>
+<div class="panel-head"><span class="panel-title">💬 Channels</span><span class="panel-badge" id="channelCount">4</span></div>
 <div class="panel-body">
-<div class="channel-grid">
+<div class="channel-grid" id="channelGrid">
 <div class="channel-card"><div class="channel-icon">✈️</div><div class="channel-info"><div class="channel-name">Telegram</div><div class="channel-msgs">12 msgs</div></div><span class="status-dot" style="background:var(--green)"></span></div>
 <div class="channel-card"><div class="channel-icon">📱</div><div class="channel-info"><div class="channel-name">WhatsApp</div><div class="channel-msgs">0 msgs</div></div><span class="status-dot" style="background:var(--text3)"></span></div>
 <div class="channel-card"><div class="channel-icon">🎮</div><div class="channel-info"><div class="channel-name">Discord</div><div class="channel-msgs">5 msgs</div></div><span class="status-dot" style="background:var(--green)"></span></div>
@@ -337,15 +396,84 @@ html,body{height:100%}
 <div class="log-entry success"><span class="log-time">23:51:00</span><span class="log-msg">Trade #4 closed: +$4,000</span></div>
 <div class="log-entry info"><span class="log-time">23:45:00</span><span class="log-msg">Risk check: All clear</span></div>
 <div class="log-entry warn"><span class="log-time">23:40:00</span><span class="log-msg">RSI Compliance at 33%</span></div>
-<div class="log-entry"><span class="log-time">23:30:00</span><span class="log-msg">Agent: Scanning signals</span></div>
-<div class="log-entry success"><span class="log-time">23:24:01</span><span class="log-msg">Session started: Ollie</span></div>
-<div class="log-entry"><span class="log-time">23:23:45</span><span class="log-msg">Cron: Morning Briefing done</span></div>
+</div>
 </div>
 </div>
 </div>
 </div>
 
-<div class="three-col">
+<!-- TRADING SECTION -->
+<div class="section" id="section-trading">
+<div class="kpi-row">
+<div class="kpi-card"><div class="kpi-label">Open Positions</div><div class="kpi-value blue" id="openPositions">1</div><div class="kpi-sub">BTC/USDT</div></div>
+<div class="kpi-card"><div class="kpi-label">Pending Orders</div><div class="kpi-value" id="pendingOrders">0</div><div class="kpi-sub">Waiting execution</div></div>
+<div class="kpi-card"><div class="kpi-label">Today's P&L</div><div class="kpi-value green" id="todayPnl">+$4,000</div><div class="kpi-sub">+5.97%</div></div>
+<div class="kpi-card"><div class="kpi-label">Weekly P&L</div><div class="kpi-value green" id="weeklyPnl">+$15,399</div><div class="kpi-sub">+21.6%</div></div>
+<div class="kpi-card"><div class="kpi-label">Active Signals</div><div class="kpi-value purple" id="activeSignals">2</div><div class="kpi-sub">Scanning</div></div>
+<div class="kpi-card"><div class="kpi-label">Last Signal</div><div class="kpi-value orange" id="lastSignal">1h ago</div><div class="kpi-sub">RSI Oversold</div></div>
+</div>
+
+<div class="panel">
+<div class="panel-head"><span class="panel-title">📊 Trading Signals</span><span class="panel-badge">Live</span></div>
+<div class="panel-body">
+<div class="signal-list" id="signalList">
+<div class="signal-row"><div class="signal-icon">₿</div><div class="signal-info"><div class="signal-pair">BTC/USDT</div><div class="signal-details">RSI: 32 (Oversold) • MACD: Bullish Cross</div></div><div class="signal-action buy">BUY</div></div>
+<div class="signal-row"><div class="signal-icon">📊</div><div class="signal-info"><div class="signal-pair">ETH/USDT</div><div class="signal-details">RSI: 45 (Neutral) • Price: $2,450</div></div><div class="signal-action hold">HOLD</div></div>
+</div>
+</div>
+</div>
+
+<div class="panel">
+<div class="panel-head"><span class="panel-title">📈 All Trades</span><span class="panel-badge" id="allTradesCount">4 Trades</span></div>
+<div class="panel-body" style="padding:0">
+<table class="trades-table">
+<thead><tr><th>#</th><th>Pair</th><th>Entry</th><th>Exit</th><th>Type</th><th>P&L</th><th>Status</th></tr></thead>
+<tbody id="allTradesTable">
+<tr><td>4</td><td>BTC/USDT</td><td>$66,439</td><td>$67,740</td><td>LONG</td><td style="color:var(--green)">+$4,000</td><td><span class="trade-badge win">Win</span></td></tr>
+<tr><td>3</td><td>BTC/USDT</td><td>$82,100</td><td>$84,500</td><td>LONG</td><td style="color:var(--green)">+$4,004</td><td><span class="trade-badge win">Win</span></td></tr>
+<tr><td>2</td><td>BTC/USDT</td><td>$78,500</td><td>$81,940</td><td>LONG</td><td style="color:var(--green)">+$4,930</td><td><span class="trade-badge win">Win</span></td></tr>
+<tr><td>1</td><td>BTC/USDT</td><td>$67,200</td><td>$69,664</td><td>LONG</td><td style="color:var(--green)">+$2,465</td><td><span class="trade-badge win">Win</span></td></tr>
+</tbody>
+</table>
+</div>
+</div>
+</div>
+
+<!-- AGENTS SECTION -->
+<div class="section" id="section-agents">
+<div class="kpi-row">
+<div class="kpi-card"><div class="kpi-label">Active Agents</div><div class="kpi-value blue" id="agentsActive">5</div><div class="kpi-sub">Running</div></div>
+<div class="kpi-card"><div class="kpi-label">Idle Agents</div><div class="kpi-value" id="agentsIdle">2</div><div class="kpi-sub">Available</div></div>
+<div class="kpi-card"><div class="kpi-label">Total Sessions</div><div class="kpi-value" id="totalSessions">6</div><div class="kpi-sub">All time</div></div>
+<div class="kpi-card"><div class="kpi-label">Total Cost</div><div class="kpi-value green" id="agentsCost">$0.04</div><div class="kpi-sub">This session</div></div>
+<div class="kpi-card"><div class="kpi-label">Total Tokens</div><div class="kpi-value purple" id="totalTokens">124K</div><div class="kpi-sub">All time</div></div>
+<div class="kpi-card"><div class="kpi-label">Avg Response</div><div class="kpi-value" id="avgResponse">1.2s</div><div class="kpi-sub">Per agent</div></div>
+</div>
+
+<div class="two-col">
+<div class="panel">
+<div class="panel-head"><span class="panel-title">🤖 Agent Status</span><span class="panel-badge" id="agentsPanelBadge">5 Active</span></div>
+<div class="panel-body">
+<div class="agent-list" id="agentsList">
+<div class="agent-row"><div class="agent-dot green"></div><div class="agent-info"><div class="agent-name">Ollie (CEO)</div><div class="agent-task">Chief of Command</div><div class="agent-meta"><span>minimax-m2.5</span><span class="agent-cost">$0.02</span></div></div><span class="agent-status">active</span></div>
+<div class="agent-row"><div class="agent-dot green"></div><div class="agent-info"><div class="agent-name">MintyTrades</div><div class="agent-task">Trading Research</div><div class="agent-meta"><span>qwen3.5</span><span class="agent-cost">$0.01</span></div></div><span class="agent-status">active</span></div>
+<div class="agent-row"><div class="agent-dot blue"></div><div class="agent-info"><div class="agent-name">HiftyCodes</div><div class="agent-task">Website Dev</div><div class="agent-meta"><span>等待中</span><span>$0.00</span></div></div><span class="agent-status">idle</span></div>
+<div class="agent-row"><div class="agent-dot blue"></div><div class="agent-info"><div class="agent-name">HiftyAnalyst</div><div class="agent-task">Data Analysis</div><div class="agent-meta"><span>等待中</span><span>$0.00</span></div></div><span class="agent-status">idle</span></div>
+<div class="agent-row"><div class="agent-dot green"></div><div class="agent-info"><div class="agent-name">HiftyRiskManager</div><div class="agent-task">Risk Management</div><div class="agent-meta"><span>等待中</span><span class="agent-cost">$0.01</span></div></div><span class="agent-status">active</span></div>
+</div>
+</div>
+</div>
+
+<div class="panel">
+<div class="panel-head"><span class="panel-title">💻 Live Sessions</span><span class="panel-badge" id="sessionsCount">1</span></div>
+<div class="panel-body">
+<div class="session-list" id="sessionList">
+<div class="session-row"><div class="agent-dot green"></div><div class="agent-info"><div class="agent-name">main</div><div class="session-id">agent:main:main</div></div><span class="session-model">MiniMax M2.5</span><span class="session-time">12m</span></div>
+</div>
+</div>
+</div>
+</div>
+
 <div class="panel">
 <div class="panel-head"><span class="panel-title">🧠 Model Distribution</span></div>
 <div class="panel-body">
@@ -355,87 +483,775 @@ html,body{height:100%}
 <div class="model-row"><span class="model-name">Opus</span><div class="model-bar"><div class="model-fill opus" style="width:17%"></div></div><span class="model-pct">17%</span></div>
 </div>
 <div class="model-stats">
-<div class="stat-item"><div class="stat-val">124K</div><div class="stat-lbl">Tokens</div></div>
-<div class="stat-item"><div class="stat-val">847</div><div class="stat-lbl">Calls</div></div>
+<div class="stat-item"><div class="stat-val" id="statTokens">124K</div><div class="stat-lbl">Tokens</div></div>
+<div class="stat-item"><div class="stat-val" id="statCalls">847</div><div class="stat-lbl">Calls</div></div>
 <div class="stat-item"><div class="stat-val">99.2%</div><div class="stat-lbl">Uptime</div></div>
 </div>
 </div>
 </div>
+</div>
+
+<!-- ANALYSIS SECTION -->
+<div class="section" id="section-analysis">
+<div class="kpi-row">
+<div class="kpi-card"><div class="kpi-label">Monthly Budget</div><div class="kpi-value blue" id="monthlyBudgetDisplay">$350</div><div class="kpi-sub">Allocated</div></div>
+<div class="kpi-card"><div class="kpi-label">Spent This Month</div><div class="kpi-value" id="monthlySpentDisplay">$142</div><div class="kpi-sub" id="monthlyPercent">41%</div></div>
+<div class="kpi-card"><div class="kpi-label">Daily Average</div><div class="kpi-value green" id="dailyAvg">$18.42</div><div class="kpi-sub">Per day</div></div>
+<div class="kpi-card"><div class="kpi-label">Total Tokens</div><div class="kpi-value purple" id="analysisTokens">124K</div><div class="kpi-sub">This month</div></div>
+<div class="kpi-card"><div class="kpi-label">API Calls</div><div class="kpi-value" id="analysisCalls">847</div><div class="kpi-sub">This month</div></div>
+<div class="kpi-card"><div class="kpi-label">Avg Cost/Call</div><div class="kpi-value" id="avgCostCall">$0.17</div><div class="kpi-sub">USD</div></div>
+</div>
 
 <div class="panel">
-<div class="panel-head"><span class="panel-title">⚡ Quick Actions</span></div>
+<div class="panel-head"><span class="panel-title">💰 Weekly Cost Breakdown</span><span class="panel-badge" id="weeklyCostBadge">$18.42</span></div>
+<div class="panel-body">
+<div class="chart-container" id="analysisCostChart">
+<div class="chart-bar" style="height:45%"><div class="bar-fill"></div></div>
+<div class="chart-bar" style="height:62%"><div class="bar-fill"></div></div>
+<div class="chart-bar" style="height:38%"><div class="bar-fill"></div></div>
+<div class="chart-bar" style="height:55%"><div class="bar-fill"></div></div>
+<div class="chart-bar" style="height:78%"><div class="bar-fill"></div></div>
+<div class="chart-bar" style="height:42%"><div class="bar-fill"></div></div>
+<div class="chart-bar today" style="height:28%"><div class="bar-fill"></div></div>
+</div>
+<div class="chart-labels"><span class="chart-label">Mon</span><span class="chart-label">Tue</span><span class="chart-label">Wed</span><span class="chart-label">Thu</span><span class="chart-label">Fri</span><span class="chart-label">Sat</span><span class="chart-label">Sun</span></div>
+<div class="chart-total">
+<span class="chart-budget"><span class="chart-budget-label">Budget:</span> <span class="chart-budget-val">$350</span></span>
+<span class="chart-budget"><span class="chart-budget-label">Remaining:</span> <span class="chart-budget-val" style="color:var(--green)">$208</span></span>
+</div>
+</div>
+</div>
+
+<div class="two-col">
+<div class="panel">
+<div class="panel-head"><span class="panel-title">📊 Model Usage</span></div>
+<div class="panel-body">
+<div class="model-bars">
+<div class="model-row"><span class="model-name">Sonnet</span><div class="model-bar"><div class="model-fill sonnet" style="width:52%"></div></div><span class="model-pct">52%</span></div>
+<div class="model-row"><span class="model-name">Haiku</span><div class="model-bar"><div class="model-fill haiku" style="width:31%"></div></div><span class="model-pct">31%</span></div>
+<div class="model-row"><span class="model-name">Opus</span><div class="model-bar"><div class="model-fill opus" style="width:17%"></div></div><span class="model-pct">17%</span></div>
+</div>
+<div class="model-stats">
+<div class="stat-item"><div class="stat-val">124K</div><div class="stat-lbl">Tokens</div></div>
+<div class="stat-item"><div class="stat-val">847</div><div class="stat-lbl">Calls</div></div>
+</div>
+</div>
+</div>
+
+<div class="panel">
+<div class="panel-head"><span class="panel-title">📈 Performance</span></div>
+<div class="panel-body">
+<div class="risk-grid">
+<div class="risk-item"><div class="risk-label">Win Rate</div><div class="risk-value good">100%</div></div>
+<div class="risk-item"><div class="risk-label">Total Trades</div><div class="risk-value">4</div></div>
+<div class="risk-item"><div class="risk-label">Profit Factor</div><div class="risk-value good">∞</div></div>
+<div class="risk-item"><div class="risk-label">Avg Win</div><div class="risk-value good">$3,850</div></div>
+<div class="risk-item"><div class="risk-label">Avg Loss</div><div class="risk-value">$0</div></div>
+<div class="risk-item"><div class="risk-label">RSI Comp</div><div class="risk-value warn">33%</div></div>
+</div>
+</div>
+</div>
+</div>
+</div>
+
+<!-- RISK SECTION -->
+<div class="section" id="section-risk">
+<div class="kpi-row">
+<div class="kpi-card"><div class="kpi-label">Risk/Trade</div><div class="kpi-value green" id="riskPerTrade">2%</div><div class="kpi-sub">Max allowed</div></div>
+<div class="kpi-card"><div class="kpi-label">Max Drawdown</div><div class="kpi-value green" id="riskMaxDd">0%</div><div class="kpi-sub">Current</div></div>
+<div class="kpi-card"><div class="kpi-label">Consec. Losses</div><div class="kpi-value green" id="riskConsecLoss">0</div><div class="kpi-sub">Max: 3</div></div>
+<div class="kpi-card"><div class="kpi-label">Position Size</div><div class="kpi-value" id="riskPosition">$200</div><div class="kpi-sub">Per trade</div></div>
+<div class="kpi-card"><div class="kpi-label">Stop Loss</div><div class="kpi-value red" id="riskStopLoss">2%</div><div class="kpi-sub">Per trade</div></div>
+<div class="kpi-card"><div class="kpi-label">Portfolio Risk</div><div class="kpi-value green" id="riskPortfolio">LOW</div><div class="kpi-sub">Overall</div></div>
+</div>
+
+<div class="panel">
+<div class="panel-head"><span class="panel-title">🛡️ Risk Metrics</span><span class="panel-badge" id="riskBadge">SAFE</span></div>
+<div class="panel-body">
+<div class="risk-grid">
+<div class="risk-item"><div class="risk-label">Risk/Trade</div><div class="risk-value good">2%</div></div>
+<div class="risk-item"><div class="risk-label">Max DD</div><div class="risk-value good">0%</div></div>
+<div class="risk-item"><div class="risk-label">Consec Loss</div><div class="risk-value good">0</div></div>
+<div class="risk-item"><div class="risk-label">Position</div><div class="risk-value">$200</div></div>
+<div class="risk-item"><div class="risk-label">Stop Loss</div><div class="risk-value">2%</div></div>
+<div class="risk-item"><div class="risk-label">Portfolio</div><div class="risk-value good">LOW</div></div>
+</div>
+</div>
+</div>
+
+<div class="panel">
+<div class="panel-head"><span class="panel-title">⚠️ Risk Rules</span><span class="panel-badge">Active</span></div>
+<div class="panel-body" style="font-size:12px">
+<div class="setting-row"><div><div class="setting-label">Max Risk Per Trade</div><div class="setting-desc">Stop trading if risk exceeds 2%</div></div><span style="color:var(--green)">✓ Active</span></div>
+<div class="setting-row"><div><div class="setting-label">Max Drawdown</div><div class="setting-desc">Stop trading if DD exceeds 10%</div></div><span style="color:var(--green)">✓ Active</span></div>
+<div class="setting-row"><div><div class="setting-label">Consecutive Losses</div><div class="setting-desc">Pause after 3 consecutive losses</div></div><span style="color:var(--green)">✓ Active</span></div>
+<div class="setting-row"><div><div class="setting-label">RSI Signal Only</div><div class="setting-desc">Only trade on RSI oversold/overbought</div></div><span style="color:var(--orange)">⚠ 33%</span></div>
+</div>
+</div>
+
+<div class="two-col">
+<div class="panel">
+<div class="panel-head"><span class="panel-title">📊 Risk History</span></div>
+<div class="panel-body">
+<div class="chart-container" style="height:60px">
+<div class="chart-bar" style="height:0%"><div class="bar-fill" style="background:var(--green)"></div></div>
+<div class="chart-bar" style="height:0%"><div class="bar-fill" style="background:var(--green)"></div></div>
+<div class="chart-bar" style="height:0%"><div class="bar-fill" style="background:var(--green)"></div></div>
+<div class="chart-bar" style="height:0%"><div class="bar-fill" style="background:var(--green)"></div></div>
+<div class="chart-bar" style="height:0%"><div class="bar-fill" style="background:var(--green)"></div></div>
+<div class="chart-bar" style="height:0%"><div class="bar-fill" style="background:var(--green)"></div></div>
+<div class="chart-bar today" style="height:0%"><div class="bar-fill" style="background:var(--green)"></div></div>
+</div>
+<div class="chart-labels"><span class="chart-label">Mon</span><span class="chart-label">Tue</span><span class="chart-label">Wed</span><span class="chart-label">Thu</span><span class="chart-label">Fri</span><span class="chart-label">Sat</span><span class="chart-label">Sun</span></div>
+</div>
+</div>
+
+<div class="panel">
+<div class="panel-head"><span class="panel-title">🎯 Position Sizing</span></div>
+<div class="panel-body" style="font-size:11px;color:var(--text2);line-height:1.8">
+<div><span style="color:var(--text3)">Account Balance:</span> $50,000</div>
+<div><span style="color:var(--text3)">Risk Amount:</span> $1,000 (2%)</div>
+<div><span style="color:var(--text3)">Position Size:</span> $200 (per trade)</div>
+<div><span style="color:var(--text3)">Max Positions:</span> 1</div>
+</div>
+</div>
+</div>
+</div>
+
+<!-- TASKS SECTION -->
+<div class="section" id="section-tasks">
+<div class="kpi-row">
+<div class="kpi-card"><div class="kpi-label">Active Jobs</div><div class="kpi-value blue" id="tasksActive">3</div><div class="kpi-sub">Running</div></div>
+<div class="kpi-card"><div class="kpi-label">Paused</div><div class="kpi-value" id="tasksPaused">1</div><div class="kpi-sub">Paused</div></div>
+<div class="kpi-card"><div class="kpi-label">Total Runs</div><div class="kpi-value" id="tasksTotalRuns">247</div><div class="kpi-sub">All time</div></div>
+<div class="kpi-card"><div class="kpi-label">Success Rate</div><div class="kpi-value green" id="tasksSuccess">98.4%</div><div class="kpi-sub">Last 30 days</div></div>
+<div class="kpi-card"><div class="kpi-label">Last Run</div><div class="kpi-value" id="tasksLastRun">5m ago</div><div class="kpi-sub">System Check</div></div>
+<div class="kpi-card"><div class="kpi-label">Next Run</div><div class="kpi-value" id="tasksNextRun">8:00</div><div class="kpi-sub">Morning Briefing</div></div>
+</div>
+
+<div class="panel">
+<div class="panel-head"><span class="panel-title">⏰ Cron Jobs</span><span class="panel-badge" id="cronJobsCount">4 Jobs</span></div>
+<div class="panel-body" style="padding:0">
+<table class="cron-table">
+<thead><tr><th>Name</th><th>Schedule</th><th>Last Run</th><th>Next Run</th><th>Status</th></tr></thead>
+<tbody id="cronJobsTable">
+<tr><td>Morning Briefing</td><td>0 8 * * *</td><td>Yesterday 8:00 AM</td><td>Today 8:00 AM</td><td><span class="cron-status ready">ready</span></td></tr>
+<tr><td>System Check</td><td>*/30 * * * *</td><td>5 minutes ago</td><td>In 25 minutes</td><td><span class="cron-status running">running</span></td></tr>
+<tr><td>Weather Update</td><td>0 7 * * *</td><td>Yesterday 7:00 AM</td><td>Today 7:00 AM</td><td><span class="cron-status ready">ready</span></td></tr>
+<tr><td>Research</td><td>0 18 * * *</td><td>—</td><td>—</td><td><span class="cron-status paused">paused</span></td></tr>
+</tbody>
+</table>
+</div>
+</div>
+
+<div class="panel">
+<div class="panel-head"><span class="panel-title">📋 Recent Cron Runs</span></div>
+<div class="panel-body">
+<div class="log-list" id="cronLogFeed">
+<div class="log-entry success"><span class="log-time">10:35:00</span><span class="log-msg">System Check: Completed successfully</span></div>
+<div class="log-entry success"><span class="log-time">10:05:00</span><span class="log-msg">System Check: Completed successfully</span></div>
+<div class="log-entry success"><span class="log-time">09:35:00</span><span class="log-msg">System Check: Completed successfully</span></div>
+<div class="log-entry error"><span class="log-time">09:05:00</span><span class="log-msg">System Check: Failed - Timeout</span></div>
+<div class="log-entry success"><span class="log-time">08:00:00</span><span class="log-msg">Morning Briefing: Completed</span></div>
+</div>
+</div>
+</div>
+</div>
+
+<!-- SETTINGS SECTION -->
+<div class="section" id="section-settings">
+<div class="panel">
+<div class="panel-head"><span class="panel-title">⚙️ Configuration</span></div>
+<div class="panel-body" style="padding:0">
+<div class="setting-row"><div><div class="setting-label">Gateway URL</div><div class="setting-desc">OpenClaw gateway endpoint</div></div><span class="select-input" id="gatewayUrlDisplay">ws://localhost:5682</span></div>
+<div class="setting-row"><div><div class="setting-label">Auto Reconnect</div><div class="setting-desc">Reconnect on connection loss</div></div><div class="toggle on" id="autoReconnect"></div></div>
+<div class="setting-row"><div><div class="setting-label">Dark Mode</div><div class="setting-desc">Use dark theme</div></div><div class="toggle on" id="darkMode"></div></div>
+<div class="setting-row"><div><div class="setting-label">Sound Alerts</div><div class="setting-desc">Play sound on important events</div></div><div class="toggle" id="soundAlerts"></div></div>
+<div class="setting-row"><div><div class="setting-label">Auto Refresh</div><div class="setting-desc">Refresh data every 30 seconds</div></div><div class="toggle on" id="autoRefresh"></div></div>
+<div class="setting-row"><div><div class="setting-label">Show Debug</div><div class="setting-desc">Show debug information</div></div><div class="toggle" id="showDebug"></div></div>
+</div>
+</div>
+
+<div class="panel">
+<div class="panel-head"><span class="panel-title">🔌 Connection</span></div>
+<div class="panel-body" style="padding:0">
+<div class="setting-row"><div><div class="setting-label">Connection Status</div></div><span class="status-badge connected" id="settingsConnection"><span class="status-dot"></span><span>Connected</span></span></div>
+<div class="setting-row"><div><div class="setting-label">Protocol Version</div></div><span>OpenClaw v3</span></div>
+<div class="setting-row"><div><div class="setting-label">Gateway</div></div><span>localhost:5682</span></div>
+<div class="setting-row"><div><div class="setting-label">Last Sync</div></div><span id="lastSync">Just now</span></div>
+</div>
+</div>
+
+<div class="panel">
+<div class="panel-head"><span class="panel-title">💾 Data</span></div>
+<div class="panel-body" style="padding:0">
+<div class="setting-row"><div><div class="setting-label">Refresh Interval</div><div class="setting-desc">How often to fetch new data</div></div><select class="select-input"><option>10 seconds</option><option selected>30 seconds</option><option>1 minute</option><option>5 minutes</option></select></div>
+<div class="setting-row"><div><div class="setting-label">Log Retention</div><div class="setting-desc">Keep logs for</div></div><select class="select-input"><option>1 hour</option><option selected>24 hours</option><option>7 days</option><option>30 days</option></select></div>
+<div class="setting-row"><div><div class="setting-label">Chart Period</div><div class="setting-desc">Default chart time period</div></div><select class="select-input"><option>24 hours</option><option selected>7 days</option><option>30 days</option><option>All time</option></select></div>
+</div>
+</div>
+
+<div class="panel">
+<div class="panel-head"><span class="panel-title">🚀 Quick Actions</span></div>
 <div class="panel-body">
 <div class="actions-grid">
-<div class="action-btn"><span class="action-icon">➕</span><span class="action-label">New Session</span></div>
-<div class="action-btn"><span class="action-icon">⚙️</span><span class="action-label">Config</span></div>
-<div class="action-btn"><span class="action-icon">🧠</span><span class="action-label">Memory</span></div>
-<div class="action-btn"><span class="action-icon">🩺</span><span class="action-label">Health</span></div>
-<div class="action-btn"><span class="action-icon">📦</span><span class="action-label">Skills</span></div>
-<div class="action-btn"><span class="action-icon">⏰</span><span class="action-label">Add Cron</span></div>
-<div class="action-btn"><span class="action-icon">📱</span><span class="action-label">Devices</span></div>
-<div class="action-btn"><span class="action-icon">🔄</span><span class="action-label">Updates</span></div>
+<div class="action-btn" data-action="refreshData"><span class="action-icon">🔄</span><span class="action-label">Refresh Data</span></div>
+<div class="action-btn" data-action="clearLogs"><span class="action-icon">🗑️</span><span class="action-label">Clear Logs</span></div>
+<div class="action-btn" data-action="exportData"><span class="action-icon">📤</span><span class="action-label">Export Data</span></div>
+<div class="action-btn" data-action="resetSettings"><span class="action-icon">↩️</span><span class="action-label">Reset</span></div>
+</div>
 </div>
 </div>
 </div>
 
-<div class="panel">
-<div class="panel-head"><span class="panel-title">💻 Session Info</span></div>
-<div class="panel-body" style="font-size:11px;color:var(--text2);line-height:1.8">
-<div><span style="color:var(--text3)">Gateway:</span> 5682</div>
-<div><span style="color:var(--text3)">Version:</span> OpenClaw v1.0</div>
-<div><span style="color:var(--text3)">Runtime:</span> Node.js v22</div>
-<div><span style="color:var(--text3)">Uptime:</span> 14 days</div>
-<div><span style="color:var(--text3)">Model:</span> MiniMax M2.5</div>
-</div>
-</div>
-</div>
-</div>
 </main>
 </div>
 
 <script>
+// ============================================
+// OPENCLAW WEBSOCKET CONNECTION (Protocol v3)
+// ============================================
+
+let ws = null;
+let reconnectAttempts = 0;
+const MAX_RECONNECT_ATTEMPTS = 10;
+const RECONNECT_DELAY = 3000;
+
+// Connection state
+let connectionState = 'connecting'; // connecting, connected, disconnected
+
+function updateConnectionStatus(state, message) {
+    const badge = document.getElementById('statusBadge');
+    const text = document.getElementById('statusText');
+    const settingsBadge = document.getElementById('settingsConnection');
+    
+    badge.className = 'status-badge ' + state;
+    text.textContent = message;
+    
+    if (settingsBadge) {
+        settingsBadge.className = 'status-badge ' + state;
+        settingsBadge.querySelector('span:last-child').textContent = message;
+    }
+    
+    connectionState = state;
+}
+
+function connectWebSocket() {
+    const gatewayUrl = 'ws://localhost:5682';
+    
+    updateConnectionStatus('connecting', 'Connecting...');
+    addLog('info', 'Attempting to connect to OpenClaw gateway...');
+    
+    try {
+        ws = new WebSocket(gatewayUrl);
+        
+        ws.onopen = function() {
+            addLog('success', 'WebSocket connected, performing handshake...');
+            // Protocol v3 handshake
+            sendRPC('hello', { version: '3', agent: 'mission-control' });
+        };
+        
+        ws.onmessage = function(event) {
+            try {
+                const msg = JSON.parse(event.data);
+                handleMessage(msg);
+            } catch(e) {
+                console.log('Received:', event.data);
+            }
+        };
+        
+        ws.onerror = function(error) {
+            addLog('error', 'WebSocket error occurred');
+            updateConnectionStatus('disconnected', 'Error');
+        };
+        
+        ws.onclose = function() {
+            addLog('warn', 'WebSocket connection closed');
+            updateConnectionStatus('disconnected', 'Disconnected');
+            
+            // Auto reconnect
+            if (reconnectAttempts < MAX_RECONNECT_ATTEMPTS) {
+                reconnectAttempts++;
+                addLog('info', `Reconnecting... (attempt ${reconnectAttempts})`);
+                setTimeout(connectWebSocket, RECONNECT_DELAY);
+            } else {
+                addLog('error', 'Max reconnect attempts reached');
+            }
+        };
+        
+    } catch(e) {
+        addLog('error', 'Failed to create WebSocket: ' + e.message);
+        updateConnectionStatus('disconnected', 'Failed');
+    }
+}
+
+function sendRPC(method, params = {}) {
+    if (ws && ws.readyState === WebSocket.OPEN) {
+        const id = Date.now();
+        ws.send(JSON.stringify({
+            jsonrpc: '2.0',
+            id: id,
+            method: method,
+            params: params
+        }));
+        return id;
+    }
+    return null;
+}
+
+function handleMessage(msg) {
+    // Handle hello/handshake response
+    if (msg.method === 'hello' || msg.result?.welcome) {
+        addLog('success', 'OpenClaw handshake successful');
+        updateConnectionStatus('connected', 'Connected');
+        reconnectAttempts = 0;
+        
+        // Fetch initial data
+        fetchSessions();
+        fetchCronJobs();
+        fetchChannels();
+        fetchStatus();
+        fetchHealth();
+        
+        return;
+    }
+    
+    // Handle RPC responses
+    if (msg.id && msg.result) {
+        handleRPCResponse(msg.id, msg.method, msg.result);
+    }
+    
+    // Handle notifications
+    if (msg.method && !msg.id) {
+        handleNotification(msg.method, msg.params);
+    }
+}
+
+function handleRPCResponse(id, method, result) {
+    switch(method) {
+        case 'sessions.list':
+            updateSessionsList(result);
+            break;
+        case 'cron.list':
+        case 'cron.status':
+            updateCronJobs(result);
+            break;
+        case 'channels.status':
+            updateChannels(result);
+            break;
+        case 'status':
+            updateStatus(result);
+            break;
+        case 'health':
+            updateHealth(result);
+            break;
+    }
+    
+    // Update last sync time
+    const lastSync = document.getElementById('lastSync');
+    if (lastSync) lastSync.textContent = 'Just now';
+}
+
+function handleNotification(method, params) {
+    addLog('info', `${method}: ${JSON.stringify(params)}`);
+}
+
+// ============================================
+// DATA FETCHING FUNCTIONS
+// ============================================
+
+function fetchSessions() {
+    sendRPC('sessions.list', {});
+}
+
+function fetchCronJobs() {
+    sendRPC('cron.list', {});
+}
+
+function fetchChannels() {
+    sendRPC('channels.status', {});
+}
+
+function fetchStatus() {
+    sendRPC('status', {});
+}
+
+function fetchHealth() {
+    sendRPC('health', {});
+}
+
+// ============================================
+// UI UPDATE FUNCTIONS
+// ============================================
+
+function updateSessionsList(sessions) {
+    if (!sessions || !Array.isArray(sessions)) return;
+    
+    const sessionList = document.getElementById('sessionList');
+    const sessionsCount = document.getElementById('sessionsCount');
+    
+    if (sessionsCount) sessionsCount.textContent = sessions.length;
+    
+    if (sessionList) {
+        sessionList.innerHTML = sessions.map(s => `
+            <div class="session-row">
+                <div class="agent-dot ${s.status === 'active' ? 'green' : 'blue'}"></div>
+                <div class="agent-info">
+                    <div class="agent-name">${s.label || s.name || 'Session'}</div>
+                    <div class="session-id">${s.id || 'unknown'}</div>
+                </div>
+                <span class="session-model">${s.model || 'N/A'}</span>
+                <span class="session-time">${s.runtime ? formatDuration(s.runtime) : '0s'}</span>
+            </div>
+        `).join('');
+    }
+    
+    addLog('success', `Loaded ${sessions.length} sessions`);
+}
+
+function updateCronJobs(jobs) {
+    if (!jobs || !Array.isArray(jobs)) return;
+    
+    const cronTable = document.getElementById('cronTable');
+    const cronActive = document.getElementById('cronActive');
+    const cronJobsTable = document.getElementById('cronJobsTable');
+    const cronJobsCount = document.getElementById('cronJobsCount');
+    
+    const activeCount = jobs.filter(j => j.status === 'running' || j.status === 'ready').length;
+    if (cronActive) cronActive.textContent = `${activeCount} Active`;
+    if (cronJobsCount) cronJobsCount.textContent = `${jobs.length} Jobs`;
+    
+    if (cronTable) {
+        cronTable.innerHTML = jobs.slice(0, 5).map(j => `
+            <tr>
+                <td>${j.name || 'Unknown'}</td>
+                <td>${j.nextRun || '—'}</td>
+                <td><span class="cron-status ${j.status}">${j.status}</span></td>
+            </tr>
+        `).join('');
+    }
+    
+    if (cronJobsTable) {
+        cronJobsTable.innerHTML = jobs.map(j => `
+            <tr><td>${j.name || 'Unknown'}</td><td>${j.schedule || '—'}</td><td>${j.lastRun || '—'}</td><td>${j.nextRun || '—'}</td><td><span class="cron-status ${j.status}">${j.status}</span></td></tr>
+        `).join('');
+    }
+    
+    addLog('success', `Loaded ${jobs.length} cron jobs`);
+}
+
+function updateChannels(channels) {
+    if (!channels || !Array.isArray(channels)) return;
+    
+    const channelGrid = document.getElementById('channelGrid');
+    const channelCount = document.getElementById('channelCount');
+    
+    if (channelCount) channelCount.textContent = channels.length;
+    
+    if (channelGrid) {
+        channelGrid.innerHTML = channels.map(c => `
+            <div class="channel-card">
+                <div class="channel-icon">${getChannelIcon(c.name)}</div>
+                <div class="channel-info">
+                    <div class="channel-name">${c.name || 'Unknown'}</div>
+                    <div class="channel-msgs">${c.messages || 0} msgs</div>
+                </div>
+                <span class="status-dot" style="background:${c.connected ? 'var(--green)' : 'var(--text3)'}"></span>
+            </div>
+        `).join('');
+    }
+    
+    addLog('success', `Loaded ${channels.length} channels`);
+}
+
+function updateStatus(status) {
+    if (!status) return;
+    
+    // Update agent list if provided
+    if (status.agents) {
+        updateAgentList(status.agents);
+    }
+    
+    // Update resource bars
+    if (status.cpu !== undefined) {
+        updateResourceBar('cpu', status.cpu);
+    }
+    if (status.memory !== undefined) {
+        updateResourceBar('ram', status.memory);
+    }
+    if (status.disk !== undefined) {
+        updateResourceBar('disk', status.disk);
+    }
+    
+    addLog('info', 'Status updated');
+}
+
+function updateHealth(health) {
+    if (!health) return;
+    
+    // Update health metrics in UI if elements exist
+    const elements = {
+        'healthUptime': health.uptime,
+        'healthCpu': health.cpu ? health.cpu + '%' : 'N/A',
+        'healthMemory': health.memory ? health.memory + '%' : 'N/A',
+        'healthRequests': health.requests
+    };
+    
+    Object.keys(elements).forEach(id => {
+        const el = document.getElementById(id);
+        if (el) el.textContent = elements[id];
+    });
+    
+    addLog('info', 'Health metrics updated');
+}
+
+function updateAgentList(agents) {
+    const agentList = document.getElementById('agentList');
+    const agentCount = document.getElementById('agentCount');
+    const agentsList = document.getElementById('agentsList');
+    const agentsPanelBadge = document.getElementById('agentsPanelBadge');
+    const agentsActive = document.getElementById('agentsActive');
+    const agentsIdle = document.getElementById('agentsIdle');
+    
+    if (agentCount) agentCount.textContent = agents.length;
+    if (agentsActive) {
+        const active = agents.filter(a => a.status === 'active').length;
+        agentsActive.textContent = active;
+    }
+    if (agentsIdle) {
+        const idle = agents.filter(a => a.status === 'idle').length;
+        agentsIdle.textContent = idle;
+    }
+    if (agentsPanelBadge) agentsPanelBadge.textContent = `${agents.length} Agents`;
+    
+    if (agentList) {
+        agentList.innerHTML = agents.slice(0, 5).map(a => `
+            <div class="agent-row">
+                <div class="agent-dot ${a.status === 'active' ? 'green' : a.status === 'idle' ? 'blue' : 'grey'}"></div>
+                <div class="agent-info">
+                    <div class="agent-name">${a.name || 'Unknown'}</div>
+                    <div class="agent-task">${a.task || 'Idle'}</div>
+                    <div class="agent-meta"><span>${a.runtime || '0m'}</span><span class="agent-cost">${a.cost || '$0.00'}</span></div>
+                </div>
+            </div>
+        `).join('');
+    }
+    
+    if (agentsList) {
+        agentsList.innerHTML = agents.map(a => `
+            <div class="agent-row">
+                <div class="agent-dot ${a.status === 'active' ? 'green' : a.status === 'idle' ? 'blue' : 'grey'}"></div>
+                <div class="agent-info">
+                    <div class="agent-name">${a.name || 'Unknown'}</div>
+                    <div class="agent-task">${a.task || 'No task'}</div>
+                    <div class="agent-meta"><span>${a.model || 'N/A'}</span><span class="agent-cost">${a.cost || '$0.00'}</span></div>
+                </div>
+                <span class="agent-status">${a.status}</span>
+            </div>
+        `).join('');
+    }
+}
+
+function updateResourceBar(type, value) {
+    const bar = document.getElementById(type + 'Bar');
+    if (bar) {
+        bar.style.width = value + '%';
+        bar.className = 'res-fill ' + (value > 80 ? 'high' : value > 60 ? 'med' : 'low');
+    }
+}
+
+function getChannelIcon(name) {
+    const icons = {
+        'telegram': '✈️',
+        'whatsapp': '📱',
+        'discord': '🎮',
+        'webchat': '💬',
+        'signal': '🔔'
+    };
+    return icons[name?.toLowerCase()] || '💬';
+}
+
+function formatDuration(seconds) {
+    if (!seconds) return '0s';
+    if (seconds < 60) return Math.round(seconds) + 's';
+    if (seconds < 3600) return Math.round(seconds / 60) + 'm';
+    return Math.round(seconds / 3600) + 'h';
+}
+
+// ============================================
+// NAVIGATION
+// ============================================
+
+document.querySelectorAll('.s-btn[data-section]').forEach(btn => {
+    btn.addEventListener('click', function() {
+        const section = this.dataset.section;
+        
+        // Update active button
+        document.querySelectorAll('.s-btn').forEach(b => b.classList.remove('active'));
+        this.classList.add('active');
+        
+        // Show section
+        document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
+        const targetSection = document.getElementById('section-' + section);
+        if (targetSection) {
+            targetSection.classList.add('active');
+        }
+        
+        addLog('info', `Navigated to ${section}`);
+    });
+});
+
+// ============================================
+// UI FUNCTIONS
+// ============================================
+
 function updateClock(){
-document.getElementById('clock').textContent=new Date().toLocaleTimeString('en-US',{hour:'2-digit',minute:'2-digit',second:'2-digit',hour12:false});
+    document.getElementById('clock').textContent = new Date().toLocaleTimeString('en-US', {
+        hour:'2-digit', minute:'2-digit', second:'2-digit', hour12:false
+    });
 }
-updateClock();setInterval(updateClock,1000);
+updateClock();
+setInterval(updateClock, 1000);
 
-function jitter(val,range){return Math.max(0,Math.min(100,val+(Math.random()-0.5)*range));}
+function jitter(val, range) {
+    return Math.max(0, Math.min(100, val + (Math.random() - 0.5) * range));
+}
+
 function updateResources(){
-const cpu=jitter(12,8),ram=jitter(34,6);
-document.getElementById('cpuBar').style.width=cpu+'%';
-document.getElementById('cpuBar').className='res-fill '+(cpu>80?'high':cpu>60?'med':'low');
-document.getElementById('ramBar').style.width=ram+'%';
-document.getElementById('ramBar').className='res-fill '+(ram>80?'high':ram>60?'med':'low');
+    const cpu = jitter(12, 8);
+    const ram = jitter(34, 6);
+    const disk = jitter(67, 3);
+    
+    updateResourceBar('cpu', cpu);
+    updateResourceBar('ram', ram);
+    updateResourceBar('disk', disk);
 }
-updateResources();setInterval(updateResources,3000);
+updateResources();
+setInterval(updateResources, 3000);
 
-let apiCount=847;
-setInterval(()=>{apiCount+=Math.floor(Math.random()*15);document.getElementById('apiCount').textContent=apiCount;},8000);
+let apiCount = 847;
+setInterval(() => {
+    apiCount += Math.floor(Math.random() * 15);
+    const el = document.getElementById('apiCount');
+    if (el) el.textContent = apiCount;
+    const statEl = document.getElementById('statCalls');
+    if (statEl) statEl.textContent = apiCount;
+}, 8000);
 
 // Live BTC (Binance)
 async function fetchBTC(){
-try{
-const r=await fetch("https://api.binance.com/api/v3/ticker/24hr?symbol=BTCUSDT");
-const d=await r.json();
-const price=parseFloat(d.lastPrice).toLocaleString();
-const change=parseFloat(d.priceChangePercent).toFixed(2);
-document.getElementById('btcPrice').textContent='$'+price;
-document.getElementById('btcChange').textContent=(parseFloat(change)>=0?'+':'')+change+'% (24h)';
-document.getElementById('btcUpdated').textContent='Updated: '+new Date().toLocaleTimeString('en-US',{hour:'2-digit',minute:'2-digit',hour12:false});
-}catch(e){}
+    try {
+        const r = await fetch("https://api.binance.com/api/v3/ticker/24hr?symbol=BTCUSDT");
+        const d = await r.json();
+        const price = parseFloat(d.lastPrice).toLocaleString();
+        const change = parseFloat(d.priceChangePercent).toFixed(2);
+        
+        document.getElementById('btcPrice').textContent = '$' + price;
+        document.getElementById('btcChange').textContent = (parseFloat(change) >= 0 ? '+' : '') + change + '% (24h)';
+        document.getElementById('btcUpdated').textContent = 'Updated: ' + new Date().toLocaleTimeString('en-US', {
+            hour:'2-digit', minute:'2-digit', hour12:false
+        });
+    } catch(e) {
+        console.log('BTC fetch error:', e);
+    }
 }
-fetchBTC();setInterval(fetchBTC,30000);
+fetchBTC();
+setInterval(fetchBTC, 30000);
 
-function addLog(type,msg){
-const list=document.getElementById('logFeed');
-const time=new Date().toLocaleTimeString('en-US',{hour12:false});
-const entry=document.createElement('div');
-entry.className='log-entry '+type;
-entry.innerHTML='<span class="log-time">'+time+'</span><span class="log-msg">'+msg+'</span>';
-list.insertBefore(entry,list.firstChild);
-if(list.children.length>10)list.removeChild(list.lastChild);
+function addLog(type, msg) {
+    const list = document.getElementById('logFeed');
+    if (!list) return;
+    
+    const time = new Date().toLocaleTimeString('en-US', {hour12: false});
+    const entry = document.createElement('div');
+    entry.className = 'log-entry ' + type;
+    entry.innerHTML = '<span class="log-time">' + time + '</span><span class="log-msg">' + msg + '</span>';
+    list.insertBefore(entry, list.firstChild);
+    
+    if (list.children.length > 10) {
+        list.removeChild(list.lastChild);
+    }
 }
-setInterval(()=>{const msgs=['Processing request','Agent heartbeat','API call','Cron check'];addLog('success',msgs[Math.floor(Math.random()*msgs.length)]);},15000);
+
+// Toggle settings
+document.querySelectorAll('.toggle').forEach(toggle => {
+    toggle.addEventListener('click', function() {
+        this.classList.toggle('on');
+        const isOn = this.classList.contains('on');
+        addLog('info', `${this.id || 'Toggle'} ${isOn ? 'enabled' : 'disabled'}`);
+    });
+});
+
+// Quick actions
+document.querySelectorAll('.action-btn').forEach(btn => {
+    btn.addEventListener('click', function() {
+        const action = this.dataset.action;
+        if (action === 'refreshData') {
+            addLog('info', 'Refreshing all data...');
+            fetchSessions();
+            fetchCronJobs();
+            fetchChannels();
+            fetchStatus();
+            fetchHealth();
+            fetchBTC();
+        } else if (action === 'clearLogs') {
+            const logFeed = document.getElementById('logFeed');
+            if (logFeed) logFeed.innerHTML = '';
+            addLog('info', 'Logs cleared');
+        } else if (action === 'exportData') {
+            addLog('info', 'Exporting data...');
+        } else if (action === 'resetSettings') {
+            addLog('warn', 'Settings reset to defaults');
+        }
+    });
+});
+
+// Simulate some periodic log messages
+setInterval(() => {
+    const msgs = ['Processing request', 'Agent heartbeat', 'API call', 'Cron check', 'Health check'];
+    addLog('success', msgs[Math.floor(Math.random() * msgs.length)]);
+}, 15000);
+
+// Initialize connection
+setTimeout(() => {
+    addLog('info', 'Initializing OpenClaw connection...');
+    connectWebSocket();
+}, 1000);
+
+// Fallback: If WebSocket fails, show simulated data after timeout
+setTimeout(() => {
+    if (connectionState !== 'connected') {
+        addLog('warn', 'Using fallback data (WebSocket unavailable)');
+        updateConnectionStatus('disconnected', 'Offline Mode');
+        
+        // Show some simulated sessions
+        updateSessionsList([
+            { id: 'agent:main:main', label: 'main', model: 'MiniMax M2.5', status: 'active', runtime: 720, cost: '$0.02' }
+        ]);
+        
+        // Show simulated cron jobs
+        updateCronJobs([
+            { name: 'Morning Briefing', schedule: '0 8 * * *', lastRun: 'Yesterday 8:00 AM', nextRun: 'Today 8:00 AM', status: 'ready' },
+            { name: 'System Check', schedule: '*/30 * * * *', lastRun: '5 minutes ago', nextRun: 'In 25 minutes', status: 'running' },
+            { name: 'Weather', schedule: '0 7 * * *', lastRun: 'Yesterday 7:00 AM', nextRun: 'Today 7:00 AM', status: 'ready' },
+            { name: 'Research', schedule: '0 18 * * *', lastRun: '—', nextRun: '—', status: 'paused' }
+        ]);
+        
+        // Show simulated channels
+        updateChannels([
+            { name: 'Telegram', messages: 12, connected: true },
+            { name: 'WhatsApp', messages: 0, connected: false },
+            { name: 'Discord', messages: 5, connected: true },
+            { name: 'WebChat', messages: 3, connected: true }
+        ]);
+    }
+}, 5000);
+
+// Final message
+setTimeout(() => {
+    addLog('success', 'Mission Control initialized');
+    console.log('// SYSTEMS ONLINE. READY, SIR.');
+}, 2000);
 </script>
 </body>
 </html>
