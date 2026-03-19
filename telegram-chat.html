@@ -17,8 +17,8 @@ html,body{height:100%}
 body{font-family:-apple-system,BlinkMacSystemFont,'SF Pro Text',sans-serif;background:var(--bg);color:var(--text);-webkit-font-smoothing:antialiased;position:relative}
 body::before{content:'';position:fixed;inset:0;background-image:radial-gradient(circle at 1px 1px,rgba(255,255,255,0.03) 1px,transparent 0);background-size:32px 32px;pointer-events:none;z-index:0}
 
-/* Layout */
 .app{display:flex;flex-direction:column;height:100vh;position:relative;z-index:1}
+
 .header{height:56px;background:var(--bg1);border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;padding:0 16px;flex-shrink:0}
 .h-left{display:flex;align-items:center;gap:12px}
 .h-logo{width:34px;height:34px;background:rgba(10,132,255,0.15);border-radius:9px;display:flex;align-items:center;justify-content:center;font-size:18px}
@@ -26,8 +26,8 @@ body::before{content:'';position:fixed;inset:0;background-image:radial-gradient(
 .h-subtitle{font-size:11px;font-family:var(--mono);color:var(--hint)}
 .h-center{display:flex;align-items:center;gap:8px}
 .status-pill{padding:5px 12px;border-radius:20px;font-size:11px;font-weight:500;display:flex;align-items:center;gap:6px}
-.status-pill.online{background:rgba(48,209,88,0.15);color:var(--green)}
-.status-pill.offline{background:rgba(255,69,58,0.15);color:var(--red)}
+.status-pill.polling{background:rgba(48,209,88,0.15);color:var(--green)}
+.status-pill.error{background:rgba(255,69,58,0.15);color:var(--red)}
 .status-dot{width:6px;height:6px;border-radius:50%;background:currentColor;animation:pulse 2s infinite}
 @keyframes pulse{0%,100%{opacity:1}50%{opacity:0.5}}
 .status-time{font-size:10px;color:var(--hint);margin-left:4px}
@@ -36,34 +36,45 @@ body::before{content:'';position:fixed;inset:0;background-image:radial-gradient(
 .h-btn:hover{background:var(--bg3);color:var(--text)}
 .h-link{font-size:12px;color:var(--blue);text-decoration:none;padding:6px 10px}
 
-/* Messages */
-.messages{f flex:1;overflow-y:auto;padding:16px 20px;display:flex;flex-direction:column;gap:8px;scroll-behavior:smooth}
-.msg{display:flex;gap:10px;max-width:85%;animation:fadeIn 0.2s ease}
-.msg.me{flex-direction:row-reverse;align-self:flex-end}
-.msg-avatar{width:32px;height:32px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:600;flex-shrink:0}
-.msg.me .msg-avatar{background:linear-gradient(135deg,var(--blue),#0066cc)}
-.msg.them .msg-avatar{background:linear-gradient(135deg,var(--green),#00a854)}
-.msg-content{display:flex;flex-direction:column;gap:3px}
-.msg.me .msg-content{align-items:flex-end}
-.msg-bubble{padding:10px 14px;border-radius:16px;font-size:14px;line-height:1.45;white-space:pre-wrap;word-break:break-word}
-.msg.me .msg-bubble{background:var(--blue);border-bottom-right-radius:4px}
-.msg.them .msg-bubble{background:var(--bg3);border-bottom-left-radius:4px}
-.msg-time{font-size:10px;color:var(--hint);padding:0 4px}
+.messages{flex:1;overflow-y:auto;padding:16px 20px;display:flex;flex-direction:column;gap:10px;scroll-behavior:smooth}
+
+.msg{display:flex;max-width:72%;animation:fadeSlideUp 0.2s ease}
+.msg.user{flex-direction:row-reverse;align-self:flex-end}
+.msg.user .msg-bubble{background:var(--blue);color:#fff;border-radius:18px 18px 4px 18px}
+.msg.openclaw{max-width:72%;margin-right:auto}
+.msg.openclaw .msg-bubble{background:var(--bg2);border:1px solid var(--border);border-radius:18px 18px 18px 4px}
+.msg-avatar{width:28px;height:28px;border-radius:50%;background:rgba(10,132,255,0.2);display:flex;align-items:center;justify-content:center;font-size:14px;margin-right:8px;flex-shrink:0}
+.msg.user .msg-avatar{display:none}
+.msg-content{display:flex;flex-direction:column;gap:2px}
+.msg-time{font-size:10px;opacity:0.7;padding:0 4px}
+.msg.user .msg-time{text-align:right}
+.msg.openclaw .msg-time{color:var(--hint)}
+
 .date-sep{display:flex;align-items:center;gap:12px;margin:12px 0;color:var(--hint);font-size:11px}
 .date-sep::before,.date-sep::after{content:'';flex:1;height:1px;background:var(--border)}
-@keyframes fadeIn{from{opacity:0;transform:translateY(8px)}}
+@keyframes fadeSlideUp{from{opacity:0;transform:translateY(8px)}}
 
-/* Input */
-.input-bar{height:64px;background:var(--bg1);border-top:1px solid var(--border);display:flex;align-items:center;gap:10px;padding:0 16px;flex-shrink:0}
-.input-bar textarea{flex:1;background:var(--bg2);border:1px solid var(--border);border-radius:12px;padding:12px 16px;color:var(--text);font-size:14px;font-family:inherit;resize:none;outline:none;max-height:48px;line-height:1.3}
+.typing{display:none;padding:10px 14px;background:var(--bg2);border:1px solid var(--border);border-radius:18px 18px 18px 4px;width:fit-content}
+.typing.show{display:flex;gap:4px;align-items:center}
+.typing span{width:6px;height:6px;background:var(--hint);border-radius:50%;animation:bounce 1.4s infinite}
+.typing span:nth-child(2){animation-delay:0.15s}
+.typing span:nth-child(3){animation-delay:0.3s}
+@keyframes bounce{0%,60%,100%{transform:translateY(0);opacity:0.4}30%{transform:translateY(-4px);opacity:1}}
+
+.system{text-align:center;font-size:11px;color:var(--muted);padding:4px}
+
+.input-bar{background:var(--bg1);border-top:1px solid var(--border);display:flex;align-items:flex-end;gap:10px;padding:12px 16px;flex-shrink:0}
+.input-bar textarea{flex:1;background:var(--bg3);border:1px solid var(--border);border-radius:20px;padding:10px 16px;color:var(--text);font-family:inherit;font-size:14px;resize:none;outline:none;min-height:40px;max-height:120px;line-height:1.4}
 .input-bar textarea::placeholder{color:var(--hint)}
-.input-bar textarea:focus{border-color:var(--blue)}
-.input-bar button{height:40px;padding:0 16px;background:var(--bg3);border:1px solid var(--border);border-radius:10px;color:var(--muted);font-size:13px;font-weight:500;cursor:pointer;transition:all 0.15s;display:flex;align-items:center;gap:6px}
+.input-bar textarea:focus{border-color:var(--border2)}
+.input-bar button{height:40px;padding:0 16px;background:var(--bg3);border:1px solid var(--border);border-radius:20px;color:var(--muted);font-size:13px;font-weight:500;cursor:pointer;transition:all 0.15s;display:flex;align-items:center;gap:6px}
 .input-bar button:hover{background:var(--bg4);color:var(--text)}
-.input-bar button.send{background:var(--blue);border-color:var(--blue);color:#fff}
-.input-bar button.send:hover{background:#0095ff}
+.input-bar button.send{width:40px;padding:0;background:var(--blue);border-color:var(--blue);color:#fff;border-radius:50%;justify-content:center;font-size:16px}
+.input-bar button.send:hover{opacity:0.85}
+.input-bar button.send:active{transform:scale(0.95)}
+.input-bar button.send:disabled{opacity:0.4;cursor:not-allowed}
+.input-bar button.abort{background:rgba(255,69,58,0.15);border-color:rgba(255,69,58,0.25);color:var(--red);font-size:12px;padding:8px 14px}
 
-/* Modal */
 .modal{position:fixed;inset:0;background:rgba(0,0,0,0.7);backdrop-filter:blur(8px);display:flex;align-items:center;justify-content:center;z-index:100;opacity:0;pointer-events:none;transition:opacity 0.2s}
 .modal.show{opacity:1;pointer-events:auto}
 .modal-card{width:380px;background:var(--bg2);border:1px solid var(--border);border-radius:16px;padding:24px;transform:scale(0.95);transition:transform 0.2s}
@@ -80,31 +91,17 @@ body::before{content:'';position:fixed;inset:0;background-image:radial-gradient(
 .modal-btn:hover{background:#0095ff}
 .modal-error{color:var(--red);font-size:12px;margin-top:10px;text-align:center}
 
-/* Empty State */
-.empty{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;color:var(--muted);gap:12px}
-.empty-icon{font-size:48px;opacity:0.5}
-.empty-text{font-size:14px}
-
-/* Typing */
-.typing{font-size:12px;color:var(--hint);padding:8px 0;display:none}
-.typing.show{display:block}
-.typing span{width:6px;height:6px;background:var(--hint);border-radius:50%;display:inline-block;margin:0 2px;animation:typing 1.4s infinite}
-.typing span:nth-child(2){animation-delay:0.2s}
-.typing span:nth-child(3){animation-delay:0.4s}
-@keyframes typing{0%,60%,100%{transform:translateY(0);opacity:0.4}30%{transform:translateY(-4px);opacity:1}}
-
-/* Responsive */
 @media(max-width:500px){
 .header{padding:0 12px}
 .h-subtitle,.status-time,.h-link{display:none}
 .messages{padding:12px}
-.msg{max-width:90%}
+.msg{max-width:88%}
+.input-bar{padding:10px}
 }
 </style>
 </head>
 <body>
-<div class="app" id="app">
-<!-- Header -->
+<div class="app">
 <header class="header">
 <div class="h-left">
 <div class="h-logo">🦞</div>
@@ -114,33 +111,26 @@ body::before{content:'';position:fixed;inset:0;background-image:radial-gradient(
 </div>
 </div>
 <div class="h-center">
-<div class="status-pill offline" id="statusPill"><span class="status-dot"></span><span id="statusText">Offline</span><span class="status-time" id="statusTime"></span></div>
+<div class="status-pill error" id="statusPill"><span class="status-dot"></span><span id="statusText">Not connected</span><span class="status-time" id="statusTime"></span></div>
 </div>
 <div class="h-right">
 <a href="index.html" class="h-link">← Dashboard</a>
-<button class="h-btn" onclick="showSettings()">⚙️</button>
+<button class="h-btn" onclick="showSetup()">⚙️</button>
 </div>
 </header>
 
-<!-- Messages -->
 <div class="messages" id="messages">
-<div class="empty" id="emptyState">
-<div class="empty-icon">💬</div>
-<div class="empty-text">No messages yet</div>
-</div>
 <div class="typing" id="typing"><span></span><span></span><span></span></div>
 </div>
 
-<!-- Input -->
 <div class="input-bar">
-<textarea id="input" placeholder="Type a message..." rows="1" onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();sendMessage()}"></textarea>
-<button id="abortBtn" onclick="abortPolling()">⏹️</button>
-<button class="send" onclick="sendMessage()">Send ↑</button>
+<textarea id="input" placeholder="Message OpenClaw…" rows="1" onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();sendMessage()}"></textarea>
+<button class="abort" id="abortBtn" onclick="sendStop()" style="display:none">⏹️ Stop</button>
+<button class="send" id="sendBtn" onclick="sendMessage()" disabled>↑</button>
 </div>
 </div>
 
-<!-- Settings Modal -->
-<div class="modal" id="settingsModal">
+<div class="modal" id="setupModal">
 <div class="modal-card">
 <div class="modal-title">🔧 Connect Telegram</div>
 <div class="modal-desc">Enter your bot token and chat ID to enable messaging</div>
@@ -163,173 +153,257 @@ body::before{content:'';position:fixed;inset:0;background-image:radial-gradient(
 </div>
 
 <script>
-// Config
-const API_URL='https://api.telegram.org/bot';
-let config={token:'',chatId:'',name:'User'};
-let lastUpdateId=0;
-let pollingInterval=null;
-let isPolling=false;
+// Constants
+const TG_API='https://api.telegram.org/bot';
+const POLL_INTERVAL_ACTIVE=2000;
+const POLL_INTERVAL_IDLE=8000;
+const POLL_TIMEOUT=25;
+const MAX_MESSAGES=100;
+
+// State
+let offset=0;
+let polling=false;
+let lastActivity=Date.now();
+let pendingReply=false;
+let pollTimer=null;
+let myMessageIds=new Set();
 
 // Load config
 function loadConfig(){
-config.token=localStorage.getItem('oc_bot_token')||'';
-config.chatId=localStorage.getItem('oc_chat_id')||'';
-config.name=localStorage.getItem('oc_user_name')||'User';
-if(config.token&&config.chatId){
-document.getElementById('botToken').value=config.token;
-document.getElementById('chatId').value=config.chatId;
-document.getElementById('userName').value=config.name;
+const token=localStorage.getItem('oc_bot_token');
+const chatId=localStorage.getItem('oc_chat_id');
+if(token&&chatId){
+document.getElementById('botToken').value=token;
+document.getElementById('chatId').value=chatId;
+document.getElementById('userName').value=localStorage.getItem('oc_user_name')||'Mango';
+restoreHistory();
 startPolling();
+}else{
+showSetup();
 }
+}
+
+// Show setup modal
+function showSetup(){
+document.getElementById('setupModal').classList.add('show');
+document.getElementById('modalError').textContent='';
 }
 
 // Save settings
 function saveSettings(){
 const token=document.getElementById('botToken').value.trim();
 const chatId=document.getElementById('chatId').value.trim();
-const name=document.getElementById('userName').value.trim()||'User';
+const name=document.getElementById('userName').value.trim()||'Mango';
 if(!token||!chatId){
 document.getElementById('modalError').textContent='Please fill in all fields';
 return;
 }
-config.token=token;
-config.chatId=chatId;
-config.name=name;
 localStorage.setItem('oc_bot_token',token);
 localStorage.setItem('oc_chat_id',chatId);
 localStorage.setItem('oc_user_name',name);
-document.getElementById('settingsModal').classList.remove('show');
+document.getElementById('setupModal').classList.remove('show');
 startPolling();
 }
 
-// Show settings
-function showSettings(){
-document.getElementById('settingsModal').classList.add('show');
-document.getElementById('modalError').textContent='';
+// Restore message history
+function restoreHistory(){
+try{
+const msgs=JSON.parse(localStorage.getItem('oc_messages')||'[]');
+const container=document.getElementById('messages');
+msgs.forEach(m=>appendMessage(m.role,m.text,m.ts,false));
+}catch(e){}
 }
 
-// Close modal on backdrop click
-document.getElementById('settingsModal').addEventListener('click',e=>{
-if(e.target.id==='settingsModal')document.getElementById('settingsModal').classList.remove('show');
+// Save message history
+function saveHistory(){
+const container=document.getElementById('messages');
+const msgs=[];
+container.querySelectorAll('.msg').forEach(el=>{
+const role=el.classList.contains('user')?'user':'openclaw';
+const text=el.querySelector('.msg-bubble').textContent;
+msgs.push({role,text});
+});
+if(msgs.length>MAX_MESSAGES)msgs.splice(0,msgs.length-MAX_MESSAGES);
+localStorage.setItem('oc_messages',JSON.stringify(msgs));
+}
+
+// Append message
+function appendMessage(role,text,ts,save=true){
+const typing=document.getElementById('typing');
+const msg=document.createElement('div');
+msg.className='msg '+(role==='user'?'user':'openclaw');
+msg.innerHTML=role==='openclaw'?'<div class="msg-avatar">🦞</div>':'';
+msg.innerHTML+=`<div class="msg-content"><div class="msg-bubble">${renderMarkdown(text)}</div><div class="msg-time">${fmtTime(ts)}</div></div>`;
+document.getElementById('messages').insertBefore(msg,typing);
+document.getElementById('messages').scrollTop=document.getElementById('messages').scrollHeight;
+if(save)saveHistory();
+}
+
+// Render markdown
+function renderMarkdown(text){
+return text
+.replace(/```([\s\S]*?)```/g,'<pre><code>$1</code></pre>')
+.replace(/`([^`]+)`/g,'<code>$1</code>')
+.replace(/\*\*([^*]+)\*\*/g,'<strong>$1</strong>')
+.replace(/\*([^*]+)\*/g,'<em>$1</em>')
+.replace(/\n/g,'<br>');
+}
+
+// Format time
+function fmtTime(ms){
+return new Date(ms).toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'});
+}
+
+// Clear input
+function clearInput(){
+document.getElementById('input').value='';
+document.getElementById('input').style.height='auto';
+document.getElementById('sendBtn').disabled=true;
+}
+
+// Input handler
+document.getElementById('input').addEventListener('input',function(){
+this.style.height='auto';
+this.style.height=Math.min(this.scrollHeight,120)+'px';
+document.getElementById('sendBtn').disabled=!this.value.trim();
 });
 
-// Send message via Telegram Bot API
+// Show typing
+function showTyping(){
+document.getElementById('typing').classList.add('show');
+document.getElementById('abortBtn').style.display='block';
+document.getElementById('messages').scrollTop=document.getElementById('messages').scrollHeight;
+}
+
+// Hide typing
+function hideTyping(){
+document.getElementById('typing').classList.remove('show');
+document.getElementById('abortBtn').style.display='none';
+}
+
+// Send message
 async function sendMessage(){
 const input=document.getElementById('input');
 const text=input.value.trim();
-if(!text||!config.token||!config.chatId)return;
+if(!text)return;
 
-addMessage(text,true);
-input.value='';
+const token=localStorage.getItem('oc_bot_token');
+const chatId=localStorage.getItem('oc_chat_id');
+if(!token||!chatId){showSetup();return;}
 
-// Send via Telegram
+appendMessage('user',text,Date.now());
+clearInput();
+showTyping();
+pendingReply=true;
+lastActivity=Date.now();
+
 try{
-const response=await fetch(`${API_URL}${config.token}/sendMessage`,{
+const res=await fetch(TG_API+token+'/sendMessage',{
 method:'POST',
 headers:{'Content-Type':'application/json'},
-body:JSON.stringify({chat_id:config.chatId,text:`${config.name}: ${text}`})
+body:JSON.stringify({chat_id:chatId,text:text,parse_mode:'Markdown'})
 });
-if(!response.ok)throw new Error('Failed to send');
-}catch(e){
-addMessage('Failed to send: '+e.message,false,true);
+const data=await res.json();
+if(!data.ok)throw new Error(data.description);
+myMessageIds.add(data.result.message_id);
+}catch(err){
+hideTyping();
+pendingReply=false;
+showSystem('Send failed: '+err.message);
 }
 }
 
-// Add message to UI
-function addMessage(text,isMe,isError=false){
-const empty=document.getElementById('emptyState');
-if(empty)empty.style.display='none';
-
-const container=document.getElementById('messages');
-const typing=document.getElementById('typing');
-
-const msg=document.createElement('div');
-msg.className=`msg ${isMe?'me':'them'}`;
-msg.innerHTML=`
-<div class="msg-avatar">${isMe?config.name.charAt(0).toUpperCase():'O'}</div>
-<div class="msg-content">
-<div class="msg-bubble">${escapeHtml(text)}</div>
-<div class="msg-time">${new Date().toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'})}</div>
-</div>
-`;
-container.insertBefore(msg,typing);
-container.scrollTop=container.scrollHeight;
-}
-
-// Escape HTML
-function escapeHtml(text){
-const div=document.createElement('div');
-div.textContent=text;
-return div.innerHTML;
-}
-
-// Start polling for updates
-async function startPolling(){
-if(isPolling)return;
-isPolling=true;
-updateStatus(true);
-poll();
-pollingInterval=setInterval(poll,3000);
-}
-
-// Stop polling
-function abortPolling(){
-if(pollingInterval){
-clearInterval(pollingInterval);
-pollingInterval=null;
-}
-isPolling=false;
-updateStatus(false);
-}
-
-// Poll for messages
-async function poll(){
-if(!config.token||!config.chatId)return;
+// Send stop
+async function sendStop(){
+const token=localStorage.getItem('oc_bot_token');
+const chatId=localStorage.getItem('oc_chat_id');
+if(!token||!chatId)return;
 try{
-const response=await fetch(`${API_URL}${config.token}/getUpdates?offset=${lastUpdateId+1}&timeout=2`);
-const data=await response.json();
-if(data.ok&&data.result){
-for(const update of data.result){
-if(update.message){
-const text=update.message.text;
-if(text&&!text.startsWith(config.name+':')){
-addMessage(text,false);
+await fetch(TG_API+token+'/sendMessage',{
+method:'POST',
+headers:{'Content-Type':'application/json'},
+body:JSON.stringify({chat_id:chatId,text:'/stop'})
+});
+}catch(e){}
+hideTyping();
+pendingReply=false;
+showSystem('Stopped');
 }
-lastUpdateId=update.update_id;
-}
-}
-}
-updateStatus(true);
-}catch(e){
-updateStatus(false);
-}
+
+// Show system message
+function showSystem(text){
+const container=document.getElementById('messages');
+const el=document.createElement('div');
+el.className='system';
+el.textContent=text;
+container.insertBefore(el,document.getElementById('typing'));
 }
 
 // Update status
-function updateStatus(online){
+function updateStatusPill(status){
 const pill=document.getElementById('statusPill');
 const text=document.getElementById('statusText');
 const time=document.getElementById('statusTime');
-if(online){
-pill.className='status-pill online';
-text.textContent='Polling';
+if(status==='polling'){
+pill.className='status-pill polling';
+text.textContent='● Polling';
 time.textContent='Updated just now';
 }else{
-pill.className='status-pill offline';
-text.textContent='Offline';
-time.textContent='';
+pill.className='status-pill error';
+text.textContent='✕ '+status;
 }
 }
 
-// Update time every 10s
-setInterval(()=>{
-if(isPolling){
-document.getElementById('statusTime').textContent='Updated '+Math.floor(Math.random()*3)+'s ago';
+// Start polling
+function startPolling(){
+if(polling)return;
+polling=true;
+updateStatusPill('polling');
+poll();
 }
-},10000);
+
+// Poll
+async function poll(){
+if(!polling)return;
+const token=localStorage.getItem('oc_bot_token');
+const chatId=localStorage.getItem('oc_chat_id');
+if(!token||!chatId){polling=false;return;}
+
+try{
+const url=TG_API+token+'/getUpdates?offset='+(offset||0)+'&timeout='+POLL_TIMEOUT+'&allowed_updates=["message"]';
+const res=await fetch(url);
+const data=await res.json();
+if(!data.ok)throw new Error(data.description);
+
+data.result.forEach(update=>{
+offset=update.update_id+1;
+const msg=update.message;
+if(!msg)return;
+if(myMessageIds.has(msg.message_id)){myMessageIds.delete(msg.message_id);return;}
+if(String(msg.chat.id)!==String(chatId))return;
+hideTyping();
+pendingReply=false;
+appendMessage('openclaw',msg.text,msg.date*1000);
+});
+
+updateStatusPill('polling');
+}catch(err){
+updateStatusPill('Error');
+}finally{
+const interval=(Date.now()-lastActivity>60000)?POLL_INTERVAL_IDLE:POLL_INTERVAL_ACTIVE;
+pollTimer=setTimeout(poll,interval);
+}
+}
 
 // Init
 loadConfig();
+
+// Update relative time
+setInterval(()=>{
+if(polling){
+document.getElementById('statusTime').textContent='Updated '+Math.round((Date.now()-lastActivity)/1000)+'s ago';
+}
+},5000);
 </script>
 </body>
 </html>
