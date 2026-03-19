@@ -710,6 +710,9 @@ document.querySelectorAll('.team-member').forEach(m=>{m.addEventListener('click'
 setTimeout(()=>{updateTimeline();addLog('success','Team workflow section loaded')},500);
 </script>
 </div>
-<button id="signOutBtn" onclick="logout()" style="display:none;position:fixed;top:14px;right:14px;z-index:100;padding:6px 12px;background:#1c1c1e;border:1px solid #333;border-radius:9px;color:#fff;font-size:12px;cursor:pointer">Sign Out</button>
+<button id="signOutBtn" onclick="logout()" style="display:none;position:fixed;top:14px;right:14px;z-index:100;padding:8px 16px;background:linear-gradient(135deg,#1c1c1e,#2c2c2e);border:1px solid rgba(255,255,255,0.1);border-radius:8px;color:#fff;font-size:12px;font-weight:500;cursor:pointer;display:flex;align-items:center;gap:6px;box-shadow:0 2px 8px rgba(0,0,0,0.3);transition:all 0.2s ease">
+<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+Sign Out
+</button>
 </body>
 </html>
