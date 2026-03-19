@@ -4,2005 +4,446 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>OLLIE — Hifty Mission Control</title>
-    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;500;700;900&family=Share+Tech+Mono&family=Rajdhani:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
     <style>
         :root {
             --void: #0a0a0f;
-            --void-lighter: #12121a;
-            --cyan: #00d4ff;
-            --cyan-bright: #00f0ff;
-            --cyan-dim: rgba(0, 212, 255, 0.3);
-            --cyan-glow: rgba(0, 212, 255, 0.5);
-            --gold: #f0a500;
-            --gold-bright: #ffc800;
-            --gold-dim: rgba(240, 165, 0, 0.3);
-            --gold-glow: rgba(240, 165, 0, 0.5);
-            --orange: #ff7b00;
-            --orange-bright: #ff9500;
-            --green: #00ff88;
-            --green-bright: #00ffaa;
-            --red: #ff3040;
+            --void-elevated: #12121a;
+            --void-card: rgba(18, 18, 26, 0.7);
+            --cyan: #00f5d4;
+            --cyan-dim: rgba(0, 245, 212, 0.3);
+            --cyan-glow: rgba(0, 245, 212, 0.4);
+            --violet: #9b5de5;
+            --violet-dim: rgba(155, 93, 229, 0.3);
+            --coral: #f15bb5;
+            --coral-dim: rgba(241, 91, 181, 0.3);
+            --amber: #fee440;
+            --amber-dim: rgba(254, 228, 64, 0.3);
+            --success: #00f5d4;
+            --warning: #fee440;
+            --danger: #ff6b6b;
+            --text: #e8e8e8;
+            --text-muted: #6b7280;
             --glass: rgba(255, 255, 255, 0.03);
-            --glass-border: rgba(0, 212, 255, 0.15);
-            --glass-border-hover: rgba(0, 212, 255, 0.4);
+            --glass-border: rgba(255, 255, 255, 0.08);
         }
-        
         * { margin: 0; padding: 0; box-sizing: border-box; }
-        
+        html { scroll-behavior: smooth; }
         body {
-            font-family: 'Rajdhani', sans-serif;
+            font-family: 'Outfit', sans-serif;
             background: var(--void);
-            color: var(--cyan);
+            color: var(--text);
             min-height: 100vh;
             overflow-x: hidden;
+            position: relative;
         }
-        
-        #particle-canvas {
+        .noise-overlay {
             position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            z-index: 0;
+            top: 0; left: 0;
+            width: 100%; height: 100%;
             pointer-events: none;
-        }
-        
-        .ambient-glow {
-            position: fixed;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            width: 150%;
-            height: 150%;
-            background: radial-gradient(ellipse at center, rgba(240, 165, 0, 0.06) 0%, rgba(0, 212, 255, 0.04) 30%, transparent 70%);
-            pointer-events: none;
-            z-index: 1;
-        }
-        
-        body::after {
-            content: '';
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: repeating-linear-gradient(0deg, transparent, transparent 2px, rgba(0, 212, 255, 0.015) 2px, rgba(0, 212, 255, 0.015) 4px);
-            pointer-events: none;
-            z-index: 9999;
-            animation: scanMove 6s linear infinite;
-        }
-        
-        @keyframes scanMove {
-            0% { transform: translateY(0); }
-            100% { transform: translateY(4px); }
-        }
-        
-        .corner-bracket {
-            position: fixed;
-            width: 60px;
-            height: 60px;
-            z-index: 100;
-            pointer-events: none;
-        }
-        
-        .corner-bracket::before, .corner-bracket::after {
-            content: '';
-            position: absolute;
-            background: var(--cyan);
-            box-shadow: 0 0 10px var(--cyan-glow);
-        }
-        
-        .corner-bracket.tl { top: 20px; left: 20px; }
-        .corner-bracket.tl::before { width: 40px; height: 2px; top: 0; left: 0; }
-        .corner-bracket.tl::after { width: 2px; height: 40px; top: 0; left: 0; }
-        
-        .corner-bracket.tr { top: 20px; right: 20px; }
-        .corner-bracket.tr::before { width: 40px; height: 2px; top: 0; right: 0; }
-        .corner-bracket.tr::after { width: 2px; height: 40px; top: 0; right: 0; }
-        
-        .corner-bracket.bl { bottom: 20px; left: 20px; }
-        .corner-bracket.bl::before { width: 40px; height: 2px; bottom: 0; left: 0; }
-        .corner-bracket.bl::after { width: 2px; height: 40px; bottom: 0; left: 0; }
-        
-        .corner-bracket.br { bottom: 20px; right: 20px; }
-        .corner-bracket.br::before { width: 40px; height: 2px; bottom: 0; right: 0; }
-        .corner-bracket.br::after { width: 2px; height: 40px; bottom: 0; right: 0; }
-        
-        #boot-overlay {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: var(--void);
             z-index: 10000;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            transition: opacity 1s ease;
+            opacity: 0.025;
+            background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)'/%3E%3C/svg%3E");
         }
-        
-        #boot-overlay.hidden {
-            opacity: 0;
+        .orb {
+            position: fixed;
+            border-radius: 50%;
+            filter: blur(100px);
             pointer-events: none;
-        }
-        
-        .boot-title {
-            font-family: 'Orbitron', sans-serif;
-            font-size: 4rem;
-            font-weight: 900;
-            color: var(--cyan);
-            text-shadow: 0 0 30px var(--cyan), 0 0 60px var(--cyan);
-            letter-spacing: 0.5rem;
-            margin-bottom: 0.5rem;
-            animation: bootPulse 2s ease-in-out infinite;
-        }
-        
-        @keyframes bootPulse {
-            0%, 100% { text-shadow: 0 0 30px var(--cyan), 0 0 60px var(--cyan); }
-            50% { text-shadow: 0 0 50px var(--cyan), 0 0 100px var(--cyan), 0 0 150px var(--cyan); }
-        }
-        
-        .boot-subtitle {
-            font-family: 'Rajdhani', sans-serif;
-            font-size: 1rem;
-            color: var(--gold);
-            letter-spacing: 0.5rem;
-            margin-bottom: 3rem;
-            text-shadow: 0 0 10px var(--gold);
-            font-weight: 600;
-        }
-        
-        .boot-line {
-            font-family: 'Share Tech Mono', monospace;
-            font-size: 0.85rem;
-            color: var(--green);
-            margin: 0.3rem 0;
-            opacity: 0;
-            transform: translateX(-30px);
-            animation: bootType 0.3s ease forwards;
-        }
-        
-        .boot-line.warning { color: var(--orange); }
-        .boot-line.error { color: var(--red); }
-        
-        @keyframes bootType {
-            to { opacity: 1; transform: translateX(0); }
-        }
-        
-        .boot-progress {
-            width: 500px;
-            height: 3px;
-            background: rgba(0, 212, 255, 0.15);
-            margin-top: 2rem;
-            border-radius: 2px;
-            overflow: hidden;
-        }
-        
-        .boot-progress-bar {
-            height: 100%;
-            background: linear-gradient(90deg, var(--cyan), var(--gold));
-            width: 0%;
-            transition: width 0.3s ease;
-            box-shadow: 0 0 15px var(--cyan);
-        }
-        
-        .app-container {
-            display: grid;
-            grid-template-columns: 70px 1fr 300px;
-            grid-template-rows: auto 1fr auto;
-            min-height: 100vh;
-            position: relative;
-            z-index: 10;
-            gap: 0;
-        }
-        
-        .sidebar {
-            grid-row: 1 / 4;
-            background: linear-gradient(180deg, rgba(10, 10, 15, 0.95) 0%, rgba(18, 18, 26, 0.95) 100%);
-            border-right: 1px solid var(--glass-border);
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            padding: 1rem 0;
-            backdrop-filter: blur(10px);
-        }
-        
-        .sidebar-logo {
-            width: 45px;
-            height: 45px;
-            cursor: pointer;
-            margin-bottom: 2rem;
-            filter: drop-shadow(0 0 8px var(--cyan));
-            transition: all 0.3s ease;
-        }
-        
-        .sidebar-logo:hover {
-            transform: scale(1.15) rotate(90deg);
-            filter: drop-shadow(0 0 15px var(--cyan));
-        }
-        
-        .nav-items {
-            display: flex;
-            flex-direction: column;
-            gap: 0.5rem;
-            width: 100%;
-            padding: 0 0.5rem;
-        }
-        
-        .nav-item {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            padding: 0.75rem 0.5rem;
-            background: transparent;
-            border: 1px solid transparent;
-            border-radius: 8px;
-            cursor: pointer;
-            transition: all 0.3s ease;
-            color: var(--cyan-dim);
-        }
-        
-        .nav-item:hover, .nav-item.active {
-            background: rgba(0, 212, 255, 0.1);
-            border-color: var(--cyan-dim);
-            color: var(--cyan);
-        }
-        
-        .nav-item.active {
-            border-color: var(--gold);
-            box-shadow: 0 0 15px var(--gold-dim);
-        }
-        
-        .nav-icon {
-            font-size: 1.4rem;
-            margin-bottom: 0.25rem;
-        }
-        
-        .nav-label {
-            font-size: 0.55rem;
-            letter-spacing: 0.1rem;
-            text-transform: uppercase;
-            font-weight: 600;
-        }
-        
-        .sidebar-bottom {
-            margin-top: auto;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            gap: 1rem;
-        }
-        
-        .sound-toggle {
-            background: rgba(0, 212, 255, 0.1);
-            border: 1px solid var(--cyan-dim);
-            color: var(--cyan);
-            padding: 0.5rem;
-            cursor: pointer;
-            font-family: 'Share Tech Mono', monospace;
-            font-size: 0.6rem;
-            transition: all 0.3s ease;
-            border-radius: 4px;
-            width: 45px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-        }
-        
-        .sound-toggle:hover {
-            border-color: var(--cyan);
-            box-shadow: 0 0 20px var(--cyan-dim);
-            transform: translateY(-2px);
-        }
-        
-        .header {
-            grid-column: 2 / 3;
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            padding: 0.8rem 1.5rem;
-            background: linear-gradient(180deg, rgba(0, 212, 255, 0.08) 0%, transparent 100%);
-            border-bottom: 1px solid var(--glass-border);
-        }
-        
-        .header-left {
-            display: flex;
-            align-items: center;
-            gap: 1rem;
-        }
-        
-        .arc-reactor-mini {
-            width: 40px;
-            height: 40px;
-            filter: drop-shadow(0 0 8px var(--cyan));
-        }
-        
-        .header-title {
-            font-family: 'Orbitron', sans-serif;
-            font-size: 1.2rem;
-            font-weight: 700;
-            color: var(--cyan);
-            text-shadow: 0 0 15px var(--cyan);
-        }
-        
-        .header-title span {
-            color: var(--gold);
-            text-shadow: 0 0 15px var(--gold);
-        }
-        
-        .header-center {
-            display: flex;
-            gap: 1.5rem;
-            align-items: center;
-        }
-        
-        .resource-bar {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            gap: 0.2rem;
-            min-width: 60px;
-        }
-        
-        .resource-label {
-            font-size: 0.55rem;
-            color: var(--cyan-dim);
-            letter-spacing: 0.15rem;
-            font-weight: 600;
-        }
-        
-        .resource-track {
-            width: 100%;
-            height: 4px;
-            background: rgba(0, 212, 255, 0.1);
-            border-radius: 2px;
-            overflow: hidden;
-        }
-        
-        .resource-fill {
-            height: 100%;
-            border-radius: 2px;
-            transition: width 0.5s ease;
-        }
-        
-        .resource-fill.cpu { background: linear-gradient(90deg, var(--cyan), var(--cyan-bright)); box-shadow: 0 0 8px var(--cyan); }
-        .resource-fill.ram { background: linear-gradient(90deg, var(--green), var(--green-bright)); box-shadow: 0 0 8px var(--green); }
-        .resource-fill.net { background: linear-gradient(90deg, var(--gold), var(--gold-bright)); box-shadow: 0 0 8px var(--gold); }
-        
-        .header-right {
-            display: flex;
-            align-items: center;
-            gap: 1.5rem;
-        }
-        
-        .clock {
-            font-family: 'Orbitron', sans-serif;
-            font-size: 1rem;
-            color: var(--gold);
-            text-shadow: 0 0 15px var(--gold);
-        }
-        
-        .system-status-badge {
-            display: flex;
-            align-items: center;
-            gap: 0.5rem;
-            padding: 0.35rem 0.75rem;
-            background: rgba(0, 255, 136, 0.1);
-            border: 1px solid var(--green);
-            border-radius: 4px;
-        }
-        
-        .status-dot {
-            width: 8px;
-            height: 8px;
-            border-radius: 50%;
-            background: var(--green);
-            box-shadow: 0 0 10px var(--green);
-            animation: statusPulse 2s ease-in-out infinite;
-        }
-        
-        @keyframes statusPulse {
-            0%, 100% { opacity: 1; }
-            50% { opacity: 0.5; }
-        }
-        
-        .status-text {
-            font-size: 0.65rem;
-            color: var(--green);
-            font-weight: 600;
-            letter-spacing: 0.1rem;
-        }
-        
-        .main-content {
-            grid-column: 2 / 3;
-            padding: 1rem;
-            overflow-y: auto;
-        }
-        
-        .kpi-row {
-            display: grid;
-            grid-template-columns: repeat(6, 1fr);
-            gap: 0.75rem;
-            margin-bottom: 1rem;
-        }
-        
-        .kpi-card {
-            background: linear-gradient(135deg, rgba(0, 212, 255, 0.08) 0%, rgba(0, 212, 255, 0.02) 100%);
-            border: 1px solid var(--glass-border);
-            padding: 0.75rem;
-            position: relative;
-            overflow: hidden;
-            transition: all 0.3s ease;
-            backdrop-filter: blur(10px);
-        }
-        
-        .kpi-card::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 2px;
-            background: linear-gradient(90deg, transparent, var(--cyan), transparent);
-            animation: kpiGlow 2s ease-in-out infinite;
-        }
-        
-        @keyframes kpiGlow {
-            0%, 100% { opacity: 0.5; }
-            50% { opacity: 1; }
-        }
-        
-        .kpi-card:hover {
-            border-color: var(--cyan);
-            box-shadow: 0 0 25px var(--cyan-dim);
-            transform: translateY(-3px);
-        }
-        
-        .kpi-label {
-            font-size: 0.6rem;
-            color: var(--cyan-dim);
-            letter-spacing: 0.15rem;
-            margin-bottom: 0.35rem;
-            font-weight: 600;
-        }
-        
-        .kpi-value {
-            font-family: 'Orbitron', sans-serif;
-            font-size: 1.3rem;
-            font-weight: 700;
-            color: var(--cyan);
-            text-shadow: 0 0 15px var(--cyan);
-        }
-        
-        .kpi-value.positive { color: var(--green); text-shadow: 0 0 15px var(--green); }
-        .kpi-value.negative { color: var(--red); text-shadow: 0 0 15px var(--red); }
-        .kpi-value.warning { color: var(--orange); text-shadow: 0 0 15px var(--orange); }
-        .kpi-value.gold { color: var(--gold); text-shadow: 0 0 15px var(--gold); }
-        
-        .hud-grid {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 0.75rem;
-            margin-bottom: 1rem;
-        }
-        
-        .panel {
-            background: linear-gradient(135deg, rgba(0, 212, 255, 0.06) 0%, rgba(0, 212, 255, 0.01) 100%);
-            border: 1px solid var(--glass-border);
-            padding: 0.75rem;
-            position: relative;
-            backdrop-filter: blur(10px);
-            transition: all 0.3s ease;
-        }
-        
-        .panel:hover {
-            border-color: var(--glass-border-hover);
-            box-shadow: 0 0 30px var(--cyan-dim);
-        }
-        
-        .panel-header {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            margin-bottom: 0.75rem;
-            padding-bottom: 0.5rem;
-            border-bottom: 1px solid var(--glass-border);
-        }
-        
-        .panel-title {
-            font-family: 'Orbitron', sans-serif;
-            font-size: 0.75rem;
-            font-weight: 700;
-            color: var(--cyan);
-            letter-spacing: 0.15rem;
-            text-shadow: 0 0 10px var(--cyan);
-        }
-        
-        .panel-status {
-            font-size: 0.6rem;
-            padding: 0.2rem 0.5rem;
-            border-radius: 2px;
-            font-weight: 600;
-        }
-        
-        .panel-status.online { background: rgba(0, 255, 136, 0.2); color: var(--green); }
-        .panel-status.warning { background: rgba(255, 123, 0, 0.2); color: var(--orange); }
-        
-        .btc-gauge-container {
-            display: flex;
-            align-items: center;
-            gap: 1.5rem;
-        }
-        
-        .arc-gauge {
-            position: relative;
-            width: 120px;
-            height: 120px;
-        }
-        
-        .arc-gauge canvas {
-            width: 100%;
-            height: 100%;
-        }
-        
-        .arc-gauge-value {
-            position: absolute;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            text-align: center;
-        }
-        
-        .arc-gauge-price {
-            font-family: 'Orbitron', sans-serif;
-            font-size: 1.1rem;
-            font-weight: 700;
-            color: var(--gold);
-            text-shadow: 0 0 15px var(--gold);
-        }
-        
-        .arc-gauge-label {
-            font-size: 0.55rem;
-            color: var(--cyan-dim);
-            letter-spacing: 0.1rem;
-        }
-        
-        .btc-stats {
-            flex: 1;
-            display: flex;
-            flex-direction: column;
-            gap: 0.5rem;
-        }
-        
-        .btc-stat-item {
-            display: flex;
-            justify-content: space-between;
-            padding: 0.4rem;
-            background: rgba(0, 212, 255, 0.05);
-            border-radius: 4px;
-        }
-        
-        .btc-stat-label {
-            font-size: 0.65rem;
-            color: var(--cyan-dim);
-        }
-        
-        .btc-stat-value {
-            font-family: 'Orbitron', sans-serif;
-            font-size: 0.75rem;
-            font-weight: 600;
-        }
-        
-        .btc-stat-value.up { color: var(--green); }
-        .btc-stat-value.down { color: var(--red); }
-        
-        .agent-grid {
-            display: grid;
-            grid-template-columns: repeat(5, 1fr);
-            gap: 0.5rem;
-        }
-        
-        .agent-circle {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            gap: 0.35rem;
-            padding: 0.5rem 0.25rem;
-            background: rgba(0, 212, 255, 0.03);
-            border: 1px solid transparent;
-            border-radius: 8px;
-            transition: all 0.3s ease;
-        }
-        
-        .agent-circle:hover {
-            background: rgba(0, 212, 255, 0.1);
-            border-color: var(--cyan-dim);
-        }
-        
-        .agent-avatar {
-            width: 36px;
-            height: 36px;
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 1.2rem;
-            position: relative;
-        }
-        
-        .agent-avatar::after {
-            content: '';
-            position: absolute;
-            bottom: 0;
-            right: 0;
-            width: 10px;
-            height: 10px;
-            border-radius: 50%;
-            background: var(--green);
-            border: 2px solid var(--void);
-            box-shadow: 0 0 8px var(--green);
-        }
-        
-        .agent-avatar.busy::after {
-            background: var(--gold);
-            box-shadow: 0 0 8px var(--gold);
-            animation: statusPulse 1s ease-in-out infinite;
-        }
-        
-        .agent-name {
-            font-size: 0.55rem;
-            font-weight: 600;
-            color: var(--cyan);
-            text-align: center;
-        }
-        
-        .agent-role {
-            font-size: 0.45rem;
-            color: var(--cyan-dim);
-            text-align: center;
-        }
-        
-        .kpi-gauges {
-            display: grid;
-            grid-template-columns: repeat(3, 1fr);
-            gap: 0.75rem;
-        }
-        
-        .gauge-card {
-            background: rgba(0, 212, 255, 0.03);
-            border: 1px solid var(--glass-border);
-            border-radius: 8px;
-            padding: 0.75rem;
-            text-align: center;
-            transition: all 0.3s ease;
-        }
-        
-        .gauge-card:hover {
-            border-color: var(--cyan);
-            box-shadow: 0 0 20px var(--cyan-dim);
-        }
-        
-        .gauge-ring {
-            position: relative;
-            width: 80px;
-            height: 80px;
-            margin: 0 auto 0.5rem;
-        }
-        
-        .gauge-ring canvas {
-            width: 100%;
-            height: 100%;
-            transform: rotate(-90deg);
-        }
-        
-        .gauge-value {
-            position: absolute;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            font-family: 'Orbitron', sans-serif;
-            font-size: 1rem;
-            font-weight: 700;
-        }
-        
-        .gauge-label {
-            font-size: 0.6rem;
-            color: var(--cyan-dim);
-            letter-spacing: 0.1rem;
-            font-weight: 600;
-        }
-        
-        .trades-list {
-            display: flex;
-            flex-direction: column;
-            gap: 0.5rem;
-        }
-        
-        .trade-card {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            padding: 0.6rem;
-            background: linear-gradient(135deg, rgba(0, 255, 136, 0.08) 0%, rgba(0, 212, 255, 0.03) 100%);
-            border: 1px solid var(--green);
-            border-radius: 6px;
-            transition: all 0.3s ease;
-        }
-        
-        .trade-card:hover {
-            box-shadow: 0 0 20px rgba(0, 255, 136, 0.2);
-            transform: translateX(5px);
-        }
-        
-        .trade-info {
-            display: flex;
-            flex-direction: column;
-        }
-        
-        .trade-pair {
-            font-family: 'Orbitron', sans-serif;
-            font-size: 0.85rem;
-            font-weight: 700;
-            color: var(--cyan);
-        }
-        
-        .trade-details {
-            font-size: 0.6rem;
-            color: var(--cyan-dim);
-        }
-        
-        .trade-pnl {
-            font-family: 'Orbitron', sans-serif;
-            font-size: 0.95rem;
-            font-weight: 700;
-            color: var(--green);
-            text-shadow: 0 0 10px var(--green);
-        }
-        
-        .right-panel {
-            grid-column: 3 / 4;
-            grid-row: 2 / 4;
-            background: linear-gradient(180deg, rgba(10, 10, 15, 0.95) 0%, rgba(18, 18, 26, 0.95) 100%);
-            border-left: 1px solid var(--glass-border);
-            padding: 1rem;
-            display: flex;
-            flex-direction: column;
-            gap: 0.75rem;
-            backdrop-filter: blur(10px);
-            overflow-y: auto;
-        }
-        
-        .ollie-header {
-            display: flex;
-            align-items: center;
-            gap: 0.75rem;
-            padding-bottom: 0.75rem;
-            border-bottom: 1px solid var(--glass-border);
-        }
-        
-        .ollie-avatar {
-            width: 45px;
-            height: 45px;
-            border-radius: 50%;
-            background: linear-gradient(135deg, var(--gold) 0%, var(--cyan) 100%);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 1.5rem;
-            box-shadow: 0 0 20px var(--gold-glow);
-        }
-        
-        .ollie-title {
-            font-family: 'Orbitron', sans-serif;
-            font-size: 0.9rem;
-            font-weight: 700;
-            color: var(--gold);
-            text-shadow: 0 0 10px var(--gold);
-        }
-        
-        .ollie-subtitle {
-            font-size: 0.6rem;
-            color: var(--cyan-dim);
-            letter-spacing: 0.1rem;
-        }
-        
-        .ollie-section {
-            background: rgba(0, 212, 255, 0.03);
-            border: 1px solid var(--glass-border);
-            border-radius: 8px;
-            padding: 0.75rem;
-        }
-        
-        .ollie-section-title {
-            font-size: 0.6rem;
-            color: var(--gold);
-            letter-spacing: 0.15rem;
-            margin-bottom: 0.5rem;
-            font-weight: 600;
-            text-transform: uppercase;
-        }
-        
-        .briefing-grid {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 0.4rem;
-        }
-        
-        .briefing-item {
-            padding: 0.4rem;
-            background: rgba(0, 212, 255, 0.05);
-            border-left: 2px solid var(--gold);
-            border-radius: 0 4px 4px 0;
-        }
-        
-        .briefing-label {
-            font-size: 0.5rem;
-            color: var(--cyan-dim);
-        }
-        
-        .briefing-value {
-            font-family: 'Orbitron', sans-serif;
-            font-size: 0.75rem;
-            color: var(--cyan);
-        }
-        
-        .briefing-value.up { color: var(--green); }
-        .briefing-value.down { color: var(--red); }
-        
-        .alerts-list {
-            display: flex;
-            flex-direction: column;
-            gap: 0.4rem;
-        }
-        
-        .alert-item {
-            display: flex;
-            align-items: center;
-            gap: 0.4rem;
-            padding: 0.4rem;
-            background: rgba(0, 212, 255, 0.05);
-            border-left: 2px solid var(--cyan);
-            border-radius: 0 4px 4px 0;
-            font-size: 0.65rem;
-        }
-        
-        .alert-item.warning {
-            border-left-color: var(--orange);
-            background: rgba(255, 123, 0, 0.05);
-        }
-        
-        .alert-item.success {
-            border-left-color: var(--green);
-            background: rgba(0, 255, 136, 0.05);
-        }
-        
-        .alert-icon {
-            font-size: 0.8rem;
-        }
-        
-        .voice-input {
-            display: flex;
-            gap: 0.4rem;
-        }
-        
-        .voice-input input {
-            flex: 1;
-            background: rgba(0, 212, 255, 0.1);
-            border: 1px solid var(--cyan-dim);
-            color: var(--cyan);
-            padding: 0.5rem;
-            font-family: 'Share Tech Mono', monospace;
-            font-size: 0.65rem;
-            border-radius: 4px;
-        }
-        
-        .voice-input input:focus {
-            outline: none;
-            border-color: var(--cyan);
-        }
-        
-        .voice-input button {
-            background: var(--gold);
-            border: none;
-            color: var(--void);
-            padding: 0.5rem 0.75rem;
-            font-family: 'Orbitron', sans-serif;
-            font-size: 0.55rem;
-            cursor: pointer;
-            border-radius: 4px;
-            font-weight: 700;
-        }
-        
-        .voice-input button:hover {
-            background: var(--gold-bright);
-            box-shadow: 0 0 15px var(--gold);
-        }
-        
-        .quick-commands {
-            display: grid;
-            grid-template-columns: 1fr;
-            gap: 0.35rem;
-        }
-        
-        .cmd-btn {
-            background: rgba(0, 212, 255, 0.08);
-            border: 1px solid var(--cyan-dim);
-            color: var(--cyan);
-            padding: 0.5rem;
-            font-family: 'Share Tech Mono', monospace;
-            font-size: 0.6rem;
-            cursor: pointer;
-            transition: all 0.3s ease;
-            border-radius: 4px;
-            text-align: left;
-        }
-        
-        .cmd-btn:hover {
-            background: rgba(0, 212, 255, 0.2);
-            border-color: var(--cyan);
-            box-shadow: 0 0 15px var(--cyan-dim);
-            transform: translateX(5px);
-        }
-        
-        .cmd-btn .key {
-            color: var(--gold);
-            font-weight: 700;
-            font-size: 0.7rem;
-            display: block;
-            margin-bottom: 0.15rem;
-        }
-        
-        .bottom-bar {
-            grid-column: 2 / 3;
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            padding: 0.75rem 1.5rem;
-            background: linear-gradient(0deg, rgba(0, 212, 255, 0.08) 0%, transparent 100%);
-            border-top: 1px solid var(--glass-border);
-        }
-        
-        .bottom-left {
-            display: flex;
-            align-items: center;
-            gap: 1rem;
-        }
-        
-        .bottom-logo {
-            display: flex;
-            align-items: center;
-            gap: 0.5rem;
-        }
-        
-        .bottom-logo canvas {
-            width: 25px;
-            height: 25px;
-            filter: drop-shadow(0 0 5px var(--cyan));
-        }
-        
-        .bottom-logo-text {
-            font-family: 'Orbitron', sans-serif;
-            font-size: 0.75rem;
-            font-weight: 700;
-            color: var(--cyan);
-            letter-spacing: 0.15rem;
-        }
-        
-        .bottom-logo-text span {
-            color: var(--gold);
-        }
-        
-        .bottom-center {
-            display: flex;
-            gap: 1rem;
-        }
-        
-        .channel-item {
-            display: flex;
-            align-items: center;
-            gap: 0.4rem;
-            font-size: 0.65rem;
-            color: var(--cyan-dim);
-        }
-        
-        .channel-icon {
-            color: var(--gold);
-        }
-        
-        .bottom-right {
-            display: flex;
-            gap: 0.75rem;
-        }
-        
-        .quick-btn {
-            background: rgba(0, 212, 255, 0.1);
-            border: 1px solid var(--cyan-dim);
-            color: var(--cyan);
-            padding: 0.35rem 0.75rem;
-            font-family: 'Share Tech Mono', monospace;
-            font-size: 0.6rem;
-            cursor: pointer;
-            border-radius: 4px;
-            transition: all 0.3s ease;
-        }
-        
-        .quick-btn:hover {
-            background: rgba(0, 212, 255, 0.2);
-            border-color: var(--cyan);
-            box-shadow: 0 0 15px var(--cyan-dim);
-        }
-        
-        .live-log {
-            max-height: 120px;
-            overflow-y: auto;
-            font-size: 0.6rem;
-            font-family: 'Share Tech Mono', monospace;
-        }
-        
-        .live-entry {
-            padding: 0.2rem 0;
-            border-bottom: 1px solid rgba(0, 212, 255, 0.05);
-        }
-        
-        .live-entry.info { color: var(--cyan); }
-        .live-entry.success { color: var(--green); }
-        .live-entry.warn { color: var(--orange); }
-        .live-entry.error { color: var(--red); }
-        
-        #arc-modal {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: rgba(10, 10, 15, 0.95);
-            z-index: 9000;
-            display: none;
-            align-items: center;
-            justify-content: center;
-            flex-direction: column;
-        }
-        
-        #arc-modal.visible {
-            display: flex;
-        }
-        
-        .arc-stats {
-            text-align: center;
-            margin-top: 2rem;
-        }
-        
-        .arc-stat {
-            margin: 1rem 0;
-        }
-        
-        .arc-stat .label {
-            font-size: 0.8rem;
-            color: var(--cyan-dim);
-        }
-        
-        .arc-stat .value {
-            font-family: 'Orbitron', sans-serif;
-            font-size: 2rem;
-            color: var(--cyan);
-            text-shadow: 0 0 20px var(--cyan);
-        }
-        
-        .close-modal {
-            margin-top: 2rem;
-            background: none;
-            border: 1px solid var(--cyan);
-            color: var(--cyan);
-            padding: 0.5rem 2rem;
-            cursor: pointer;
-            font-family: 'Share Tech Mono', monospace;
-            transition: all 0.3s ease;
-        }
-        
-        .close-modal:hover {
-            background: var(--cyan);
-            color: var(--void);
-        }
-        
-        .toast-container {
-            position: fixed;
-            top: 80px;
-            right: 20px;
-            z-index: 8000;
-            display: flex;
-            flex-direction: column;
-            gap: 0.5rem;
-        }
-        
-        .toast {
-            background: rgba(0, 212, 255, 0.1);
-            border: 1px solid var(--cyan);
-            padding: 1rem 1.5rem;
-            min-width: 300px;
-            animation: toastIn 0.3s ease;
-            position: relative;
-        }
-        
-        .toast::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 3px;
-            height: 100%;
-            background: var(--cyan);
-        }
-        
-        .toast.success { border-color: var(--green); }
-        .toast.success::before { background: var(--green); }
-        .toast.warning { border-color: var(--orange); }
-        .toast.warning::before { background: var(--orange); }
-        .toast.error { border-color: var(--red); }
-        .toast.error::before { background: var(--red); }
-        
-        @keyframes toastIn {
-            from { transform: translateX(100%); opacity: 0; }
-            to { transform: translateX(0); opacity: 1; }
-        }
-        
-        .toast-title {
-            font-family: 'Orbitron', sans-serif;
-            font-size: 0.8rem;
-            font-weight: 700;
-            margin-bottom: 0.3rem;
-        }
-        
-        .toast-msg {
-            font-size: 0.75rem;
-            color: var(--cyan-dim);
-        }
-        
-        ::-webkit-scrollbar { width: 6px; }
+            z-index: 0;
+            animation: orbFloat 25s ease-in-out infinite;
+        }
+        .orb-1 { width: 600px; height: 600px; background: radial-gradient(circle, rgba(155, 93, 229, 0.12) 0%, transparent 70%); top: -200px; right: -200px; }
+        .orb-2 { width: 500px; height: 500px; background: radial-gradient(circle, rgba(0, 245, 212, 0.1) 0%, transparent 70%); bottom: -150px; left: -150px; animation-delay: -12s; }
+        .orb-3 { width: 450px; height: 450px; background: radial-gradient(circle, rgba(241, 91, 181, 0.08) 0%, transparent 70%); top: 50%; left: 50%; transform: translate(-50%, -50%); animation: orbPulse 18s ease-in-out infinite; }
+        @keyframes orbFloat { 0%, 100% { transform: translate(0, 0) scale(1); } 25% { transform: translate(40px, -40px) scale(1.05); } 50% { transform: translate(-30px, 30px) scale(0.95); } 75% { transform: translate(30px, 40px) scale(1.02); } }
+        @keyframes orbPulse { 0%, 100% { opacity: 0.4; transform: translate(-50%, -50%) scale(1); } 50% { opacity: 0.7; transform: translate(-50%, -50%) scale(1.15); } }
+        #particles { position: fixed; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; z-index: 1; }
+        ::-webkit-scrollbar { width: 5px; }
         ::-webkit-scrollbar-track { background: var(--void); }
-        ::-webkit-scrollbar-thumb { background: var(--cyan-dim); border-radius: 3px; }
-        
-        @media (max-width: 1200px) {
-            .kpi-row { grid-template-columns: repeat(3, 1fr); }
-            .hud-grid { grid-template-columns: 1fr; }
-            .app-container { grid-template-columns: 60px 1fr; }
-            .right-panel { display: none; }
-        }
-        
-        @media (max-width: 768px) {
-            .kpi-row { grid-template-columns: repeat(2, 1fr); }
-            .header { flex-wrap: wrap; }
-            .header-center { order: 3; width: 100%; margin-top: 0.5rem; }
-        }
+        ::-webkit-scrollbar-thumb { background: var(--glass-border); border-radius: 3px; }
+        ::-webkit-scrollbar-thumb:hover { background: var(--cyan-dim); }
+        #boot-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: var(--void); z-index: 99999; display: flex; flex-direction: column; align-items: center; justify-content: center; transition: opacity 0.8s ease, visibility 0.8s ease; }
+        #boot-overlay.hidden { opacity: 0; visibility: hidden; }
+        .boot-logo { font-family: 'Outfit', sans-serif; font-size: 5rem; font-weight: 900; background: linear-gradient(135deg, var(--cyan) 0%, var(--violet) 50%, var(--coral) 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; margin-bottom: 0.5rem; animation: bootGlow 2s ease-in-out infinite; letter-spacing: 0.2rem; }
+        @keyframes bootGlow { 0%, 100% { filter: drop-shadow(0 0 20px var(--cyan-glow)); } 50% { filter: drop-shadow(0 0 40px var(--violet-dim)); } }
+        .boot-subtitle { font-family: 'JetBrains Mono', monospace; font-size: 0.85rem; color: var(--text-muted); letter-spacing: 0.4rem; margin-bottom: 3rem; }
+        .boot-status { font-family: 'JetBrains Mono', monospace; font-size: 0.75rem; color: var(--cyan); margin: 0.25rem 0; opacity: 0; transform: translateX(-20px); animation: bootType 0.4s ease forwards; }
+        .boot-status.success { color: var(--success); }
+        @keyframes bootType { to { opacity: 1; transform: translateX(0); } }
+        .boot-progress { width: 300px; height: 2px; background: var(--glass-border); margin-top: 2rem; border-radius: 1px; overflow: hidden; }
+        .boot-progress-bar { height: 100%; background: linear-gradient(90deg, var(--cyan), var(--violet), var(--coral)); width: 0%; transition: width 0.3s ease; }
+        .app-container { display: grid; grid-template-columns: 1fr; grid-template-rows: auto 1fr auto; min-height: 100vh; position: relative; z-index: 10; }
+        .header { grid-column: 1; display: flex; align-items: center; justify-content: space-between; padding: 1rem 2rem; background: var(--void-card); backdrop-filter: blur(20px); border-bottom: 1px solid var(--glass-border); position: sticky; top: 0; z-index: 100; }
+        .header-left { display: flex; align-items: center; gap: 1rem; }
+        .logo { display: flex; align-items: center; gap: 0.75rem; }
+        .logo-icon { width: 40px; height: 40px; background: linear-gradient(135deg, var(--cyan) 0%, var(--violet) 100%); border-radius: 10px; display: flex; align-items: center; justify-content: center; font-weight: 800; font-size: 1.2rem; color: var(--void); box-shadow: 0 0 20px var(--cyan-glow); }
+        .logo-text { font-family: 'Outfit', sans-serif; font-size: 1.4rem; font-weight: 700; color: var(--text); }
+        .logo-text span { background: linear-gradient(90deg, var(--cyan), var(--violet)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; }
+        .header-center { display: flex; align-items: center; gap: 2rem; }
+        .nav-links { display: flex; gap: 0.5rem; }
+        .nav-link { padding: 0.5rem 1rem; font-size: 0.85rem; font-weight: 500; color: var(--text-muted); text-decoration: none; border-radius: 8px; transition: all 0.3s ease; position: relative; }
+        .nav-link:hover, .nav-link.active { color: var(--text); background: var(--glass); }
+        .nav-link.active::after { content: ''; position: absolute; bottom: 0; left: 50%; transform: translateX(-50%); width: 20px; height: 2px; background: var(--cyan); border-radius: 1px; }
+        .header-right { display: flex; align-items: center; gap: 1.5rem; }
+        .clock { font-family: 'JetBrains Mono', monospace; font-size: 1rem; color: var(--text); font-weight: 500; }
+        .status-badge { display: flex; align-items: center; gap: 0.5rem; padding: 0.4rem 0.8rem; background: rgba(0, 245, 212, 0.1); border: 1px solid var(--cyan); border-radius: 20px; }
+        .status-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--cyan); box-shadow: 0 0 10px var(--cyan); animation: statusPulse 2s ease-in-out infinite; }
+        @keyframes statusPulse { 0%, 100% { opacity: 1; box-shadow: 0 0 10px var(--cyan); } 50% { opacity: 0.5; box-shadow: 0 0 5px var(--cyan); } }
+        .status-label { font-size: 0.7rem; font-weight: 600; color: var(--cyan); letter-spacing: 0.1rem; }
+        .main-content { padding: 2rem; max-width: 1600px; margin: 0 auto; width: 100%; }
+        .hero { display: grid; grid-template-columns: 2fr 1fr; gap: 2rem; margin-bottom: 2rem; }
+        .hero-main { background: var(--void-card); backdrop-filter: blur(20px); border: 1px solid var(--glass-border); border-radius: 24px; padding: 2rem; position: relative; overflow: hidden; }
+        .hero-main::before { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 1px; background: linear-gradient(90deg, transparent, var(--cyan), var(--violet), transparent); }
+        .hero-label { font-size: 0.75rem; font-weight: 600; color: var(--text-muted); letter-spacing: 0.15rem; text-transform: uppercase; margin-bottom: 0.5rem; }
+        .hero-price { font-family: 'JetBrains Mono', monospace; font-size: 3.5rem; font-weight: 700; color: var(--text); margin-bottom: 0.5rem; line-height: 1; }
+        .hero-price .currency { font-size: 1.5rem; color: var(--text-muted); margin-right: 0.25rem; }
+        .hero-change { display: inline-flex; align-items: center; gap: 0.4rem; padding: 0.3rem 0.7rem; border-radius: 20px; font-family: 'JetBrains Mono', monospace; font-size: 0.9rem; font-weight: 600; }
+        .hero-change.positive { background: rgba(0, 245, 212, 0.15); color: var(--cyan); }
+        .hero-change.negative { background: rgba(255, 107, 107, 0.15); color: var(--danger); }
+        .hero-chart { height: 100px; margin-top: 1.5rem; position: relative; }
+        .hero-chart canvas { width: 100%; height: 100%; }
+        .hero-stats { display: grid; grid-template-columns: repeat(4, 1fr); gap: 1rem; margin-top: 1.5rem; padding-top: 1.5rem; border-top: 1px solid var(--glass-border); }
+        .hero-stat { text-align: center; }
+        .hero-stat-value { font-family: 'JetBrains Mono', monospace; font-size: 1.1rem; font-weight: 600; color: var(--text); }
+        .hero-stat-label { font-size: 0.7rem; color: var(--text-muted); margin-top: 0.25rem; }
+        .hero-sidebar { display: flex; flex-direction: column; gap: 1rem; }
+        .kpi-row { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
+        .kpi-card { background: var(--void-card); backdrop-filter: blur(20px); border: 1px solid var(--glass-border); border-radius: 16px; padding: 1.25rem; transition: all 0.3s ease; position: relative; overflow: hidden; }
+        .kpi-card::before { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 2px; background: linear-gradient(90deg, var(--cyan), var(--violet)); opacity: 0; transition: opacity 0.3s ease; }
+        .kpi-card:hover { transform: translateY(-3px); border-color: var(--cyan-dim); box-shadow: 0 10px 40px rgba(0, 245, 212, 0.1); }
+        .kpi-card:hover::before { opacity: 1; }
+        .kpi-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 0.75rem; }
+        .kpi-icon { width: 36px; height: 36px; border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 1.1rem; }
+        .kpi-icon.cyan { background: rgba(0, 245, 212, 0.15); }
+        .kpi-icon.violet { background: rgba(155, 93, 229, 0.15); }
+        .kpi-icon.coral { background: rgba(241, 91, 181, 0.15); }
+        .kpi-icon.amber { background: rgba(254, 228, 64, 0.15); }
+        .kpi-trend { font-family: 'JetBrains Mono', monospace; font-size: 0.7rem; padding: 0.2rem 0.5rem; border-radius: 10px; }
+        .kpi-trend.up { background: rgba(0, 245, 212, 0.15); color: var(--cyan); }
+        .kpi-trend.down { background: rgba(255, 107, 107, 0.15); color: var(--danger); }
+        .kpi-value { font-family: 'JetBrains Mono', monospace; font-size: 1.6rem; font-weight: 700; color: var(--text); margin-bottom: 0.25rem; }
+        .kpi-value.gradient { background: linear-gradient(90deg, var(--cyan), var(--violet)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; }
+        .kpi-label { font-size: 0.75rem; color: var(--text-muted); font-weight: 500; }
+        .main-grid { display: grid; grid-template-columns: 1fr 1fr 320px; gap: 1.5rem; margin-bottom: 2rem; }
+        .panel { background: var(--void-card); backdrop-filter: blur(20px); border: 1px solid var(--glass-border); border-radius: 20px; padding: 1.5rem; transition: all 0.3s ease; }
+        .panel:hover { border-color: rgba(255, 255, 255, 0.12); }
+        .panel-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 1.25rem; }
+        .panel-title { font-size: 0.9rem; font-weight: 600; color: var(--text); display: flex; align-items: center; gap: 0.5rem; }
+        .panel-title::before { content: ''; width: 8px; height: 8px; background: var(--cyan); border-radius: 2px; }
+        .panel-badge { font-size: 0.65rem; font-weight: 600; padding: 0.25rem 0.6rem; border-radius: 12px; letter-spacing: 0.05rem; }
+        .panel-badge.online { background: rgba(0, 245, 212, 0.15); color: var(--cyan); }
+        .panel-badge.warning { background: rgba(254, 228, 64, 0.15); color: var(--warning); }
+        .trades-table { width: 100%; }
+        .trade-row { display: grid; grid-template-columns: 1fr auto auto auto; gap: 1rem; align-items: center; padding: 1rem; background: var(--glass); border-radius: 12px; margin-bottom: 0.75rem; transition: all 0.3s ease; border: 1px solid transparent; }
+        .trade-row:hover { background: rgba(255, 255, 255, 0.05); border-color: var(--glass-border); transform: translateX(5px); }
+        .trade-pair { display: flex; flex-direction: column; gap: 0.25rem; }
+        .trade-symbol { font-family: 'JetBrains Mono', monospace; font-weight: 600; font-size: 0.95rem; color: var(--text); }
+        .trade-direction { font-size: 0.7rem; color: var(--text-muted); }
+        .trade-direction.long { color: var(--cyan); }
+        .trade-direction.short { color: var(--coral); }
+        .trade-entry, .trade-size { font-family: 'JetBrains Mono', monospace; font-size: 0.8rem; color: var(--text-muted); text-align: right; }
+        .trade-pnl { font-family: 'JetBrains Mono', monospace; font-weight: 600; font-size: 0.95rem; text-align: right; min-width: 80px; }
+        .trade-pnl.positive { color: var(--cyan); }
+        .trade-pnl.negative { color: var(--danger); }
+        .agents-grid { display: grid; grid-template-columns: 1fr; gap: 0.75rem; }
+        .agent-card { background: var(--glass); border-radius: 14px; padding: 1rem 1.25rem; display: flex; align-items: center; gap: 1rem; transition: all 0.3s ease; border: 1px solid transparent; }
+        .agent-card:hover { background: rgba(255, 255, 255, 0.05); border-color: var(--glass-border); }
+        .agent-card.busy { border-color: var(--amber-dim); }
+        .agent-avatar { width: 44px; height: 44px; border-radius: 12px; display: flex; align-items: center; justify-content: center; font-size: 1.3rem; position: relative; flex-shrink: 0; }
+        .agent-avatar::after { content: ''; position: absolute; bottom: -2px; right: -2px; width: 12px; height: 12px; border-radius: 50%; border: 2px solid var(--void-card); }
+        .agent-avatar.idle::after { background: var(--cyan); box-shadow: 0 0 8px var(--cyan); }
+        .agent-avatar.busy::after { background: var(--amber); box-shadow: 0 0 8px var(--amber); animation: statusPulse 1s ease-in-out infinite; }
+        .agent-info { flex: 1; }
+        .agent-name { font-weight: 600; font-size: 0.9rem; color: var(--text); margin-bottom: 0.15rem; }
+        .agent-role { font-size: 0.7rem; color: var(--text-muted); }
+        .agent-status { font-size: 0.65rem; font-weight: 600; padding: 0.25rem 0.5rem; border-radius: 8px; }
+        .agent-status.active { background: rgba(0, 245, 212, 0.15); color: var(--cyan); }
+        .agent-status.working { background: rgba(254, 228, 64, 0.15); color: var(--amber); }
+        .activity-list { display: flex; flex-direction: column; gap: 0.75rem; max-height: 380px; overflow-y: auto; }
+        .activity-item { display: flex; align-items: flex-start; gap: 0.75rem; padding: 0.75rem; background: var(--glass); border-radius: 10px; animation: slideIn 0.3s ease; }
+        @keyframes slideIn { from { opacity: 0; transform: translateX(-10px); } to { opacity: 1; transform: translateX(0); } }
+        .activity-icon { width: 32px; height: 32px; border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 0.9rem; flex-shrink: 0; }
+        .activity-icon.info { background: rgba(0, 245, 212, 0.15); }
+        .activity-icon.success { background: rgba(0, 245, 212, 0.15); }
+        .activity-icon.warning { background: rgba(254, 228, 64, 0.15); }
+        .activity-content { flex: 1; }
+        .activity-text { font-size: 0.8rem; color: var(--text); line-height: 1.4; }
+        .activity-time { font-family: 'JetBrains Mono', monospace; font-size: 0.65rem; color: var(--text-muted); margin-top: 0.25rem; }
+        .lower-section { display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem; }
+        .actions-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 0.75rem; }
+        .action-btn { display: flex; flex-direction: column; align-items: center; gap: 0.5rem; padding: 1.25rem 1rem; background: var(--glass); border: 1px solid var(--glass-border); border-radius: 14px; cursor: pointer; transition: all 0.3s ease; }
+        .action-btn:hover { background: rgba(255, 255, 255, 0.08); border-color: var(--cyan-dim); transform: translateY(-3px); }
+        .action-icon { font-size: 1.5rem; }
+        .action-label { font-size: 0.7rem; font-weight: 500; color: var(--text-muted); }
+        .alerts-list { display: flex; flex-direction: column; gap: 0.75rem; }
+        .alert-item { display: flex; align-items: center; gap: 0.75rem; padding: 0.85rem 1rem; background: var(--glass); border-radius: 12px; border-left: 3px solid; }
+        .alert-item.info { border-left-color: var(--cyan); }
+        .alert-item.warning { border-left-color: var(--amber); }
+        .alert-item.success { border-left-color: var(--cyan); }
+        .alert-icon { font-size: 1.1rem; }
+        .alert-text { flex: 1; font-size: 0.8rem; color: var(--text); }
+        .alert-time { font-family: 'JetBrains Mono', monospace; font-size: 0.65rem; color: var(--text-muted); }
+        .footer { grid-column: 1; display: flex; align-items: center; justify-content: space-between; padding: 1rem 2rem; background: var(--void-card); backdrop-filter: blur(20px); border-top: 1px solid var(--glass-border); }
+        .footer-left { display: flex; align-items: center; gap: 1.5rem; }
+        .footer-logo { display: flex; align-items: center; gap: 0.5rem; font-weight: 600; font-size: 0.85rem; color: var(--text-muted); }
+        .footer-logo span { color: var(--cyan); }
+        .footer-channels { display: flex; gap: 1rem; }
+        .channel-badge { display: flex; align-items: center; gap: 0.4rem; font-size: 0.75rem; color: var(--text-muted); }
+        .channel-badge::before { content: ''; width: 6px; height: 6px; background: var(--cyan); border-radius: 50%; }
+        .footer-right { display: flex; align-items: center; gap: 1rem; }
+        .footer-btn { padding: 0.5rem 1rem; background: var(--glass); border: 1px solid var(--glass-border); border-radius: 8px; color: var(--text-muted); font-family: 'JetBrains Mono', monospace; font-size: 0.7rem; cursor: pointer; transition: all 0.3s ease; }
+        .footer-btn:hover { border-color: var(--cyan); color: var(--cyan); }
+        .toast-container { position: fixed; top: 80px; right: 20px; z-index: 9000; display: flex; flex-direction: column; gap: 0.75rem; }
+        .toast { background: var(--void-elevated); border: 1px solid var(--glass-border); padding: 1rem 1.5rem; min-width: 320px; border-radius: 12px; animation: toastIn 0.3s ease; display: flex; align-items: center; gap: 0.75rem; }
+        .toast.success { border-left: 3px solid var(--cyan); }
+        .toast.warning { border-left: 3px solid var(--amber); }
+        .toast.error { border-left: 3px solid var(--danger); }
+        @keyframes toastIn { from { transform: translateX(100%); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
+        .toast-icon { font-size: 1.2rem; }
+        .toast-content { flex: 1; }
+        .toast-title { font-weight: 600; font-size: 0.85rem; margin-bottom: 0.15rem; }
+        .toast-message { font-size: 0.75rem; color: var(--text-muted); }
+        @media (max-width: 1200px) { .main-grid { grid-template-columns: 1fr 1fr; } .hero { grid-template-columns: 1fr; } .hero-sidebar { flex-direction: row; } .kpi-row { flex: 1; } }
+        @media (max-width: 900px) { .main-grid { grid-template-columns: 1fr; } .lower-section { grid-template-columns: 1fr; } .hero-stats { grid-template-columns: repeat(2, 1fr); } .actions-grid { grid-template-columns: repeat(2, 1fr); } }
+        @media (max-width: 600px) { .header { flex-direction: column; gap: 1rem; } .header-center, .header-right { width: 100%; justify-content: center; } .nav-links { flex-wrap: wrap; justify-content: center; } }
     </style>
 </head>
 <body>
-    <canvas id="particle-canvas"></canvas>
-    <div class="ambient-glow"></div>
-    
-    <div class="corner-bracket tl"></div>
-    <div class="corner-bracket tr"></div>
-    <div class="corner-bracket bl"></div>
-    <div class="corner-bracket br"></div>
-    
-    <!-- BOOT SEQUENCE -->
+    <div class="orb orb-1"></div>
+    <div class="orb orb-2"></div>
+    <div class="orb orb-3"></div>
+    <div class="noise-overlay"></div>
+    <canvas id="particles"></canvas>
     <div id="boot-overlay">
-        <div class="boot-title">OLLIE</div>
+        <div class="boot-logo">OLLIE</div>
         <div class="boot-subtitle">— HIFTY MISSION CONTROL —</div>
         <div id="boot-lines"></div>
         <div class="boot-progress"><div class="boot-progress-bar" id="boot-progress"></div></div>
     </div>
-    
-    <!-- ARC REACTOR MODAL -->
-    <div id="arc-modal">
-        <canvas id="arc-canvas" width="300" height="300"></canvas>
-        <div class="arc-stats">
-            <div class="arc-stat"><div class="label">CORE TEMPERATURE</div><div class="value" id="core-temp">42.0°C</div></div>
-            <div class="arc-stat"><div class="label">POWER OUTPUT</div><div class="value" id="power-output">98.7%</div></div>
-            <div class="arc-stat"><div class="label">CYCLE COUNT</div><div class="value" id="cycle-count">1,337</div></div>
-        </div>
-        <button class="close-modal" onclick="closeArcModal(); SFX.click();">[ CLOSE ]</button>
-    </div>
-    
-    <!-- TOAST CONTAINER -->
     <div class="toast-container" id="toast-container"></div>
-    
-    <!-- MAIN CONTAINER -->
     <div class="app-container">
-        <!-- LEFT SIDEBAR -->
-        <div class="sidebar">
-            <canvas class="sidebar-logo" id="arc-reactor" width="50" height="50"></canvas>
-            
-            <div class="nav-items">
-                <div class="nav-item active">
-                    <div class="nav-icon">◈</div>
-                    <div class="nav-label">Team</div>
-                </div>
-                <div class="nav-item">
-                    <div class="nav-icon">📈</div>
-                    <div class="nav-label">Trades</div>
-                </div>
-                <div class="nav-item">
-                    <div class="nav-icon">📊</div>
-                    <div class="nav-label">Markets</div>
-                </div>
-                <div class="nav-item">
-                    <div class="nav-icon">✓</div>
-                    <div class="nav-label">Tasks</div>
-                </div>
-                <div class="nav-item">
-                    <div class="nav-icon">⚙</div>
-                    <div class="nav-label">Settings</div>
-                </div>
-            </div>
-            
-            <div class="sidebar-bottom">
-                <button id="sound-toggle" onclick="toggleSound()" class="sound-toggle">🔇</button>
-            </div>
-        </div>
-        
-        <!-- HEADER -->
-        <div class="header">
+        <header class="header">
             <div class="header-left">
-                <canvas class="arc-reactor-mini" id="arc-reactor-mini" width="45" height="45"></canvas>
-                <div class="header-title">OLLIE <span>//</span> HIFTY CO</div>
-            </div>
-            
-            <div class="header-center">
-                <div class="resource-bar">
-                    <span class="resource-label">CPU</span>
-                    <div class="resource-track"><div class="resource-fill cpu" id="cpu-bar" style="width: 23%"></div></div>
-                </div>
-                <div class="resource-bar">
-                    <span class="resource-label">RAM</span>
-                    <div class="resource-track"><div class="resource-fill ram" id="ram-bar" style="width: 47%"></div></div>
-                </div>
-                <div class="resource-bar">
-                    <span class="resource-label">NET</span>
-                    <div class="resource-track"><div class="resource-fill net" id="net-bar" style="width: 12%"></div></div>
+                <div class="logo">
+                    <div class="logo-icon">◈</div>
+                    <div class="logo-text">OLLIE <span>//</span> HIFTY CO</div>
                 </div>
             </div>
-            
+            <nav class="header-center">
+                <div class="nav-links">
+                    <a href="#" class="nav-link active">Dashboard</a>
+                    <a href="#" class="nav-link">Trades</a>
+                    <a href="#" class="nav-link">Agents</a>
+                    <a href="#" class="nav-link">Analytics</a>
+                </div>
+            </nav>
             <div class="header-right">
                 <div class="clock" id="clock">00:00:00</div>
-                <div class="system-status-badge">
+                <div class="status-badge">
                     <div class="status-dot"></div>
-                    <span class="status-text">ONLINE</span>
+                    <span class="status-label">ONLINE</span>
                 </div>
             </div>
-        </div>
-        
-        <!-- MAIN CONTENT -->
-        <div class="main-content">
-            <!-- KPI ROW -->
-            <div class="kpi-row">
-                <div class="kpi-card">
-                    <div class="kpi-label">ACTIVE AGENTS</div>
-                    <div class="kpi-value" id="kpi-sessions">5</div>
+        </header>
+        <main class="main-content">
+            <section class="hero">
+                <div class="hero-main">
+                    <div class="hero-label">◈ Bitcoin Price</div>
+                    <div class="hero-price"><span class="currency">$</span><span id="btc-price">84,234</span></div>
+                    <div class="hero-change positive" id="btc-change">▲ +2.4%</div>
+                    <div class="hero-chart"><canvas id="chart-canvas"></canvas></div>
+                    <div class="hero-stats">
+                        <div class="hero-stat"><div class="hero-stat-value" id="stat-high">$85,120</div><div class="hero-stat-label">24H HIGH</div></div>
+                        <div class="hero-stat"><div class="hero-stat-value" id="stat-low">$82,456</div><div class="hero-stat-label">24H LOW</div></div>
+                        <div class="hero-stat"><div class="hero-stat-value" id="stat-volume">28.4B</div><div class="hero-stat-label">VOLUME</div></div>
+                        <div class="hero-stat"><div class="hero-stat-value" id="stat-market">1.67T</div><div class="hero-stat-label">MARKET CAP</div></div>
+                    </div>
                 </div>
-                <div class="kpi-card">
-                    <div class="kpi-label">API CALLS (24H)</div>
-                    <div class="kpi-value" id="kpi-api-calls">1,247</div>
+                <div class="hero-sidebar">
+                    <div class="kpi-row">
+                        <div class="kpi-card"><div class="kpi-header"><div class="kpi-icon cyan">📈</div><div class="kpi-trend up">+12%</div></div><div class="kpi-value gradient">$7,394</div><div class="kpi-label">Total P&L</div></div>
+                        <div class="kpi-card"><div class="kpi-header"><div class="kpi-icon violet">✓</div><div class="kpi-trend up">100%</div></div><div class="kpi-value">100%</div><div class="kpi-label">Win Rate</div></div>
+                        <div class="kpi-card"><div class="kpi-header"><div class="kpi-icon coral">📊</div><div class="kpi-trend down">-67%</div></div><div class="kpi-value">33%</div><div class="kpi-label">RSI Compliance</div></div>
+                        <div class="kpi-card"><div class="kpi-header"><div class="kpi-icon amber">👥</div><div class="kpi-trend up">5</div></div><div class="kpi-value">5</div><div class="kpi-label">Active Agents</div></div>
+                    </div>
                 </div>
-                <div class="kpi-card">
-                    <div class="kpi-label">COST TODAY</div>
-                    <div class="kpi-value gold" id="kpi-cost">$12.47</div>
-                </div>
-                <div class="kpi-card">
-                    <div class="kpi-label">TOKENS/MIN</div>
-                    <div class="kpi-value" id="kpi-tokens">89.3</div>
-                </div>
-                <div class="kpi-card">
-                    <div class="kpi-label">CRON JOBS</div>
-                    <div class="kpi-value" id="kpi-crons">3</div>
-                </div>
-                <div class="kpi-card">
-                    <div class="kpi-label">ERROR RATE</div>
-                    <div class="kpi-value positive" id="kpi-errors">0.0%</div>
-                </div>
-            </div>
-            
-            <!-- HUD GRID -->
-            <div class="hud-grid">
-                <!-- BTC PRICE WITH ARC GAUGE -->
+            </section>
+            <section class="main-grid">
                 <div class="panel">
-                    <div class="panel-header">
-                        <div class="panel-title">◈ BITCOIN PRICE</div>
-                        <div class="panel-status online">LIVE</div>
-                    </div>
-                    <div class="btc-gauge-container">
-                        <div class="arc-gauge">
-                            <canvas id="btc-gauge-canvas" width="120" height="120"></canvas>
-                            <div class="arc-gauge-value">
-                                <div class="arc-gauge-price" id="btc-price">$84,234</div>
-                                <div class="arc-gauge-label">BTC/USD</div>
-                            </div>
-                        </div>
-                        <div class="btc-stats">
-                            <div class="btc-stat-item">
-                                <span class="btc-stat-label">24H CHANGE</span>
-                                <span class="btc-stat-value up" id="btc-change">+2.4%</span>
-                            </div>
-                            <div class="btc-stat-item">
-                                <span class="btc-stat-label">24H HIGH</span>
-                                <span class="btc-stat-value" id="btc-high">$85,120</span>
-                            </div>
-                            <div class="btc-stat-item">
-                                <span class="btc-stat-label">24H LOW</span>
-                                <span class="btc-stat-value" id="btc-low">$82,456</span>
-                            </div>
-                            <div class="btc-stat-item">
-                                <span class="btc-stat-label">VOLUME</span>
-                                <span class="btc-stat-value" id="btc-volume">28.4B</span>
-                            </div>
-                        </div>
+                    <div class="panel-header"><div class="panel-title">Active Trades</div><div class="panel-badge online">2 POSITIONS</div></div>
+                    <div class="trades-table">
+                        <div class="trade-row"><div class="trade-pair"><div class="trade-symbol">BTC/USDT</div><div class="trade-direction long">Long</div></div><div class="trade-entry">$83,500</div><div class="trade-size">0.5 BTC</div><div class="trade-pnl positive">+$1,247</div></div>
+                        <div class="trade-row"><div class="trade-pair"><div class="trade-symbol">ETH/USDT</div><div class="trade-direction long">Long</div></div><div class="trade-entry">$2,850</div><div class="trade-size">5 ETH</div><div class="trade-pnl positive">+$325</div></div>
                     </div>
                 </div>
-                
-                <!-- TEAM AGENT STATUS -->
                 <div class="panel">
-                    <div class="panel-header">
-                        <div class="panel-title">◈ TEAM AGENTS</div>
-                        <div class="panel-status online">5 ACTIVE</div>
-                    </div>
-                    <div class="agent-grid">
-                        <div class="agent-circle">
-                            <div class="agent-avatar busy">👑</div>
-                            <div class="agent-name">Ollie</div>
-                            <div class="agent-role">CEO</div>
-                        </div>
-                        <div class="agent-circle">
-                            <div class="agent-avatar">📈</div>
-                            <div class="agent-name">Minty</div>
-                            <div class="agent-role">Trading</div>
-                        </div>
-                        <div class="agent-circle">
-                            <div class="agent-avatar">💻</div>
-                            <div class="agent-name">Codes</div>
-                            <div class="agent-role">Dev</div>
-                        </div>
-                        <div class="agent-circle">
-                            <div class="agent-avatar busy">📊</div>
-                            <div class="agent-name">Analyst</div>
-                            <div class="agent-role">Data</div>
-                        </div>
-                        <div class="agent-circle">
-                            <div class="agent-avatar">🛡</div>
-                            <div class="agent-name">Risk</div>
-                            <div class="agent-role">Manager</div>
-                        </div>
+                    <div class="panel-header"><div class="panel-title">Team Agents</div><div class="panel-badge online">ALL ACTIVE</div></div>
+                    <div class="agents-grid">
+                        <div class="agent-card"><div class="agent-avatar busy">👑</div><div class="agent-info"><div class="agent-name">Ollie</div><div class="agent-role">Chief of Command</div></div><div class="agent-status working">Working</div></div>
+                        <div class="agent-card"><div class="agent-avatar idle">📈</div><div class="agent-info"><div class="agent-name">MintyTrades</div><div class="agent-role">Trading Research</div></div><div class="agent-status active">Active</div></div>
+                        <div class="agent-card"><div class="agent-avatar idle">💻</div><div class="agent-info"><div class="agent-name">HiftyCodes</div><div class="agent-role">Website Dev</div></div><divdiv class="agent-info"><div class="agent-name">HiftyAnalyst</div><div class="agent-role">Data Analysis</div></div><div class="agent-status active">Active</div></div>
+                        <div class="agent-card"><div class="agent-avatar idle">🛡</div><div class="agent-info"><div class="agent-name">HiftyRisk</div><div class="agent-role">Risk Manager</div></div><div class="agent-status active">Active</div></div>
                     </div>
                 </div>
-                
-                <!-- KPI GAUGES -->
-                <div class="panel" style="grid-column: span 2;">
-                    <div class="panel-header">
-                        <div class="panel-title">◈ PERFORMANCE METRICS</div>
-                        <div class="panel-status online">TRACKING</div>
-                    </div>
-                    <div class="kpi-gauges">
-                        <div class="gauge-card">
-                            <div class="gauge-ring">
-                                <canvas id="winrate-gauge" width="80" height="80"></canvas>
-                                <div class="gauge-value positive" id="winrate-value" style="color: var(--green);">100%</div>
-                            </div>
-                            <div class="gauge-label">WIN RATE</div>
-                        </div>
-                        <div class="gauge-card">
-                            <div class="gauge-ring">
-                                <canvas id="pnl-gauge" width="80" height="80"></canvas>
-                                <div class="gauge-value positive" id="pnl-value" style="color: var(--green);">$7,394</div>
-                            </div>
-                            <div class="gauge-label">TOTAL P&L</div>
-                        </div>
-                        <div class="gauge-card">
-                            <div class="gauge-ring">
-                                <canvas id="rsi-gauge" width="80" height="80"></canvas>
-                                <div class="gauge-value warning" id="rsi-value" style="color: var(--orange);">33%</div>
-                            </div>
-                            <div class="gauge-label">RSI COMPLIANCE</div>
-                        </div>
-                    </div>
-                </div>
-                
-                <!-- ACTIVE TRADES -->
-                <div class="panel" style="grid-column: span 2;">
-                    <div class="panel-header">
-                        <div class="panel-title">◈ ACTIVE TRADES</div>
-                        <div class="panel-status online">2 POSITIONS</div>
-                    </div>
-                    <div class="trades-list">
-                        <div class="trade-card">
-                            <div class="trade-info">
-                                <div class="trade-pair">BTC/USDT</div>
-                                <div class="trade-details">Long • Entry: $83,500 • Size: 0.5 BTC</div>
-                            </div>
-                            <div class="trade-pnl">+$1,247.50</div>
-                        </div>
-                        <div class="trade-card">
-                            <div class="trade-info">
-                                <div class="trade-pair">ETH/USDT</div>
-                                <div class="trade-details">Long • Entry: $2,850 • Size: 5 ETH</div>
-                            </div>
-                            <div class="trade-pnl">+$325.00</div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-            
-            <!-- BOTTOM SECTION -->
-            <div class="hud-grid">
-                <!-- LIVE LOG -->
                 <div class="panel">
-                    <div class="panel-header">
-                        <div class="panel-title">◈ LIVE LOG</div>
-                    </div>
-                    <div class="live-log" id="live-log">
-                        <div class="live-entry info">[08:24:00] OLLIE systems online</div>
-                        <div class="live-entry success">[08:23:45] Gateway connected</div>
-                        <div class="live-entry info">[08:23:30] Market data synced</div>
-                        <div class="live-entry success">[08:23:15] Team agents initialized</div>
+                    <div class="panel-header"><div class="panel-title">Activity Feed</div><div class="panel-badge online">LIVE</div></div>
+                    <div class="activity-list">
+                        <div class="activity-item"><div class="activity-icon success">✓</div><div class="activity-content"><div class="activity-text">BTC price updated to $84,234</div><div class="activity-time">10:16:00</div></div></div>
+                        <div class="activity-item"><div class="activity-icon info">◈</div><div class="activity-content"><div class="activity-text">Ollie systems online</div><div class="activity-time">10:15:45</div></div></div>
+                        <div class="activity-item"><div class="activity-icon success">✓</div><div class="activity-content"><div class="activity-text">Gateway connected</div><div class="activity-time">10:15:30</div></div></div>
+                        <div class="activity-item"><div class="activity-icon info">◈</div><div class="activity-content"><div class="activity-text">Market data synced</div><div class="activity-time">10:15:15</div></div></div>
+                        <div class="activity-item"><div class="activity-icon success">✓</div><div class="activity-content"><div class="activity-text">Team agents initialized</div><div class="activity-time">10:15:00</div></div></div>
                     </div>
                 </div>
-                
-                <!-- CHANNELS -->
+            </section>
+            <section class="lower-section">
                 <div class="panel">
-                    <div class="panel-header">
-                        <div class="panel-title">◈ CHANNELS</div>
-                        <div class="panel-status online">CONNECTED</div>
-                    </div>
-                    <div style="display: flex; flex-direction: column; gap: 0.5rem;">
-                        <div class="channel-item">
-                            <span class="channel-icon">◈</span>
-                            <span>Telegram - @ernigoze</span>
-                        </div>
-                        <div class="channel-item">
-                            <span class="channel-icon">◈</span>
-                            <span>AgentMail - hiftyco@agentmail.to</span>
-                        </div>
+                    <div class="panel-header"><div class="panel-title">Quick Actions</div></div>
+                    <div class="actions-grid">
+                        <div class="action-btn" onclick="executeAction('research')"><div class="action-icon">🔍</div><div class="action-label">Research</div></div>
+                        <div class="action-btn" onclick="executeAction('trade')"><div class="action-icon">📊</div><div class="action-label">Check Trades</div></div>
+                        <div class="action-btn" onclick="executeAction('status')"><div class="action-icon">⚡</div><div class="action-label">Diagnostics</div></div>
+                        <div class="action-btn" onclick="executeAction('brief')"><div class="action-icon">📋</div><div class="action-label">Briefing</div></div>
                     </div>
                 </div>
-            </div>
-        </div>
-        
-        <!-- RIGHT PANEL - OLLIE ASSISTANT -->
-        <div class="right-panel">
-            <div class="ollie-header">
-                <div class="ollie-avatar">🤖</div>
-                <div>
-                    <div class="ollie-title">OLLIE AI</div>
-                    <div class="ollie-subtitle">SYSTEM ONLINE</div>
-                </div>
-            </div>
-            
-            <!-- Daily Briefing -->
-            <div class="ollie-section">
-                <div class="ollie-section-title">◈ DAILY BRIEFING</div>
-                <div class="briefing-grid">
-                    <div class="briefing-item">
-                        <div class="briefing-label">BTC STATUS</div>
-                        <div class="briefing-value up" id="ollie-btc">$84,234 ▲</div>
-                    </div>
-                    <div class="briefing-item">
-                        <div class="briefing-label">24H CHANGE</div>
-                        <div class="briefing-value up" id="ollie-btc-change">+2.4%</div>
-                    </div>
-                    <div class="briefing-item">
-                        <div class="briefing-label">TEAM</div>
-                        <div class="briefing-value" id="ollie-team">5/5 Active</div>
-                    </div>
-                    <div class="briefing-item">
-                        <div class="briefing-label">RSI SCORE</div>
-                        <div class="briefing-value warning" id="ollie-rsi">33%</div>
+                <div class="panel">
+                    <div class="panel-header"><div class="panel-title">Recent Alerts</div><div class="panel-badge warning">1 WARNING</div></div>
+                    <div class="alerts-list">
+                        <div class="alert-item warning"><div class="alert-icon">⚠️</div><div class="alert-text">RSI Compliance below target (33%)</div><div class="alert-time">10:10</div></div>
+                        <div class="alert-item success"><div class="alert-icon">✓</div><div class="alert-text">All systems operational</div><div class="alert-time">10:15</div></div>
+                        <div class="alert-item success"><div class="alert-icon">✓</div><div class="alert-text">Gateway connected successfully</div><div class="alert-time">10:15</div></div>
                     </div>
                 </div>
-            </div>
-            
-            <!-- Alerts -->
-            <div class="ollie-section">
-                <div class="ollie-section-title">◈ ALERTS</div>
-                <div class="alerts-list">
-                    <div class="alert-item warning">
-                        <span class="alert-icon">⚠️</span>
-                        <span>RSI Compliance below target</span>
-                    </div>
-                    <div class="alert-item success">
-                        <span class="alert-icon">✅</span>
-                        <span>All systems operational</span>
-                    </div>
+            </section>
+        </main>
+        <footer class="footer">
+            <div class="footer-left">
+                <div class="footer-logo">HIFTY <span>CO.</span></div>
+                <div class="footer-channels">
+                    <div class="channel-badge">Telegram</div>
+                    <div class="channel-badge">AgentMail</div>
                 </div>
             </div>
-            
-            <!-- Voice Command -->
-            <div class="ollie-section">
-                <div class="ollie-section-title">◈ OLLIE COMMAND</div>
-                <div class="voice-input">
-                    <input type="text" placeholder="Ask OLLIE..." id="voice-command">
-                    <button onclick="ollieCommand()">SEND</button>
-                </div>
+            <div class="footer-right">
+                <button class="footer-btn" onclick="executeAction('refresh')">REFRESH</button>
+                <button class="footer-btn" onclick="executeAction('sync')">SYNC</button>
             </div>
-            
-            <!-- Quick Commands -->
-            <div class="ollie-section">
-                <div class="ollie-section-title">◈ QUICK COMMANDS</div>
-                <div class="quick-commands">
-                    <button class="cmd-btn" onclick="executeCommand('research'); SFX.click();">
-                        <span class="key">/RESEARCH</span>Run market analysis
-                    </button>
-                    <button class="cmd-btn" onclick="executeCommand('trade'); SFX.click();">
-                        <span class="key">/TRADES</span>Check opportunities
-                    </button>
-                    <button class="cmd-btn" onclick="executeCommand('status'); SFX.click();">
-                        <span class="key">/STATUS</span>System diagnostics
-                    </button>
-                    <button class="cmd-btn" onclick="executeCommand('brief'); SFX.click();">
-                        <span class="key">/BRIEF</span>Morning briefing
-                    </button>
-                </div>
-            </div>
-        </div>
-        
-        <!-- BOTTOM BAR -->
-        <div class="bottom-bar">
-            <div class="bottom-left">
-                <div class="bottom-logo">
-                    <canvas id="bottom-arc" width="25" height="25"></canvas>
-                    <div class="bottom-logo-text">HIFTY <span>CO.</span></div>
-                </div>
-            </div>
-            
-            <div class="bottom-center">
-                <div class="channel-item">
-                    <span class="channel-icon">◈</span>
-                    <span>Telegram</span>
-                </div>
-                <div class="channel-item">
-                    <span class="channel-icon">◈</span>
-                    <span>AgentMail</span>
-                </div>
-            </div>
-            
-            <div class="bottom-right">
-                <button class="quick-btn" onclick="executeCommand('refresh'); SFX.click();">REFRESH</button>
-                <button class="quick-btn" onclick="executeCommand('sync'); SFX.click();">SYNC</button>
-            </div>
-        </div>
+        </footer>
     </div>
-    
     <script>
-        // ==================== AUDIO ENGINE ====================
-        var SFX = (function() {
-            var ctx = null;
-            var enabled = false;
-            
-            function init() {
-                if (!ctx) {
-                    try {
-                        ctx = new (window.AudioContext || window.webkitAudioContext)();
-                        window.delayNode = ctx.createDelay();
-                        window.delayNode.delayTime.value = 0.25;
-                        window.delayFeedback = ctx.createGain();
-                        window.delayFeedback.gain.value = 0.15;
-                        window.delayNode.connect(window.delayFeedback);
-                        window.delayFeedback.connect(window.delayNode);
-                    } catch(e) {
-                        console.log('Web Audio API not supported:', e);
-                        return null;
-                    }
-                }
-                if (ctx.state === 'suspended') {
-                    ctx.resume();
-                }
-                return ctx;
-            }
-            
-            return {
-                enable: function() {
-                    var c = init();
-                    if (!c) return false;
-                    enabled = true;
-                    return true;
-                },
-                disable: function() {
-                    enabled = false;
-                },
-                isEnabled: function() { return enabled; },
-                click: function() {
-                    if (!enabled) return;
-                    var c = init();
-                    if (!c) return;
-                    var osc = c.createOscillator();
-                    var gain = c.createGain();
-                    osc.type = 'sine';
-                    osc.frequency.value = 660;
-                    gain.gain.setValueAtTime(0.001, c.currentTime);
-                    gain.gain.linearRampToValueAtTime(0.03, c.currentTime + 0.01);
-                    gain.gain.exponentialRampToValueAtTime(0.001, c.currentTime + 0.08);
-                    osc.connect(gain);
-                    gain.connect(c.destination);
-                    osc.start();
-                    osc.stop(c.currentTime + 0.06);
-                },
-                ui: function() {
-                    if (!enabled) return;
-                    var c = init();
-                    if (!c) return;
-                    [660, 880].forEach(function(freq) {
-                        var osc = c.createOscillator();
-                        var gain = c.createGain();
-                        osc.type = 'sine';
-                        osc.frequency.value = freq;
-                        gain.gain.setValueAtTime(0.04, c.currentTime);
-                        gain.gain.exponentialRampToValueAtTime(0.001, c.currentTime + 0.08);
-                        osc.connect(gain);
-                        gain.connect(c.destination);
-                        osc.start();
-                        osc.stop(c.currentTime + 0.15);
-                        gain.connect(window.delayNode);
-                    });
-                },
-                bootChime: function() {
-                    if (!enabled) return;
-                    var c = init();
-                    if (!c) return;
-                    var notes = [523.25, 659.25, 783.99, 1046.50];
-                    notes.forEach(function(freq, i) {
-                        setTimeout(function() {
-                            var osc = c.createOscillator();
-                            var gain = c.createGain();
-                            osc.type = 'sine';
-                            osc.frequency.value = freq;
-                            gain.gain.setValueAtTime(0.001, c.currentTime);
-                            gain.gain.linearRampToValueAtTime(0.05, c.currentTime + 0.05);
-                            gain.gain.linearRampToValueAtTime(0.03, c.currentTime + 0.4);
-                            gain.gain.exponentialRampToValueAtTime(0.001, c.currentTime + 0.8);
-                            osc.connect(gain);
-                            gain.connect(c.destination);
-                            osc.start();
-                            osc.stop(c.currentTime + 0.8);
-                            gain.connect(window.delayNode);
-                        }, i * 250);
-                    });
-                },
-                alert: function() {
-                    if (!enabled) return;
-                    var c = init();
-                    if (!c) return;
-                    [440, 440].forEach(function(freq, i) {
-                        setTimeout(function() {
-                            var osc = c.createOscillator();
-                            var gain = c.createGain();
-                            osc.type = 'square';
-                            osc.frequency.value = freq;
-                            gain.gain.setValueAtTime(0.04, c.currentTime);
-                            gain.gain.exponentialRampToValueAtTime(0.001, c.currentTime + 0.15);
-                            osc.connect(gain);
-                            gain.connect(c.destination);
-                            osc.start();
-                            osc.stop(c.currentTime + 0.15);
-                        }, i * 180);
-                    });
-                }
-            };
-        })();
-
-        function toggleSound() {
-            if (SFX.isEnabled()) {
-                SFX.disable();
-                document.getElementById('sound-toggle').textContent = '🔇';
-            } else {
-                SFX.enable();
-                SFX.bootChime();
-                document.getElementById('sound-toggle').textContent = '🔊';
-            }
-        }
-
         // ==================== BOOT SEQUENCE ====================
         function startBootSequence() {
-            var lines = [
-                'INITIALIZING OLLIE CORE SYSTEMS...',
-                'LOADING HIFTY CO DASHBOARD...',
-                'CALIBRATING HOLOGRAPHIC DISPLAY...',
-                'SYNCING TRADING ALGORITHMS...',
-                'CONNECTING TO MARKET FEEDS...',
-                'ACTIVATING TEAM AGENTS...',
-                'ALL SYSTEMS NOMINAL. READY, SIR.'
+            const lines = [
+                'Initializing OLLIE core systems...',
+                'Loading Hifty Co dashboard...',
+                'Syncing trading algorithms...',
+                'Connecting to market feeds...',
+                'Activating team agents...',
+                'All systems nominal. Ready, sir.'
             ];
-            var log = document.getElementById('boot-lines');
-            var bar = document.getElementById('boot-progress');
-            var overlay = document.getElementById('boot-overlay');
-            var i = 0;
+            const log = document.getElementById('boot-lines');
+            const bar = document.getElementById('boot-progress');
+            const overlay = document.getElementById('boot-overlay');
+            let i = 0;
             function next() {
                 if (i >= lines.length) {
-                    setTimeout(function() { 
-                        overlay.classList.add('hidden'); 
-                        console.log('// OLLIE SYSTEMS ONLINE. READY, SIR.');
-                    }, 600);
+                    setTimeout(() => { overlay.classList.add('hidden'); console.log('// SYSTEMS ONLINE. READY, SIR.'); }, 600);
                     return;
                 }
-                var p = document.createElement('div');
-                p.style.cssText = 'opacity:0;transition:opacity 0.2s;margin-bottom:4px;';
+                const p = document.createElement('div');
+                p.className = 'boot-status';
                 p.textContent = '> ' + lines[i];
                 log.appendChild(p);
-                requestAnimationFrame(function() { p.style.opacity = '1'; });
-                bar.style.width = Math.round(((i+1)/lines.length)*100) + '%';
+                bar.style.width = ((i+1)/lines.length*100) + '%';
                 i++;
-                setTimeout(next, i === lines.length ? 600 : 260);
+                setTimeout(next, i === lines.length ? 600 : 350);
             }
             setTimeout(next, 400);
         }
 
         // ==================== PARTICLE SYSTEM ====================
-        const particleCanvas = document.getElementById('particle-canvas');
-        const particleCtx = particleCanvas.getContext('2d');
+        const particleCanvas = document.getElementById('particles');
+        const pCtx = particleCanvas.getContext('2d');
+        let particles = [];
         
-        function initParticleCanvas() {
+        function initParticles() {
             particleCanvas.width = window.innerWidth;
             particleCanvas.height = window.innerHeight;
-        }
-        
-        const particles = [];
-        
-        function createParticle() {
-            return {
-                x: Math.random() * particleCanvas.width,
-                y: Math.random() * particleCanvas.height,
-                vx: (Math.random() - 0.5) * 0.5,
-                vy: (Math.random() - 0.5) * 0.5,
-                size: Math.random() * 2 + 1,
-                alpha: Math.random() * 0.5 + 0.2,
-                color: Math.random() > 0.7 ? '#f0a500' : '#00d4ff'
-            };
-        }
-        
-        for (let i = 0; i < 50; i++) {
-            particles.push(createParticle());
+            for (let i = 0; i < 40; i++) {
+                particles.push({
+                    x: Math.random() * particleCanvas.width,
+                    y: Math.random() * particleCanvas.height,
+                    vx: (Math.random() - 0.5) * 0.4,
+                    vy: (Math.random() - 0.5) * 0.4,
+                    size: Math.random() * 2 + 1,
+                    alpha: Math.random() * 0.4 + 0.1,
+                    color: Math.random() > 0.6 ? '#9b5de5' : '#00f5d4'
+                });
+            }
         }
         
         function animateParticles() {
-            particleCtx.clearRect(0, 0, particleCanvas.width, particleCanvas.height);
-            
-            particles.forEach(function(p) {
-                p.x += p.vx;
-                p.y += p.vy;
-                
+            pCtx.clearRect(0, 0, particleCanvas.width, particleCanvas.height);
+            particles.forEach(p => {
+                p.x += p.vx; p.y += p.vy;
                 if (p.x < 0 || p.x > particleCanvas.width) p.vx *= -1;
                 if (p.y < 0 || p.y > particleCanvas.height) p.vy *= -1;
-                
-                particleCtx.beginPath();
-                particleCtx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
-                particleCtx.fillStyle = p.color;
-                particleCtx.globalAlpha = p.alpha;
-                particleCtx.fill();
-                
-                particles.forEach(function(p2) {
-                    if (p === p2) return;
-                    const dx = p.x - p2.x;
-                    const dy = p.y - p2.y;
-                    const dist = Math.sqrt(dx * dx + dy * dy);
-                    if (dist < 100) {
-                        particleCtx.beginPath();
-                        particleCtx.moveTo(p.x, p.y);
-                        particleCtx.lineTo(p2.x, p2.y);
-                        particleCtx.strokeStyle = p.color;
-                        particleCtx.globalAlpha = (1 - dist / 100) * 0.2;
-                        particleCtx.stroke();
-                    }
-                });
+                pCtx.beginPath();
+                pCtx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
+                pCtx.fillStyle = p.color;
+                pCtx.globalAlpha = p.alpha;
+                pCtx.fill();
             });
-            
-            particleCtx.globalAlpha = 1;
+            pCtx.globalAlpha = 1;
             requestAnimationFrame(animateParticles);
         }
-        
-        // ==================== ARC REACTOR ====================
-        const arcCanvas = document.getElementById('arc-reactor');
-        const arcCtx = arcCanvas.getContext('2d');
-        
-        function drawArcReactor() {
-            const cx = 25, cy = 25, r = 20;
-            arcCtx.clearRect(0, 0, 50, 50);
-            
-            const time = Date.now() / 1000;
-            
-            for (let i = 0; i < 3; i++) {
-                arcCtx.beginPath();
-                arcCtx.arc(cx, cy, r - i * 5, 0, Math.PI * 2);
-                arcCtx.strokeStyle = '#00d4ff';
-                arcCtx.lineWidth = 2;
-                arcCtx.globalAlpha = 0.5 + Math.sin(time * 2 + i) * 0.3;
-                arcCtx.stroke();
-            }
-            
-            arcCtx.beginPath();
-            arcCtx.arc(cx, cy, 5, 0, Math.PI * 2);
-            arcCtx.fillStyle = '#00ff88';
-            arcCtx.globalAlpha = 0.8 + Math.sin(time * 4) * 0.2;
-            arcCtx.fill();
-            
-            arcCtx.globalAlpha = 1;
-            requestAnimationFrame(drawArcReactor);
-        }
-        
-        // Mini arc reactor
-        const arcMini = document.getElementById('arc-reactor-mini');
-        const arcMiniCtx = arcMini.getContext('2d');
-        
-        function drawArcMini() {
-            const cx = 22.5, cy = 22.5, r = 18;
-            arcMiniCtx.clearRect(0, 0, 45, 45);
-            
-            const time = Date.now() / 1000;
-            
-            for (let i = 0; i < 3; i++) {
-                arcMiniCtx.beginPath();
-                arcMiniCtx.arc(cx, cy, r - i * 4, 0, Math.PI * 2);
-                arcMiniCtx.strokeStyle = '#00d4ff';
-                arcMiniCtx.lineWidth = 1.5;
-                arcMiniCtx.globalAlpha = 0.5 + Math.sin(time * 2 + i) * 0.3;
-                arcMiniCtx.stroke();
-            }
-            
-            arcMiniCtx.beginPath();
-            arcMiniCtx.arc(cx, cy, 4, 0, Math.PI * 2);
-            arcMiniCtx.fillStyle = '#00ff88';
-            arcMiniCtx.globalAlpha = 0.8 + Math.sin(time * 4) * 0.2;
-            arcMiniCtx.fill();
-            
-            arcMiniCtx.globalAlpha = 1;
-            requestAnimationFrame(drawArcMini);
-        }
-        
-        // Bottom arc
-        const bottomArc = document.getElementById('bottom-arc');
-        const bottomArcCtx = bottomArc.getContext('2d');
-        
-        function drawBottomArc() {
-            const cx = 12.5, cy = 12.5, r = 10;
-            bottomArcCtx.clearRect(0, 0, 25, 25);
-            
-            const time = Date.now() / 1000;
-            
-            for (let i = 0; i < 2; i++) {
-                bottomArcCtx.beginPath();
-                bottomArcCtx.arc(cx, cy, r - i * 4, 0, Math.PI * 2);
-                bottomArcCtx.strokeStyle = '#00d4ff';
-                bottomArcCtx.lineWidth = 1;
-                bottomArcCtx.globalAlpha = 0.5 + Math.sin(time * 2 + i) * 0.3;
-                bottomArcCtx.stroke();
-            }
-            
-            bottomArcCtx.beginPath();
-            bottomArcCtx.arc(cx, cy, 3, 0, Math.PI * 2);
-            bottomArcCtx.fillStyle = '#00ff88';
-            bottomArcCtx.globalAlpha = 0.8 + Math.sin(time * 4) * 0.2;
-            bottomArcCtx.fill();
-            
-            bottomArcCtx.globalAlpha = 1;
-            requestAnimationFrame(drawBottomArc);
-        }
-        
-        document.getElementById('arc-reactor').addEventListener('click', function() {
-            SFX.click();
-            document.getElementById('arc-modal').classList.add('visible');
-            drawArcModal();
-        });
-        
-        function closeArcModal() {
-            SFX.click();
-            document.getElementById('arc-modal').classList.remove('visible');
-        }
-        
-        const modalArcCanvas = document.getElementById('arc-canvas');
-        const modalArcCtx = modalArcCanvas.getContext('2d');
-        
-        function drawArcModal() {
-            const cx = 150, cy = 150;
-            modalArcCtx.clearRect(0, 0, 300, 300);
-            
-            const time = Date.now() / 1000;
-            
-            for (let ring = 0; ring < 6; ring++) {
-                const radius = 30 + ring * 20;
-                modalArcCtx.beginPath();
-                modalArcCtx.arc(cx, cy, radius, 0, Math.PI * 2);
-                modalArcCtx.strokeStyle = '#00d4ff';
-                modalArcCtx.lineWidth = 3;
-                modalArcCtx.globalAlpha = 0.3 + Math.sin(time * 3 + ring * 0.5) * 0.2;
-                modalArcCtx.stroke();
-                
-                for (let s = 0; s < 8; s++) {
-                    const angle = (Math.PI * 2 / 8) * s + time * (ring % 2 === 0 ? 1 : -1);
-                    modalArcCtx.beginPath();
-                    modalArcCtx.moveTo(cx + Math.cos(angle) * (radius - 10), cy + Math.sin(angle) * (radius - 10));
-                    modalArcCtx.lineTo(cx + Math.cos(angle) * (radius + 10), cy + Math.sin(angle) * (radius + 10));
-                    modalArcCtx.stroke();
-                }
-            }
-            
-            const centerGrad = modalArcCtx.createRadialGradient(cx, cy, 0, cx, cy, 25);
-            centerGrad.addColorStop(0, '#00ff88');
-            centerGrad.addColorStop(0.7, '#00d4ff');
-            centerGrad.addColorStop(1, 'transparent');
-            modalArcCtx.beginPath();
-            modalArcCtx.arc(cx, cy, 25, 0, Math.PI * 2);
-            modalArcCtx.fillStyle = centerGrad;
-            modalArcCtx.fill();
-            
-            if (document.getElementById('arc-modal').classList.contains('visible')) {
-                requestAnimationFrame(drawArcModal);
-            }
-        }
-        
-        // ==================== BTC GAUGE ====================
-        function drawBTCGauge() {
-            const canvas = document.getElementById('btc-gauge-canvas');
-            const ctx = canvas.getContext('2d');
-            const cx = 60, cy = 60, r = 50;
-            
-            ctx.clearRect(0, 0, 120, 120);
-            
-            // Background arc
-            ctx.beginPath();
-            ctx.arc(cx, cy, r, 0.75 * Math.PI, 2.25 * Math.PI);
-            ctx.strokeStyle = 'rgba(0, 212, 255, 0.2)';
-            ctx.lineWidth = 8;
-            ctx.stroke();
-            
-            // Progress arc
-            const time = Date.now() / 1000;
-            const progress = 0.75 + Math.sin(time) * 0.1;
-            
-            ctx.beginPath();
-            ctx.arc(cx, cy, r, 0.75 * Math.PI, (0.75 + progress) * Math.PI);
-            ctx.strokeStyle = '#00d4ff';
-            ctx.lineWidth = 8;
-            ctx.lineCap = 'round';
-            ctx.shadowColor = '#00d4ff';
-            ctx.shadowBlur = 10;
-            ctx.stroke();
-            ctx.shadowBlur = 0;
-            
-            requestAnimationFrame(drawBTCGauge);
-        }
-        
-        // ==================== KPI GAUGES ====================
-        function drawGauge(canvasId, value, maxValue, color) {
-            const canvas = document.getElementById(canvasId);
+
+        // ==================== MINI CHART ====================
+        function drawMiniChart() {
+            const canvas = document.getElementById('chart-canvas');
             if (!canvas) return;
             const ctx = canvas.getContext('2d');
-            const cx = 40, cy = 40, r = 35;
+            const rect = canvas.parentElement.getBoundingClientRect();
+            canvas.width = rect.width;
+            canvas.height = rect.height;
+            const data = [82000, 83500, 82100, 84000, 82900, 84200, 83600, 84500, 83900, 84234];
+            const min = Math.min(...data) - 500;
+            const max = Math.max(...data) + 500;
+            const step = canvas.width / (data.length - 1);
             
-            ctx.clearRect(0, 0, 80, 80);
+            // Gradient fill
+            const gradient = ctx.createLinearGradient(0, 0, 0, canvas.height);
+            gradient.addColorStop(0, 'rgba(0, 245, 212, 0.3)');
+            gradient.addColorStop(1, 'rgba(0, 245, 212, 0)');
             
-            // Background arc
             ctx.beginPath();
-            ctx.arc(cx, cy, r, 0.75 * Math.PI, 2.25 * Math.PI);
-            ctx.strokeStyle = 'rgba(255, 255, 255, 0.1)';
-            ctx.lineWidth = 6;
-            ctx.stroke();
+            ctx.moveTo(0, canvas.height);
+            data.forEach((val, i) => {
+                const x = i * step;
+                const y = canvas.height - ((val - min) / (max - min)) * canvas.height;
+                ctx.lineTo(x, y);
+            });
+            ctx.lineTo(canvas.width, canvas.height);
+            ctx.closePath();
+            ctx.fillStyle = gradient;
+            ctx.fill();
             
-            // Progress arc
-            const progress = value / maxValue;
-            
+            // Line
             ctx.beginPath();
-            ctx.arc(cx, cy, r, 0.75 * Math.PI, (0.75 + progress * 1.5) * Math.PI);
-            ctx.strokeStyle = color;
-            ctx.lineWidth = 6;
-            ctx.lineCap = 'round';
-            ctx.shadowColor = color;
-            ctx.shadowBlur = 8;
+            data.forEach((val, i) => {
+                const x = i * step;
+                const y = canvas.height - ((val - min) / (max - min)) * canvas.height;
+                i === 0 ? ctx.moveTo(x, y) : ctx.lineTo(x, y);
+            });
+            ctx.strokeStyle = '#00f5d4';
+            ctx.lineWidth = 2;
             ctx.stroke();
-            ctx.shadowBlur = 0;
         }
-        
-        function updateGauges() {
-            drawGauge('winrate-gauge', 100, 100, '#00ff88');
-            drawGauge('pnl-gauge', 7394, 10000, '#00ff88');
-            drawGauge('rsi-gauge', 33, 100, '#ff7b00');
-        }
-        
+
         // ==================== CLOCK ====================
         function updateClock() {
             const now = new Date();
@@ -2011,133 +452,68 @@
             const s = String(now.getSeconds()).padStart(2, '0');
             document.getElementById('clock').textContent = h + ':' + m + ':' + s;
         }
-        
-        // ==================== LIVE LOG ====================
-        const logMessages = [
-            { msg: 'Fetching BTC price data...', type: 'info' },
-            { msg: 'BTC price updated: $84,234.56', type: 'success' },
-            { msg: 'Memory usage: 847MB / 1.8GB', type: 'info' },
-            { msg: 'Token rate within limits', type: 'success' },
-            { msg: 'Gateway heartbeat acknowledged', type: 'info' },
-            { msg: 'Agent Ollie processing request', type: 'info' },
-            { msg: 'Cron job completed: system-check', type: 'success' }
-        ];
-        
-        function addLiveLog(msg, type) {
-            type = type || 'info';
-            const log = document.getElementById('live-log');
-            const entry = document.createElement('div');
-            entry.className = 'live-entry ' + type;
-            const time = new Date().toTimeString().slice(0, 8);
-            entry.textContent = '[' + time + '] ' + msg;
-            log.insertBefore(entry, log.firstChild);
-            
-            if (log.children.length > 20) {
-                log.removeChild(log.lastChild);
-            }
-        }
-        
-        setInterval(function() {
-            const randomLog = logMessages[Math.floor(Math.random() * logMessages.length)];
-            addLiveLog(randomLog.msg, randomLog.type);
-        }, 5000);
-        
-        // ==================== RESOURCE BARS ====================
-        function updateResources() {
-            const resources = ['cpu', 'ram', 'net'];
-            resources.forEach(function(r) {
-                const bar = document.getElementById(r + '-bar');
-                if (!bar) return;
-                const current = parseInt(bar.style.width);
-                const change = Math.random() > 0.5 ? 1 : -1;
-                const newVal = Math.max(5, Math.min(95, current + change * Math.floor(Math.random() * 5)));
-                bar.style.width = newVal + '%';
-            });
-        }
-        
-        // ==================== OLLIE COMMAND ====================
-        function ollieCommand() {
-            const input = document.getElementById('voice-command');
-            const cmd = input.value.trim().toLowerCase();
-            if (!cmd) return;
-            
-            SFX.ui();
-            
-            const responses = {
-                'status': 'All systems operational. Gateway uptime at 99.8%.',
-                'btc': 'Bitcoin currently at $84,234.56, up 2.4% in the last 24 hours.',
-                'trades': 'Total P&L: +$7,394.57. Win rate: 100%. RSI Compliance: 33%.',
-                'help': 'Available commands: status, btc, trades, team, alert'
-            };
-            
-            let response = responses[cmd] || 'Command not recognized. Try: status, btc, trades, help.';
-            showToast('OLLIE', response, 'success');
-            addLiveLog('Command: ' + cmd, 'success');
-            input.value = '';
-        }
-        
-        document.getElementById('voice-command').addEventListener('keypress', function(e) {
-            if (e.key === 'Enter') ollieCommand();
-        });
-        
+
         // ==================== TOAST ====================
-        function showToast(title, message, type) {
-            type = type || 'info';
+        function showToast(title, message, type = 'info') {
             const container = document.getElementById('toast-container');
             const toast = document.createElement('div');
             toast.className = 'toast ' + type;
-            toast.innerHTML = '<div class="toast-title">// OLLIE: ' + title + '</div><div class="toast-msg">' + message + '</div>';
+            const icons = { success: '✓', warning: '⚠', error: '✕', info: '◈' };
+            toast.innerHTML = '<div class="toast-icon">' + (icons[type] || '◈') + '</div><div class="toast-content"><div class="toast-title">' + title + '</div><div class="toast-message">' + message + '</div></div>';
             container.appendChild(toast);
-            SFX.alert();
-            
-            setTimeout(function() {
-                toast.style.animation = 'toastIn 0.3s ease reverse';
-                setTimeout(function() { toast.remove(); }, 300);
-            }, 4000);
+            setTimeout(() => { toast.style.animation = 'toastIn 0.3s ease reverse'; setTimeout(() => toast.remove(), 300); }, 4000);
         }
-        
-        // ==================== QUICK COMMANDS ====================
-        function executeCommand(cmd) {
-            SFX.ui();
-            var commands = {
-                'research': 'Initiating market research analysis...',
-                'trade': 'Scanning for trade opportunities...',
-                'status': 'Running system diagnostics...',
-                'brief': 'Generating morning briefing...',
-                'refresh': 'Refreshing all data feeds...',
-                'sync': 'Syncing with market data...'
+
+        // ==================== ACTIONS ====================
+        function executeAction(action) {
+            const actions = {
+                'research': 'Initiating market research...',
+                'trade': 'Scanning for opportunities...',
+                'status': 'Running diagnostics...',
+                'brief': 'Generating briefing...',
+                'refresh': 'Refreshing data...',
+                'sync': 'Syncing with feeds...'
             };
-            showToast('COMMAND', commands[cmd] || 'Command executed', 'info');
-            addLiveLog('Command /' + cmd + ' executed', 'success');
+            showToast('COMMAND', actions[action] || 'Executing...', 'success');
         }
-        
-        // ==================== INITIALIZATION ====================
-        window.addEventListener('load', function() {
-            initParticleCanvas();
-            drawArcReactor();
-            drawArcMini();
-            drawBottomArc();
-            drawBTCGauge();
-            updateGauges();
+
+        // ==================== ANIMATED COUNTER ====================
+        function animateValue(element, start, end, duration) {
+            const range = end - start;
+            const startTime = performance.now();
+            function update(currentTime) {
+                const elapsed = currentTime - startTime;
+                const progress = Math.min(elapsed / duration, 1);
+                const eased = 1 - Math.pow(1 - progress, 3);
+                const current = Math.floor(start + range * eased);
+                element.textContent = current.toLocaleString();
+                if (progress < 1) requestAnimationFrame(update);
+            }
+            requestAnimationFrame(update);
+        }
+
+        // ==================== INIT ====================
+        window.addEventListener('load', () => {
+            initParticles();
+            animateParticles();
+            drawMiniChart();
             updateClock();
             setInterval(updateClock, 1000);
-            setInterval(updateResources, 2000);
-            animateParticles();
             startBootSequence();
             
-            console.log('// OLLIE SYSTEMS ONLINE. READY, SIR.');
-            
-            document.addEventListener('click', function initAudioOnce() {
-                if (!SFX.isEnabled()) {
-                    SFX.enable();
-                }
-                document.removeEventListener('click', initAudioOnce);
-            }, { once: true });
+            // Animate KPI values
+            setTimeout(() => {
+                const pnl = document.querySelector('.kpi-card .kpi-value.gradient');
+                if (pnl) animateValue(pnl, 0, 7394, 1500);
+            }, 2500);
         });
-        
-        window.addEventListener('resize', function() {
-            initParticleCanvas();
+
+        window.addEventListener('resize', () => {
+            initParticles();
+            drawMiniChart();
         });
+
+        console.log('// SYSTEMS ONLINE. READY, SIR.');
     </script>
 </body>
 </html>
