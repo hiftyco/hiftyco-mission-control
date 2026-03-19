@@ -1,519 +1,441 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>OLLIE — Hifty Mission Control</title>
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
-    <style>
-        :root {
-            --void: #0a0a0f;
-            --void-elevated: #12121a;
-            --void-card: rgba(18, 18, 26, 0.7);
-            --cyan: #00f5d4;
-            --cyan-dim: rgba(0, 245, 212, 0.3);
-            --cyan-glow: rgba(0, 245, 212, 0.4);
-            --violet: #9b5de5;
-            --violet-dim: rgba(155, 93, 229, 0.3);
-            --coral: #f15bb5;
-            --coral-dim: rgba(241, 91, 181, 0.3);
-            --amber: #fee440;
-            --amber-dim: rgba(254, 228, 64, 0.3);
-            --success: #00f5d4;
-            --warning: #fee440;
-            --danger: #ff6b6b;
-            --text: #e8e8e8;
-            --text-muted: #6b7280;
-            --glass: rgba(255, 255, 255, 0.03);
-            --glass-border: rgba(255, 255, 255, 0.08);
-        }
-        * { margin: 0; padding: 0; box-sizing: border-box; }
-        html { scroll-behavior: smooth; }
-        body {
-            font-family: 'Outfit', sans-serif;
-            background: var(--void);
-            color: var(--text);
-            min-height: 100vh;
-            overflow-x: hidden;
-            position: relative;
-        }
-        .noise-overlay {
-            position: fixed;
-            top: 0; left: 0;
-            width: 100%; height: 100%;
-            pointer-events: none;
-            z-index: 10000;
-            opacity: 0.025;
-            background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)'/%3E%3C/svg%3E");
-        }
-        .orb {
-            position: fixed;
-            border-radius: 50%;
-            filter: blur(100px);
-            pointer-events: none;
-            z-index: 0;
-            animation: orbFloat 25s ease-in-out infinite;
-        }
-        .orb-1 { width: 600px; height: 600px; background: radial-gradient(circle, rgba(155, 93, 229, 0.12) 0%, transparent 70%); top: -200px; right: -200px; }
-        .orb-2 { width: 500px; height: 500px; background: radial-gradient(circle, rgba(0, 245, 212, 0.1) 0%, transparent 70%); bottom: -150px; left: -150px; animation-delay: -12s; }
-        .orb-3 { width: 450px; height: 450px; background: radial-gradient(circle, rgba(241, 91, 181, 0.08) 0%, transparent 70%); top: 50%; left: 50%; transform: translate(-50%, -50%); animation: orbPulse 18s ease-in-out infinite; }
-        @keyframes orbFloat { 0%, 100% { transform: translate(0, 0) scale(1); } 25% { transform: translate(40px, -40px) scale(1.05); } 50% { transform: translate(-30px, 30px) scale(0.95); } 75% { transform: translate(30px, 40px) scale(1.02); } }
-        @keyframes orbPulse { 0%, 100% { opacity: 0.4; transform: translate(-50%, -50%) scale(1); } 50% { opacity: 0.7; transform: translate(-50%, -50%) scale(1.15); } }
-        #particles { position: fixed; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; z-index: 1; }
-        ::-webkit-scrollbar { width: 5px; }
-        ::-webkit-scrollbar-track { background: var(--void); }
-        ::-webkit-scrollbar-thumb { background: var(--glass-border); border-radius: 3px; }
-        ::-webkit-scrollbar-thumb:hover { background: var(--cyan-dim); }
-        #boot-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: var(--void); z-index: 99999; display: flex; flex-direction: column; align-items: center; justify-content: center; transition: opacity 0.8s ease, visibility 0.8s ease; }
-        #boot-overlay.hidden { opacity: 0; visibility: hidden; }
-        .boot-logo { font-family: 'Outfit', sans-serif; font-size: 5rem; font-weight: 900; background: linear-gradient(135deg, var(--cyan) 0%, var(--violet) 50%, var(--coral) 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; margin-bottom: 0.5rem; animation: bootGlow 2s ease-in-out infinite; letter-spacing: 0.2rem; }
-        @keyframes bootGlow { 0%, 100% { filter: drop-shadow(0 0 20px var(--cyan-glow)); } 50% { filter: drop-shadow(0 0 40px var(--violet-dim)); } }
-        .boot-subtitle { font-family: 'JetBrains Mono', monospace; font-size: 0.85rem; color: var(--text-muted); letter-spacing: 0.4rem; margin-bottom: 3rem; }
-        .boot-status { font-family: 'JetBrains Mono', monospace; font-size: 0.75rem; color: var(--cyan); margin: 0.25rem 0; opacity: 0; transform: translateX(-20px); animation: bootType 0.4s ease forwards; }
-        .boot-status.success { color: var(--success); }
-        @keyframes bootType { to { opacity: 1; transform: translateX(0); } }
-        .boot-progress { width: 300px; height: 2px; background: var(--glass-border); margin-top: 2rem; border-radius: 1px; overflow: hidden; }
-        .boot-progress-bar { height: 100%; background: linear-gradient(90deg, var(--cyan), var(--violet), var(--coral)); width: 0%; transition: width 0.3s ease; }
-        .app-container { display: grid; grid-template-columns: 1fr; grid-template-rows: auto 1fr auto; min-height: 100vh; position: relative; z-index: 10; }
-        .header { grid-column: 1; display: flex; align-items: center; justify-content: space-between; padding: 1rem 2rem; background: var(--void-card); backdrop-filter: blur(20px); border-bottom: 1px solid var(--glass-border); position: sticky; top: 0; z-index: 100; }
-        .header-left { display: flex; align-items: center; gap: 1rem; }
-        .logo { display: flex; align-items: center; gap: 0.75rem; }
-        .logo-icon { width: 40px; height: 40px; background: linear-gradient(135deg, var(--cyan) 0%, var(--violet) 100%); border-radius: 10px; display: flex; align-items: center; justify-content: center; font-weight: 800; font-size: 1.2rem; color: var(--void); box-shadow: 0 0 20px var(--cyan-glow); }
-        .logo-text { font-family: 'Outfit', sans-serif; font-size: 1.4rem; font-weight: 700; color: var(--text); }
-        .logo-text span { background: linear-gradient(90deg, var(--cyan), var(--violet)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; }
-        .header-center { display: flex; align-items: center; gap: 2rem; }
-        .nav-links { display: flex; gap: 0.5rem; }
-        .nav-link { padding: 0.5rem 1rem; font-size: 0.85rem; font-weight: 500; color: var(--text-muted); text-decoration: none; border-radius: 8px; transition: all 0.3s ease; position: relative; }
-        .nav-link:hover, .nav-link.active { color: var(--text); background: var(--glass); }
-        .nav-link.active::after { content: ''; position: absolute; bottom: 0; left: 50%; transform: translateX(-50%); width: 20px; height: 2px; background: var(--cyan); border-radius: 1px; }
-        .header-right { display: flex; align-items: center; gap: 1.5rem; }
-        .clock { font-family: 'JetBrains Mono', monospace; font-size: 1rem; color: var(--text); font-weight: 500; }
-        .status-badge { display: flex; align-items: center; gap: 0.5rem; padding: 0.4rem 0.8rem; background: rgba(0, 245, 212, 0.1); border: 1px solid var(--cyan); border-radius: 20px; }
-        .status-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--cyan); box-shadow: 0 0 10px var(--cyan); animation: statusPulse 2s ease-in-out infinite; }
-        @keyframes statusPulse { 0%, 100% { opacity: 1; box-shadow: 0 0 10px var(--cyan); } 50% { opacity: 0.5; box-shadow: 0 0 5px var(--cyan); } }
-        .status-label { font-size: 0.7rem; font-weight: 600; color: var(--cyan); letter-spacing: 0.1rem; }
-        .main-content { padding: 2rem; max-width: 1600px; margin: 0 auto; width: 100%; }
-        .hero { display: grid; grid-template-columns: 2fr 1fr; gap: 2rem; margin-bottom: 2rem; }
-        .hero-main { background: var(--void-card); backdrop-filter: blur(20px); border: 1px solid var(--glass-border); border-radius: 24px; padding: 2rem; position: relative; overflow: hidden; }
-        .hero-main::before { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 1px; background: linear-gradient(90deg, transparent, var(--cyan), var(--violet), transparent); }
-        .hero-label { font-size: 0.75rem; font-weight: 600; color: var(--text-muted); letter-spacing: 0.15rem; text-transform: uppercase; margin-bottom: 0.5rem; }
-        .hero-price { font-family: 'JetBrains Mono', monospace; font-size: 3.5rem; font-weight: 700; color: var(--text); margin-bottom: 0.5rem; line-height: 1; }
-        .hero-price .currency { font-size: 1.5rem; color: var(--text-muted); margin-right: 0.25rem; }
-        .hero-change { display: inline-flex; align-items: center; gap: 0.4rem; padding: 0.3rem 0.7rem; border-radius: 20px; font-family: 'JetBrains Mono', monospace; font-size: 0.9rem; font-weight: 600; }
-        .hero-change.positive { background: rgba(0, 245, 212, 0.15); color: var(--cyan); }
-        .hero-change.negative { background: rgba(255, 107, 107, 0.15); color: var(--danger); }
-        .hero-chart { height: 100px; margin-top: 1.5rem; position: relative; }
-        .hero-chart canvas { width: 100%; height: 100%; }
-        .hero-stats { display: grid; grid-template-columns: repeat(4, 1fr); gap: 1rem; margin-top: 1.5rem; padding-top: 1.5rem; border-top: 1px solid var(--glass-border); }
-        .hero-stat { text-align: center; }
-        .hero-stat-value { font-family: 'JetBrains Mono', monospace; font-size: 1.1rem; font-weight: 600; color: var(--text); }
-        .hero-stat-label { font-size: 0.7rem; color: var(--text-muted); margin-top: 0.25rem; }
-        .hero-sidebar { display: flex; flex-direction: column; gap: 1rem; }
-        .kpi-row { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
-        .kpi-card { background: var(--void-card); backdrop-filter: blur(20px); border: 1px solid var(--glass-border); border-radius: 16px; padding: 1.25rem; transition: all 0.3s ease; position: relative; overflow: hidden; }
-        .kpi-card::before { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 2px; background: linear-gradient(90deg, var(--cyan), var(--violet)); opacity: 0; transition: opacity 0.3s ease; }
-        .kpi-card:hover { transform: translateY(-3px); border-color: var(--cyan-dim); box-shadow: 0 10px 40px rgba(0, 245, 212, 0.1); }
-        .kpi-card:hover::before { opacity: 1; }
-        .kpi-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 0.75rem; }
-        .kpi-icon { width: 36px; height: 36px; border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 1.1rem; }
-        .kpi-icon.cyan { background: rgba(0, 245, 212, 0.15); }
-        .kpi-icon.violet { background: rgba(155, 93, 229, 0.15); }
-        .kpi-icon.coral { background: rgba(241, 91, 181, 0.15); }
-        .kpi-icon.amber { background: rgba(254, 228, 64, 0.15); }
-        .kpi-trend { font-family: 'JetBrains Mono', monospace; font-size: 0.7rem; padding: 0.2rem 0.5rem; border-radius: 10px; }
-        .kpi-trend.up { background: rgba(0, 245, 212, 0.15); color: var(--cyan); }
-        .kpi-trend.down { background: rgba(255, 107, 107, 0.15); color: var(--danger); }
-        .kpi-value { font-family: 'JetBrains Mono', monospace; font-size: 1.6rem; font-weight: 700; color: var(--text); margin-bottom: 0.25rem; }
-        .kpi-value.gradient { background: linear-gradient(90deg, var(--cyan), var(--violet)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; }
-        .kpi-label { font-size: 0.75rem; color: var(--text-muted); font-weight: 500; }
-        .main-grid { display: grid; grid-template-columns: 1fr 1fr 320px; gap: 1.5rem; margin-bottom: 2rem; }
-        .panel { background: var(--void-card); backdrop-filter: blur(20px); border: 1px solid var(--glass-border); border-radius: 20px; padding: 1.5rem; transition: all 0.3s ease; }
-        .panel:hover { border-color: rgba(255, 255, 255, 0.12); }
-        .panel-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 1.25rem; }
-        .panel-title { font-size: 0.9rem; font-weight: 600; color: var(--text); display: flex; align-items: center; gap: 0.5rem; }
-        .panel-title::before { content: ''; width: 8px; height: 8px; background: var(--cyan); border-radius: 2px; }
-        .panel-badge { font-size: 0.65rem; font-weight: 600; padding: 0.25rem 0.6rem; border-radius: 12px; letter-spacing: 0.05rem; }
-        .panel-badge.online { background: rgba(0, 245, 212, 0.15); color: var(--cyan); }
-        .panel-badge.warning { background: rgba(254, 228, 64, 0.15); color: var(--warning); }
-        .trades-table { width: 100%; }
-        .trade-row { display: grid; grid-template-columns: 1fr auto auto auto; gap: 1rem; align-items: center; padding: 1rem; background: var(--glass); border-radius: 12px; margin-bottom: 0.75rem; transition: all 0.3s ease; border: 1px solid transparent; }
-        .trade-row:hover { background: rgba(255, 255, 255, 0.05); border-color: var(--glass-border); transform: translateX(5px); }
-        .trade-pair { display: flex; flex-direction: column; gap: 0.25rem; }
-        .trade-symbol { font-family: 'JetBrains Mono', monospace; font-weight: 600; font-size: 0.95rem; color: var(--text); }
-        .trade-direction { font-size: 0.7rem; color: var(--text-muted); }
-        .trade-direction.long { color: var(--cyan); }
-        .trade-direction.short { color: var(--coral); }
-        .trade-entry, .trade-size { font-family: 'JetBrains Mono', monospace; font-size: 0.8rem; color: var(--text-muted); text-align: right; }
-        .trade-pnl { font-family: 'JetBrains Mono', monospace; font-weight: 600; font-size: 0.95rem; text-align: right; min-width: 80px; }
-        .trade-pnl.positive { color: var(--cyan); }
-        .trade-pnl.negative { color: var(--danger); }
-        .agents-grid { display: grid; grid-template-columns: 1fr; gap: 0.75rem; }
-        .agent-card { background: var(--glass); border-radius: 14px; padding: 1rem 1.25rem; display: flex; align-items: center; gap: 1rem; transition: all 0.3s ease; border: 1px solid transparent; }
-        .agent-card:hover { background: rgba(255, 255, 255, 0.05); border-color: var(--glass-border); }
-        .agent-card.busy { border-color: var(--amber-dim); }
-        .agent-avatar { width: 44px; height: 44px; border-radius: 12px; display: flex; align-items: center; justify-content: center; font-size: 1.3rem; position: relative; flex-shrink: 0; }
-        .agent-avatar::after { content: ''; position: absolute; bottom: -2px; right: -2px; width: 12px; height: 12px; border-radius: 50%; border: 2px solid var(--void-card); }
-        .agent-avatar.idle::after { background: var(--cyan); box-shadow: 0 0 8px var(--cyan); }
-        .agent-avatar.busy::after { background: var(--amber); box-shadow: 0 0 8px var(--amber); animation: statusPulse 1s ease-in-out infinite; }
-        .agent-info { flex: 1; }
-        .agent-name { font-weight: 600; font-size: 0.9rem; color: var(--text); margin-bottom: 0.15rem; }
-        .agent-role { font-size: 0.7rem; color: var(--text-muted); }
-        .agent-status { font-size: 0.65rem; font-weight: 600; padding: 0.25rem 0.5rem; border-radius: 8px; }
-        .agent-status.active { background: rgba(0, 245, 212, 0.15); color: var(--cyan); }
-        .agent-status.working { background: rgba(254, 228, 64, 0.15); color: var(--amber); }
-        .activity-list { display: flex; flex-direction: column; gap: 0.75rem; max-height: 380px; overflow-y: auto; }
-        .activity-item { display: flex; align-items: flex-start; gap: 0.75rem; padding: 0.75rem; background: var(--glass); border-radius: 10px; animation: slideIn 0.3s ease; }
-        @keyframes slideIn { from { opacity: 0; transform: translateX(-10px); } to { opacity: 1; transform: translateX(0); } }
-        .activity-icon { width: 32px; height: 32px; border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 0.9rem; flex-shrink: 0; }
-        .activity-icon.info { background: rgba(0, 245, 212, 0.15); }
-        .activity-icon.success { background: rgba(0, 245, 212, 0.15); }
-        .activity-icon.warning { background: rgba(254, 228, 64, 0.15); }
-        .activity-content { flex: 1; }
-        .activity-text { font-size: 0.8rem; color: var(--text); line-height: 1.4; }
-        .activity-time { font-family: 'JetBrains Mono', monospace; font-size: 0.65rem; color: var(--text-muted); margin-top: 0.25rem; }
-        .lower-section { display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem; }
-        .actions-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 0.75rem; }
-        .action-btn { display: flex; flex-direction: column; align-items: center; gap: 0.5rem; padding: 1.25rem 1rem; background: var(--glass); border: 1px solid var(--glass-border); border-radius: 14px; cursor: pointer; transition: all 0.3s ease; }
-        .action-btn:hover { background: rgba(255, 255, 255, 0.08); border-color: var(--cyan-dim); transform: translateY(-3px); }
-        .action-icon { font-size: 1.5rem; }
-        .action-label { font-size: 0.7rem; font-weight: 500; color: var(--text-muted); }
-        .alerts-list { display: flex; flex-direction: column; gap: 0.75rem; }
-        .alert-item { display: flex; align-items: center; gap: 0.75rem; padding: 0.85rem 1rem; background: var(--glass); border-radius: 12px; border-left: 3px solid; }
-        .alert-item.info { border-left-color: var(--cyan); }
-        .alert-item.warning { border-left-color: var(--amber); }
-        .alert-item.success { border-left-color: var(--cyan); }
-        .alert-icon { font-size: 1.1rem; }
-        .alert-text { flex: 1; font-size: 0.8rem; color: var(--text); }
-        .alert-time { font-family: 'JetBrains Mono', monospace; font-size: 0.65rem; color: var(--text-muted); }
-        .footer { grid-column: 1; display: flex; align-items: center; justify-content: space-between; padding: 1rem 2rem; background: var(--void-card); backdrop-filter: blur(20px); border-top: 1px solid var(--glass-border); }
-        .footer-left { display: flex; align-items: center; gap: 1.5rem; }
-        .footer-logo { display: flex; align-items: center; gap: 0.5rem; font-weight: 600; font-size: 0.85rem; color: var(--text-muted); }
-        .footer-logo span { color: var(--cyan); }
-        .footer-channels { display: flex; gap: 1rem; }
-        .channel-badge { display: flex; align-items: center; gap: 0.4rem; font-size: 0.75rem; color: var(--text-muted); }
-        .channel-badge::before { content: ''; width: 6px; height: 6px; background: var(--cyan); border-radius: 50%; }
-        .footer-right { display: flex; align-items: center; gap: 1rem; }
-        .footer-btn { padding: 0.5rem 1rem; background: var(--glass); border: 1px solid var(--glass-border); border-radius: 8px; color: var(--text-muted); font-family: 'JetBrains Mono', monospace; font-size: 0.7rem; cursor: pointer; transition: all 0.3s ease; }
-        .footer-btn:hover { border-color: var(--cyan); color: var(--cyan); }
-        .toast-container { position: fixed; top: 80px; right: 20px; z-index: 9000; display: flex; flex-direction: column; gap: 0.75rem; }
-        .toast { background: var(--void-elevated); border: 1px solid var(--glass-border); padding: 1rem 1.5rem; min-width: 320px; border-radius: 12px; animation: toastIn 0.3s ease; display: flex; align-items: center; gap: 0.75rem; }
-        .toast.success { border-left: 3px solid var(--cyan); }
-        .toast.warning { border-left: 3px solid var(--amber); }
-        .toast.error { border-left: 3px solid var(--danger); }
-        @keyframes toastIn { from { transform: translateX(100%); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
-        .toast-icon { font-size: 1.2rem; }
-        .toast-content { flex: 1; }
-        .toast-title { font-weight: 600; font-size: 0.85rem; margin-bottom: 0.15rem; }
-        .toast-message { font-size: 0.75rem; color: var(--text-muted); }
-        @media (max-width: 1200px) { .main-grid { grid-template-columns: 1fr 1fr; } .hero { grid-template-columns: 1fr; } .hero-sidebar { flex-direction: row; } .kpi-row { flex: 1; } }
-        @media (max-width: 900px) { .main-grid { grid-template-columns: 1fr; } .lower-section { grid-template-columns: 1fr; } .hero-stats { grid-template-columns: repeat(2, 1fr); } .actions-grid { grid-template-columns: repeat(2, 1fr); } }
-        @media (max-width: 600px) { .header { flex-direction: column; gap: 1rem; } .header-center, .header-right { width: 100%; justify-content: center; } .nav-links { flex-wrap: wrap; justify-content: center; } }
-    </style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Hifty Mission Control</title>
+<style>
+:root{
+--bg:#000;--bg2:#0d0d0f;--bg3:#1c1c1e;--bg4:#2c2c2e;--bg5:#3a3a3c;
+--text:#fff;--text2:#98989d;--text3:#636366;
+--blue:#007AFF;--green:#34C759;--orange:#FF9500;--red:#FF3B30;--purple:#AF52DE;--teal:#5AC8FA;
+--border:rgba(255,255,255,0.08);--border2:rgba(255,255,255,0.12);
+--radius:14px;--radius2:9px;--font:-apple-system,BlinkMacSystemFont,"SF Pro Display",sans-serif;
+}
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:var(--font);background:var(--bg);color:var(--text);line-height:1.4;font-size:14px;-webkit-font-smoothing:antialiased}
+html,body{height:100%}
+
+.dashboard{display:grid;grid-template-columns:260px 1fr;grid-template-rows:auto 1fr;gap:14px;padding:14px;height:100vh;overflow:hidden}
+.header{grid-column:1/-1;display:flex;align-items:center;justify-content:space-between;padding:10px 18px;background:var(--bg2);border-radius:var(--radius);border:1px solid var(--border)}
+.sidebar{background:var(--bg2);border-radius:var(--radius);border:1px solid var(--border);padding:14px;overflow-y:auto}
+.main{background:var(--bg2);border-radius:var(--radius);border:1px solid var(--border);padding:16px;overflow-y:auto;display:flex;flex-direction:column;gap:14px}
+
+.h-left{display:flex;align-items:center;gap:14px}
+.h-title{font-size:17px;font-weight:600}
+.h-url{font-size:11px;color:var(--text2);background:var(--bg3);padding:4px 9px;border-radius:5px}
+.h-center{display:flex;align-items:center;gap:20px}
+.h-clock{font-size:26px;font-weight:300;font-variant-numeric:tabular-nums;letter-spacing:-1px}
+.h-resources{display:flex;gap:14px}
+.res-item{text-align:center}
+.res-label{font-size:9px;color:var(--text3);text-transform:uppercase;margin-bottom:3px}
+.res-bar{width:50px;height:5px;background:var(--bg3);border-radius:3px;overflow:hidden}
+.res-fill{height:100%;border-radius:3px;transition:width 0.3s,background 0.3s}
+.res-fill.low{background:var(--blue)}.res-fill.med{background:var(--orange)}.res-fill.high{background:var(--red)}
+.h-right{display:flex;align-items:center;gap:10px}
+.status-badge{display:flex;align-items:center;gap:5px;padding:5px 10px;background:rgba(52,199,89,0.15);color:var(--green);border-radius:20px;font-size:11px;font-weight:500}
+.status-dot{width:7px;height:7px;background:var(--green);border-radius:50%;animation:pulse 2s infinite}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:0.5}}
+
+.s-logo{display:flex;align-items:center;gap:9px;margin-bottom:16px;padding-bottom:14px;border-bottom:1px solid var(--border)}
+.s-icon{width:32px;height:32px;background:linear-gradient(135deg,var(--blue),var(--purple));border-radius:9px;display:flex;align-items:center;justify-content:center;font-size:16px}
+.s-name{font-size:15px;font-weight:600}
+.s-section{margin-bottom:16px}
+.s-title{font-size:10px;color:var(--text3);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:8px;padding-left:4px}
+.s-btn{display:flex;align-items:center;gap:9px;padding:9px 11px;border-radius:var(--radius2);color:var(--text2);cursor:pointer;transition:all 0.15s;margin-bottom:3px}
+.s-btn:hover{background:var(--bg3);color:var(--text)}
+.s-btn.active{background:var(--blue);color:#fff}
+.s-btn-icon{width:18px;text-align:center}
+
+.kpi-row{display:grid;grid-template-columns:repeat(6,1fr);gap:10px}
+.kpi-card{background:var(--bg3);border-radius:var(--radius2);padding:13px;transition:all 0.2s;border:1px solid transparent}
+.kpi-card:hover{border-color:var(--border2)}
+.kpi-label{font-size:10px;color:var(--text3);text-transform:uppercase;margin-bottom:5px}
+.kpi-value{font-size:24px;font-weight:600}
+.kpi-value.blue{color:var(--blue)}.kpi-value.green{color:var(--green)}.kpi-value.orange{color:var(--orange)}.kpi-value.purple{color:var(--purple)}.kpi-value.red{color:var(--red)}
+.kpi-sub{font-size:10px;color:var(--text2);margin-top:3px}
+
+.panel{background:var(--bg3);border-radius:var(--radius2);overflow:hidden}
+.panel-head{display:flex;justify-content:space-between;align-items:center;padding:10px 14px;border-bottom:1px solid var(--border)}
+.panel-title{font-size:12px;font-weight:600}
+.panel-badge{font-size:10px;padding:3px 7px;border-radius:6px;background:var(--bg5);color:var(--text2)}
+.panel-body{padding:10px}
+
+.btc-banner{grid-column:1/-1;background:linear-gradient(135deg,#f7931a,#ff9500);border-radius:var(--radius);padding:16px 20px;display:flex;align-items:center;justify-content:space-between}
+.btc-left{display:flex;align-items:center;gap:16px}
+.btc-icon{font-size:32px}
+.btc-label{font-size:11px;color:rgba(255,255,255,0.8);margin-bottom:2px}
+.btc-price{font-size:32px;font-weight:700}
+.btc-change{font-size:14px;margin-top:2px}
+.btc-right{text-align:right}
+.btc-fng{font-size:11px;opacity:0.8}
+.btc-fng-val{font-size:20px;font-weight:600}
+.btc-updated{font-size:10px;opacity:0.6;margin-top:4px}
+
+.agent-list{display:flex;flex-direction:column;gap:6px}
+.agent-row{display:flex;align-items:center;gap:10px;padding:10px;background:var(--bg);border-radius:var(--radius2);cursor:pointer;transition:all 0.15s}
+.agent-row:hover{background:var(--bg4)}
+.agent-dot{width:9px;height:9px;border-radius:50%;flex-shrink:0}
+.agent-dot.green{background:var(--green);box-shadow:0 0 7px var(--green);animation:pulse 2s infinite}
+.agent-dot.orange{background:var(--orange);box-shadow:0 0 7px var(--orange)}
+.agent-dot.blue{background:var(--blue)}
+.agent-dot.red{background:var(--red)}
+.agent-info{flex:1;min-width:0}
+.agent-name{font-weight:500;margin-bottom:2px}
+.agent-task{font-size:11px;color:var(--text2)}
+.agent-meta{display:flex;gap:10px;font-size:10px;color:var(--text3)}
+.agent-cost{color:var(--green);font-weight:500}
+
+.trades-table{width:100%;border-collapse:collapse}
+.trades-table th{text-align:left;padding:8px 10px;font-size:10px;color:var(--text3);text-transform:uppercase;border-bottom:1px solid var(--border)}
+.trades-table td{padding:10px;font-size:12px;border-bottom:1px solid var(--border)}
+.trades-table tr:last-child td{border:none}
+.trades-table tr:hover td{background:var(--bg)}
+.trade-badge{padding:3px 8px;border-radius:6px;font-size:10px;font-weight:500}
+.trade-badge.win{background:rgba(52,199,89,0.15);color:var(--green)}
+.trade-badge.loss{background:rgba(255,59,48,0.15);color:var(--red)}
+
+.chart-container{display:flex;align-items:flex-end;gap:6px;height:80px;padding:8px 0}
+.chart-bar{flex:1;background:var(--bg5);border-radius:3px 3px 0 0;position:relative;min-height:8px}
+.chart-bar.today{background:var(--blue)}
+.chart-bar .bar-fill{position:absolute;bottom:0;left:0;right:0;background:var(--blue);border-radius:3px 3px 0 0}
+.chart-labels{display:flex;justify-content:space-between;padding:0 4px}
+.chart-label{font-size:9px;color:var(--text3)}
+.chart-total{display:flex;justify-content:space-between;margin-top:10px;padding-top:10px;border-top:1px solid var(--border)}
+.chart-budget{font-size:11px}
+.chart-budget-label{color:var(--text2)}
+.chart-budget-val{font-weight:600}
+
+.cron-table{width:100%;border-collapse:collapse}
+.cron-table th{text-align:left;padding:8px 10px;font-size:10px;color:var(--text3);text-transform:uppercase;border-bottom:1px solid var(--border)}
+.cron-table td{padding:10px;font-size:11px;border-bottom:1px solid var(--border)}
+.cron-table tr:last-child td{border:none}
+.cron-status{padding:3px 8px;border-radius:10px;font-size:10px;font-weight:500}
+.cron-status.ready{background:rgba(52,199,89,0.15);color:var(--green)}
+.cron-status.running{background:rgba(0,122,255,0.15);color:var(--blue)}
+.cron-status.paused{background:rgba(255,149,0,0.15);color:var(--orange)}
+.cron-status.overdue{background:rgba(255,59,48,0.15);color:var(--red)}
+
+.channel-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:8px}
+.channel-card{display:flex;align-items:center;gap:8px;padding:10px;background:var(--bg);border-radius:var(--radius2)}
+.channel-icon{width:28px;height:28px;background:var(--bg4);border-radius:7px;display:flex;align-items:center;justify-content:center;font-size:14px}
+.channel-info{flex:1}
+.channel-name{font-size:12px;font-weight:500}
+.channel-msgs{font-size:10px;color:var(--text2)}
+
+.log-list{max-height:160px;overflow-y:auto}
+.log-entry{display:flex;gap:8px;font-size:11px;padding:6px 0;border-bottom:1px solid var(--border2)}
+.log-entry:last-child{border:none}
+.log-time{color:var(--text3);flex-shrink:0;min-width:60px}
+.log-msg{color:var(--text2)}
+.log-entry.success .log-msg{color:var(--green)}
+.log-entry.warn .log-msg{color:var(--orange)}
+.log-entry.error .log-msg{color:var(--red)}
+.log-entry.info .log-msg{color:var(--blue)}
+
+.model-bars{display:flex;flex-direction:column;gap:8px;margin-bottom:12px}
+.model-row{display:flex;align-items:center;gap:10px}
+.model-name{width:60px;font-size:11px;color:var(--text2)}
+.model-bar{flex:1;height:6px;background:var(--bg);border-radius:3px;overflow:hidden}
+.model-fill{height:100%;border-radius:3px}
+.model-fill.sonnet{background:var(--blue)}.model-fill.haiku{background:var(--teal)}.model-fill.opus{background:var(--purple)}
+.model-pct{width:35px;text-align:right;font-size:11px;font-weight:500}
+.model-stats{display:flex;gap:16px;padding-top:10px;border-top:1px solid var(--border)}
+.stat-item{text-align:center}
+.stat-val{font-size:16px;font-weight:600;color:var(--blue)}
+.stat-lbl{font-size:9px;color:var(--text3);text-transform:uppercase}
+
+.risk-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+.risk-item{padding:10px;background:var(--bg);border-radius:var(--radius2);text-align:center}
+.risk-label{font-size:9px;color:var(--text3);text-transform:uppercase;margin-bottom:4px}
+.risk-value{font-size:18px;font-weight:600}
+.risk-value.good{color:var(--green)}.risk-value.warn{color:var(--orange)}.risk-value.bad{color:var(--red)}
+
+.actions-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:8px}
+.action-btn{display:flex;flex-direction:column;align-items:center;gap:6px;padding:12px 10px;background:var(--bg3);border-radius:var(--radius2);cursor:pointer;transition:all 0.15s;border:1px solid transparent}
+.action-btn:hover{background:var(--bg4);border-color:var(--border2);transform:translateY(-2px)}
+.action-icon{font-size:20px}
+.action-label{font-size:10px;color:var(--text2);text-align:center}
+
+.three-col{display:grid;grid-template-columns:1fr 1fr 1fr;gap:14px}
+
+@media(max-width:1000px){
+.dashboard{grid-template-columns:1fr}
+.sidebar{display:none}
+.kpi-row{grid-template-columns:repeat(3,1fr)}
+.three-col{grid-template-columns:1fr}
+}
+</style>
 </head>
 <body>
-    <div class="orb orb-1"></div>
-    <div class="orb orb-2"></div>
-    <div class="orb orb-3"></div>
-    <div class="noise-overlay"></div>
-    <canvas id="particles"></canvas>
-    <div id="boot-overlay">
-        <div class="boot-logo">OLLIE</div>
-        <div class="boot-subtitle">— HIFTY MISSION CONTROL —</div>
-        <div id="boot-lines"></div>
-        <div class="boot-progress"><div class="boot-progress-bar" id="boot-progress"></div></div>
-    </div>
-    <div class="toast-container" id="toast-container"></div>
-    <div class="app-container">
-        <header class="header">
-            <div class="header-left">
-                <div class="logo">
-                    <div class="logo-icon">◈</div>
-                    <div class="logo-text">OLLIE <span>//</span> HIFTY CO</div>
-                </div>
-            </div>
-            <nav class="header-center">
-                <div class="nav-links">
-                    <a href="#" class="nav-link active">Dashboard</a>
-                    <a href="#" class="nav-link">Trades</a>
-                    <a href="#" class="nav-link">Agents</a>
-                    <a href="#" class="nav-link">Analytics</a>
-                </div>
-            </nav>
-            <div class="header-right">
-                <div class="clock" id="clock">00:00:00</div>
-                <div class="status-badge">
-                    <div class="status-dot"></div>
-                    <span class="status-label">ONLINE</span>
-                </div>
-            </div>
-        </header>
-        <main class="main-content">
-            <section class="hero">
-                <div class="hero-main">
-                    <div class="hero-label">◈ Bitcoin Price</div>
-                    <div class="hero-price"><span class="currency">$</span><span id="btc-price">84,234</span></div>
-                    <div class="hero-change positive" id="btc-change">▲ +2.4%</div>
-                    <div class="hero-chart"><canvas id="chart-canvas"></canvas></div>
-                    <div class="hero-stats">
-                        <div class="hero-stat"><div class="hero-stat-value" id="stat-high">$85,120</div><div class="hero-stat-label">24H HIGH</div></div>
-                        <div class="hero-stat"><div class="hero-stat-value" id="stat-low">$82,456</div><div class="hero-stat-label">24H LOW</div></div>
-                        <div class="hero-stat"><div class="hero-stat-value" id="stat-volume">28.4B</div><div class="hero-stat-label">VOLUME</div></div>
-                        <div class="hero-stat"><div class="hero-stat-value" id="stat-market">1.67T</div><div class="hero-stat-label">MARKET CAP</div></div>
-                    </div>
-                </div>
-                <div class="hero-sidebar">
-                    <div class="kpi-row">
-                        <div class="kpi-card"><div class="kpi-header"><div class="kpi-icon cyan">📈</div><div class="kpi-trend up">+12%</div></div><div class="kpi-value gradient">$7,394</div><div class="kpi-label">Total P&L</div></div>
-                        <div class="kpi-card"><div class="kpi-header"><div class="kpi-icon violet">✓</div><div class="kpi-trend up">100%</div></div><div class="kpi-value">100%</div><div class="kpi-label">Win Rate</div></div>
-                        <div class="kpi-card"><div class="kpi-header"><div class="kpi-icon coral">📊</div><div class="kpi-trend down">-67%</div></div><div class="kpi-value">33%</div><div class="kpi-label">RSI Compliance</div></div>
-                        <div class="kpi-card"><div class="kpi-header"><div class="kpi-icon amber">👥</div><div class="kpi-trend up">5</div></div><div class="kpi-value">5</div><div class="kpi-label">Active Agents</div></div>
-                    </div>
-                </div>
-            </section>
-            <section class="main-grid">
-                <div class="panel">
-                    <div class="panel-header"><div class="panel-title">Active Trades</div><div class="panel-badge online">2 POSITIONS</div></div>
-                    <div class="trades-table">
-                        <div class="trade-row"><div class="trade-pair"><div class="trade-symbol">BTC/USDT</div><div class="trade-direction long">Long</div></div><div class="trade-entry">$83,500</div><div class="trade-size">0.5 BTC</div><div class="trade-pnl positive">+$1,247</div></div>
-                        <div class="trade-row"><div class="trade-pair"><div class="trade-symbol">ETH/USDT</div><div class="trade-direction long">Long</div></div><div class="trade-entry">$2,850</div><div class="trade-size">5 ETH</div><div class="trade-pnl positive">+$325</div></div>
-                    </div>
-                </div>
-                <div class="panel">
-                    <div class="panel-header"><div class="panel-title">Team Agents</div><div class="panel-badge online">ALL ACTIVE</div></div>
-                    <div class="agents-grid">
-                        <div class="agent-card"><div class="agent-avatar busy">👑</div><div class="agent-info"><div class="agent-name">Ollie</div><div class="agent-role">Chief of Command</div></div><div class="agent-status working">Working</div></div>
-                        <div class="agent-card"><div class="agent-avatar idle">📈</div><div class="agent-info"><div class="agent-name">MintyTrades</div><div class="agent-role">Trading Research</div></div><div class="agent-status active">Active</div></div>
-                        <div class="agent-card"><div class="agent-avatar idle">💻</div><div class="agent-info"><div class="agent-name">HiftyCodes</div><div class="agent-role">Website Dev</div></div><divdiv class="agent-info"><div class="agent-name">HiftyAnalyst</div><div class="agent-role">Data Analysis</div></div><div class="agent-status active">Active</div></div>
-                        <div class="agent-card"><div class="agent-avatar idle">🛡</div><div class="agent-info"><div class="agent-name">HiftyRisk</div><div class="agent-role">Risk Manager</div></div><div class="agent-status active">Active</div></div>
-                    </div>
-                </div>
-                <div class="panel">
-                    <div class="panel-header"><div class="panel-title">Activity Feed</div><div class="panel-badge online">LIVE</div></div>
-                    <div class="activity-list">
-                        <div class="activity-item"><div class="activity-icon success">✓</div><div class="activity-content"><div class="activity-text">BTC price updated to $84,234</div><div class="activity-time">10:16:00</div></div></div>
-                        <div class="activity-item"><div class="activity-icon info">◈</div><div class="activity-content"><div class="activity-text">Ollie systems online</div><div class="activity-time">10:15:45</div></div></div>
-                        <div class="activity-item"><div class="activity-icon success">✓</div><div class="activity-content"><div class="activity-text">Gateway connected</div><div class="activity-time">10:15:30</div></div></div>
-                        <div class="activity-item"><div class="activity-icon info">◈</div><div class="activity-content"><div class="activity-text">Market data synced</div><div class="activity-time">10:15:15</div></div></div>
-                        <div class="activity-item"><div class="activity-icon success">✓</div><div class="activity-content"><div class="activity-text">Team agents initialized</div><div class="activity-time">10:15:00</div></div></div>
-                    </div>
-                </div>
-            </section>
-            <section class="lower-section">
-                <div class="panel">
-                    <div class="panel-header"><div class="panel-title">Quick Actions</div></div>
-                    <div class="actions-grid">
-                        <div class="action-btn" onclick="executeAction('research')"><div class="action-icon">🔍</div><div class="action-label">Research</div></div>
-                        <div class="action-btn" onclick="executeAction('trade')"><div class="action-icon">📊</div><div class="action-label">Check Trades</div></div>
-                        <div class="action-btn" onclick="executeAction('status')"><div class="action-icon">⚡</div><div class="action-label">Diagnostics</div></div>
-                        <div class="action-btn" onclick="executeAction('brief')"><div class="action-icon">📋</div><div class="action-label">Briefing</div></div>
-                    </div>
-                </div>
-                <div class="panel">
-                    <div class="panel-header"><div class="panel-title">Recent Alerts</div><div class="panel-badge warning">1 WARNING</div></div>
-                    <div class="alerts-list">
-                        <div class="alert-item warning"><div class="alert-icon">⚠️</div><div class="alert-text">RSI Compliance below target (33%)</div><div class="alert-time">10:10</div></div>
-                        <div class="alert-item success"><div class="alert-icon">✓</div><div class="alert-text">All systems operational</div><div class="alert-time">10:15</div></div>
-                        <div class="alert-item success"><div class="alert-icon">✓</div><div class="alert-text">Gateway connected successfully</div><div class="alert-time">10:15</div></div>
-                    </div>
-                </div>
-            </section>
-        </main>
-        <footer class="footer">
-            <div class="footer-left">
-                <div class="footer-logo">HIFTY <span>CO.</span></div>
-                <div class="footer-channels">
-                    <div class="channel-badge">Telegram</div>
-                    <div class="channel-badge">AgentMail</div>
-                </div>
-            </div>
-            <div class="footer-right">
-                <button class="footer-btn" onclick="executeAction('refresh')">REFRESH</button>
-                <button class="footer-btn" onclick="executeAction('sync')">SYNC</button>
-            </div>
-        </footer>
-    </div>
-    <script>
-        // ==================== BOOT SEQUENCE ====================
-        function startBootSequence() {
-            const lines = [
-                'Initializing OLLIE core systems...',
-                'Loading Hifty Co dashboard...',
-                'Syncing trading algorithms...',
-                'Connecting to market feeds...',
-                'Activating team agents...',
-                'All systems nominal. Ready, sir.'
-            ];
-            const log = document.getElementById('boot-lines');
-            const bar = document.getElementById('boot-progress');
-            const overlay = document.getElementById('boot-overlay');
-            let i = 0;
-            function next() {
-                if (i >= lines.length) {
-                    setTimeout(() => { overlay.classList.add('hidden'); console.log('// SYSTEMS ONLINE. READY, SIR.'); }, 600);
-                    return;
-                }
-                const p = document.createElement('div');
-                p.className = 'boot-status';
-                p.textContent = '> ' + lines[i];
-                log.appendChild(p);
-                bar.style.width = ((i+1)/lines.length*100) + '%';
-                i++;
-                setTimeout(next, i === lines.length ? 600 : 350);
-            }
-            setTimeout(next, 400);
-        }
+<div class="dashboard">
+<header class="header">
+<div class="h-left">
+<span class="h-title">🚀 Mission Control</span>
+<span class="h-url">gateway:5682</span>
+</div>
+<div class="h-center">
+<span class="h-clock" id="clock">00:00:00</span>
+<div class="h-resources">
+<div class="res-item"><div class="res-label">CPU</div><div class="res-bar"><div class="res-fill low" id="cpuBar" style="width:12%"></div></div></div>
+<div class="res-item"><div class="res-label">RAM</div><div class="res-bar"><div class="res-fill low" id="ramBar" style="width:34%"></div></div></div>
+<div class="res-item"><div class="res-label">Disk</div><div class="res-bar"><div class="res-fill med" id="diskBar" style="width:67%"></div></div></div>
+</div>
+</div>
+<div class="h-right">
+<div class="status-badge"><span class="status-dot"></span><span>Online</span></div>
+</div>
+</header>
 
-        // ==================== PARTICLE SYSTEM ====================
-        const particleCanvas = document.getElementById('particles');
-        const pCtx = particleCanvas.getContext('2d');
-        let particles = [];
-        
-        function initParticles() {
-            particleCanvas.width = window.innerWidth;
-            particleCanvas.height = window.innerHeight;
-            for (let i = 0; i < 40; i++) {
-                particles.push({
-                    x: Math.random() * particleCanvas.width,
-                    y: Math.random() * particleCanvas.height,
-                    vx: (Math.random() - 0.5) * 0.4,
-                    vy: (Math.random() - 0.5) * 0.4,
-                    size: Math.random() * 2 + 1,
-                    alpha: Math.random() * 0.4 + 0.1,
-                    color: Math.random() > 0.6 ? '#9b5de5' : '#00f5d4'
-                });
-            }
-        }
-        
-        function animateParticles() {
-            pCtx.clearRect(0, 0, particleCanvas.width, particleCanvas.height);
-            particles.forEach(p => {
-                p.x += p.vx; p.y += p.vy;
-                if (p.x < 0 || p.x > particleCanvas.width) p.vx *= -1;
-                if (p.y < 0 || p.y > particleCanvas.height) p.vy *= -1;
-                pCtx.beginPath();
-                pCtx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
-                pCtx.fillStyle = p.color;
-                pCtx.globalAlpha = p.alpha;
-                pCtx.fill();
-            });
-            pCtx.globalAlpha = 1;
-            requestAnimationFrame(animateParticles);
-        }
+<aside class="sidebar">
+<div class="s-logo">
+<div class="s-icon">🚀</div>
+<span class="s-name">Hifty Co</span>
+</div>
+<div class="s-section">
+<div class="s-title">Navigation</div>
+<div class="s-btn active"><span class="s-btn-icon">📊</span>Overview</div>
+<div class="s-btn"><span class="s-btn-icon">📈</span>Trading</div>
+<div class="s-btn"><span class="s-btn-icon">🤖</span>Agents</div>
+</div>
+<div class="s-section">
+<div class="s-title">Quick</div>
+<div class="s-btn"><span class="s-btn-icon">➕</span>New Session</div>
+<div class="s-btn"><span class="s-btn-icon">⚙️</span>Config</div>
+<div class="s-btn"><span class="s-btn-icon">🧠</span>Memory</div>
+<div class="s-btn"><span class="s-btn-icon">🩺</span>Health</div>
+</div>
+<div class="s-section">
+<div class="s-title">System</div>
+<div class="s-btn"><span class="s-btn-icon">📋</span>Logs</div>
+<div class="s-btn"><span class="s-btn-icon">⏰</span>Crons</div>
+<div class="s-btn"><span class="s-btn-icon">📦</span>Skills</div>
+</div>
+</aside>
 
-        // ==================== MINI CHART ====================
-        function drawMiniChart() {
-            const canvas = document.getElementById('chart-canvas');
-            if (!canvas) return;
-            const ctx = canvas.getContext('2d');
-            const rect = canvas.parentElement.getBoundingClientRect();
-            canvas.width = rect.width;
-            canvas.height = rect.height;
-            const data = [82000, 83500, 82100, 84000, 82900, 84200, 83600, 84500, 83900, 84234];
-            const min = Math.min(...data) - 500;
-            const max = Math.max(...data) + 500;
-            const step = canvas.width / (data.length - 1);
-            
-            // Gradient fill
-            const gradient = ctx.createLinearGradient(0, 0, 0, canvas.height);
-            gradient.addColorStop(0, 'rgba(0, 245, 212, 0.3)');
-            gradient.addColorStop(1, 'rgba(0, 245, 212, 0)');
-            
-            ctx.beginPath();
-            ctx.moveTo(0, canvas.height);
-            data.forEach((val, i) => {
-                const x = i * step;
-                const y = canvas.height - ((val - min) / (max - min)) * canvas.height;
-                ctx.lineTo(x, y);
-            });
-            ctx.lineTo(canvas.width, canvas.height);
-            ctx.closePath();
-            ctx.fillStyle = gradient;
-            ctx.fill();
-            
-            // Line
-            ctx.beginPath();
-            data.forEach((val, i) => {
-                const x = i * step;
-                const y = canvas.height - ((val - min) / (max - min)) * canvas.height;
-                i === 0 ? ctx.moveTo(x, y) : ctx.lineTo(x, y);
-            });
-            ctx.strokeStyle = '#00f5d4';
-            ctx.lineWidth = 2;
-            ctx.stroke();
-        }
+<main class="main">
+<div class="kpi-row">
+<div class="kpi-card"><div class="kpi-label">Total P&L</div><div class="kpi-value green">+$15,399</div><div class="kpi-sub">100% Win Rate</div></div>
+<div class="kpi-card"><div class="kpi-label">Win Rate</div><div class="kpi-value blue">100%</div><div class="kpi-sub">4/4 Trades</div></div>
+<div class="kpi-card"><div class="kpi-label">Total Trades</div><div class="kpi-value">4</div><div class="kpi-sub">Last: Trade #4</div></div>
+<div class="kpi-card"><div class="kpi-label">RSI Compliance</div><div class="kpi-value orange">33%</div><div class="kpi-sub">Target: 100%</div></div>
+<div class="kpi-card"><div class="kpi-label">Avg Win</div><div class="kpi-value green">$3,850</div><div class="kpi-sub">Per Trade</div></div>
+<div class="kpi-card"><div class="kpi-label">API Calls</div><div class="kpi-value purple" id="apiCount">847</div><div class="kpi-sub">+127 this hour</div></div>
+</div>
 
-        // ==================== CLOCK ====================
-        function updateClock() {
-            const now = new Date();
-            const h = String(now.getHours()).padStart(2, '0');
-            const m = String(now.getMinutes()).padStart(2, '0');
-            const s = String(now.getSeconds()).padStart(2, '0');
-            document.getElementById('clock').textContent = h + ':' + m + ':' + s;
-        }
+<div class="btc-banner">
+<div class="btc-left">
+<div class="btc-icon">₿</div>
+<div class="btc-info">
+<div class="btc-label">Bitcoin Price</div>
+<div class="btc-price" id="btcPrice">$71,195</div>
+<div class="btc-change" id="btcChange">-4.02% (24h)</div>
+</div>
+</div>
+<div class="btc-right">
+<div class="btc-fng">Fear & Greed</div>
+<div class="btc-fng-val" id="fngValue">28</div>
+<div class="btc-updated" id="btcUpdated">Updated: 23:52</div>
+</div>
+</div>
 
-        // ==================== TOAST ====================
-        function showToast(title, message, type = 'info') {
-            const container = document.getElementById('toast-container');
-            const toast = document.createElement('div');
-            toast.className = 'toast ' + type;
-            const icons = { success: '✓', warning: '⚠', error: '✕', info: '◈' };
-            toast.innerHTML = '<div class="toast-icon">' + (icons[type] || '◈') + '</div><div class="toast-content"><div class="toast-title">' + title + '</div><div class="toast-message">' + message + '</div></div>';
-            container.appendChild(toast);
-            setTimeout(() => { toast.style.animation = 'toastIn 0.3s ease reverse'; setTimeout(() => toast.remove(), 300); }, 4000);
-        }
+<div class="three-col">
+<div class="panel">
+<div class="panel-head"><span class="panel-title">🤖 Active Agents</span><span class="panel-badge">5</span></div>
+<div class="panel-body">
+<div class="agent-list">
+<div class="agent-row"><div class="agent-dot green"></div><div class="agent-info"><div class="agent-name">Ollie (CEO)</div><div class="agent-task">Leading team strategy</div><div class="agent-meta"><span>12m</span><span class="agent-cost">$0.02</span></div></div></div>
+<div class="agent-row"><div class="agent-dot green"></div><div class="agent-info"><div class="agent-name">MintyTrades</div><div class="agent-task">Analyzing BTC RSI signals</div><div class="agent-meta"><span>3m</span><span class="agent-cost">$0.01</span></div></div></div>
+<div class="agent-row"><div class="agent-dot blue"></div><div class="agent-info"><div class="agent-name">HiftyCodes</div><div class="agent-task">Website maintenance</div><div class="agent-meta"><span>idle</span><span>$0.00</span></div></div></div>
+<div class="agent-row"><div class="agent-dot blue"></div><div class="agent-info"><div class="agent-name">HiftyAnalyst</div><div class="agent-task">Daily research complete</div><div class="agent-meta"><span>idle</span><span>$0.00</span></div></div></div>
+<div class="agent-row"><div class="agent-dot green"></div><div class="agent-info"><div class="agent-name">HiftyRiskManager</div><div class="agent-task">Monitoring risk compliance</div><div class="agent-meta"><span>5m</span><span class="agent-cost">$0.01</span></div></div></div>
+</div>
+</div>
+</div>
 
-        // ==================== ACTIONS ====================
-        function executeAction(action) {
-            const actions = {
-                'research': 'Initiating market research...',
-                'trade': 'Scanning for opportunities...',
-                'status': 'Running diagnostics...',
-                'brief': 'Generating briefing...',
-                'refresh': 'Refreshing data...',
-                'sync': 'Syncing with feeds...'
-            };
-            showToast('COMMAND', actions[action] || 'Executing...', 'success');
-        }
+<div class="panel">
+<div class="panel-head"><span class="panel-title">💰 Cost This Week</span><span class="panel-badge">$18.42</span></div>
+<div class="panel-body">
+<div class="chart-container">
+<div class="chart-bar" style="height:45%"><div class="bar-fill"></div></div>
+<div class="chart-bar" style="height:62%"><div class="bar-fill"></div></div>
+<div class="chart-bar" style="height:38%"><div class="bar-fill"></div></div>
+<div class="chart-bar" style="height:55%"><div class="bar-fill"></div></div>
+<div class="chart-bar" style="height:78%"><div class="bar-fill"></div></div>
+<div class="chart-bar" style="height:42%"><div class="bar-fill"></div></div>
+<div class="chart-bar today" style="height:28%"><div class="bar-fill"></div></div>
+</div>
+<div class="chart-labels"><span class="chart-label">Mon</span><span class="chart-label">Tue</span><span class="chart-label">Wed</span><span class="chart-label">Thu</span><span class="chart-label">Fri</span><span class="chart-label">Sat</span><span class="chart-label">Sun</span></div>
+<div class="chart-total">
+<span class="chart-budget"><span class="chart-budget-label">Monthly:</span> <span class="chart-budget-val">$350</span></span>
+<span class="chart-budget"><span class="chart-budget-label">Spent:</span> <span class="chart-budget-val">$142</span> (41%)</span>
+</div>
+</div>
+</div>
 
-        // ==================== ANIMATED COUNTER ====================
-        function animateValue(element, start, end, duration) {
-            const range = end - start;
-            const startTime = performance.now();
-            function update(currentTime) {
-                const elapsed = currentTime - startTime;
-                const progress = Math.min(elapsed / duration, 1);
-                const eased = 1 - Math.pow(1 - progress, 3);
-                const current = Math.floor(start + range * eased);
-                element.textContent = current.toLocaleString();
-                if (progress < 1) requestAnimationFrame(update);
-            }
-            requestAnimationFrame(update);
-        }
+<div class="panel">
+<div class="panel-head"><span class="panel-title">🛡️ Risk Management</span><span class="panel-badge">SAFE</span></div>
+<div class="panel-body">
+<div class="risk-grid">
+<div class="risk-item"><div class="risk-label">Risk/Trade</div><div class="risk-value good">2%</div></div>
+<div class="risk-item"><div class="risk-label">Max DD</div><div class="risk-value good">0%</div></div>
+<div class="risk-item"><div class="risk-label">Consec Loss</div><div class="risk-value good">0</div></div>
+<div class="risk-item"><div class="risk-label">Position</div><div class="risk-value good">$200</div></div>
+<div class="risk-item"><div class="risk-label">Stop Loss</div><div class="risk-value good">2%</div></div>
+<div class="risk-item"><div class="risk-label">Portfolio</div><div class="risk-value good">LOW</div></div>
+</div>
+</div>
+</div>
+</div>
 
-        // ==================== INIT ====================
-        window.addEventListener('load', () => {
-            initParticles();
-            animateParticles();
-            drawMiniChart();
-            updateClock();
-            setInterval(updateClock, 1000);
-            startBootSequence();
-            
-            // Animate KPI values
-            setTimeout(() => {
-                const pnl = document.querySelector('.kpi-card .kpi-value.gradient');
-                if (pnl) animateValue(pnl, 0, 7394, 1500);
-            }, 2500);
-        });
+<div class="panel">
+<div class="panel-head"><span class="panel-title">📈 Recent Trades</span><span class="panel-badge">4 Trades</span></div>
+<div class="panel-body" style="padding:0">
+<table class="trades-table">
+<thead><tr><th>#</th><th>Date</th><th>Entry</th><th>Exit</th><th>RR</th><th>P&L</th><th>Status</th></tr></thead>
+<tbody>
+<tr><td>4</td><td>Mar 18</td><td>$66,439</td><td>$67,740</td><td>2:1</td><td style="color:var(--green)">+$4,000</td><td><span class="trade-badge win">Win</span></td></tr>
+<tr><td>3</td><td>Mar 17</td><td>$82,100</td><td>$84,500</td><td>2:1</td><td style="color:var(--green)">+$4,004</td><td><span class="trade-badge win">Win</span></td></tr>
+<tr><td>2</td><td>Mar 16</td><td>$78,500</td><td>$81,940</td><td>2:1</td><td style="color:var(--green)">+$4,930</td><td><span class="trade-badge win">Win</span></td></tr>
+<tr><td>1</td><td>Mar 15</td><td>$67,200</td><td>$69,664</td><td>2:1</td><td style="color:var(--green)">+$2,465</td><td><span class="trade-badge win">Win</span></td></tr>
+</tbody>
+</table>
+</div>
+</div>
 
-        window.addEventListener('resize', () => {
-            initParticles();
-            drawMiniChart();
-        });
+<div class="three-col">
+<div class="panel">
+<div class="panel-head"><span class="panel-title">⚡ Cron Jobs</span><span class="panel-badge">3 Active</span></div>
+<div class="panel-body" style="padding:0">
+<table class="cron-table">
+<tr><th>Name</th><th>Next</th><th>Status</th></tr>
+<tr><td>Morning Briefing</td><td>8:00 AM</td><td><span class="cron-status ready">ready</span></td></tr>
+<tr><td>System Check</td><td>8:00 AM</td><td><span class="cron-status running">running</span></td></tr>
+<tr><td>Weather</td><td>8:00 AM</td><td><span class="cron-status ready">ready</span></td></tr>
+<tr><td>Research</td><td>—</td><td><span class="cron-status paused">paused</span></td></tr>
+</table>
+</div>
+</div>
 
-        console.log('// SYSTEMS ONLINE. READY, SIR.');
-    </script>
+<div class="panel">
+<div class="panel-head"><span class="panel-title">💬 Channels</span></div>
+<div class="panel-body">
+<div class="channel-grid">
+<div class="channel-card"><div class="channel-icon">✈️</div><div class="channel-info"><div class="channel-name">Telegram</div><div class="channel-msgs">12 msgs</div></div><span class="status-dot" style="background:var(--green)"></span></div>
+<div class="channel-card"><div class="channel-icon">📱</div><div class="channel-info"><div class="channel-name">WhatsApp</div><div class="channel-msgs">0 msgs</div></div><span class="status-dot" style="background:var(--text3)"></span></div>
+<div class="channel-card"><div class="channel-icon">🎮</div><div class="channel-info"><div class="channel-name">Discord</div><div class="channel-msgs">5 msgs</div></div><span class="status-dot" style="background:var(--green)"></span></div>
+<div class="channel-card"><div class="channel-icon">💬</div><div class="channel-info"><div class="channel-name">WebChat</div><div class="channel-msgs">3 msgs</div></div><span class="status-dot" style="background:var(--green)"></span></div>
+</div>
+</div>
+</div>
+
+<div class="panel">
+<div class="panel-head"><span class="panel-title">📋 Live Logs</span></div>
+<div class="panel-body">
+<div class="log-list" id="logFeed">
+<div class="log-entry success"><span class="log-time">23:52:00</span><span class="log-msg">BTC Price: $71,195 (-4.02%)</span></div>
+<div class="log-entry success"><span class="log-time">23:51:00</span><span class="log-msg">Trade #4 closed: +$4,000</span></div>
+<div class="log-entry info"><span class="log-time">23:45:00</span><span class="log-msg">Risk check: All clear</span></div>
+<div class="log-entry warn"><span class="log-time">23:40:00</span><span class="log-msg">RSI Compliance at 33%</span></div>
+<div class="log-entry"><span class="log-time">23:30:00</span><span class="log-msg">Agent: Scanning signals</span></div>
+<div class="log-entry success"><span class="log-time">23:24:01</span><span class="log-msg">Session started: Ollie</span></div>
+<div class="log-entry"><span class="log-time">23:23:45</span><span class="log-msg">Cron: Morning Briefing done</span></div>
+</div>
+</div>
+</div>
+</div>
+
+<div class="three-col">
+<div class="panel">
+<div class="panel-head"><span class="panel-title">🧠 Model Distribution</span></div>
+<div class="panel-body">
+<div class="model-bars">
+<div class="model-row"><span class="model-name">Sonnet</span><div class="model-bar"><div class="model-fill sonnet" style="width:52%"></div></div><span class="model-pct">52%</span></div>
+<div class="model-row"><span class="model-name">Haiku</span><div class="model-bar"><div class="model-fill haiku" style="width:31%"></div></div><span class="model-pct">31%</span></div>
+<div class="model-row"><span class="model-name">Opus</span><div class="model-bar"><div class="model-fill opus" style="width:17%"></div></div><span class="model-pct">17%</span></div>
+</div>
+<div class="model-stats">
+<div class="stat-item"><div class="stat-val">124K</div><div class="stat-lbl">Tokens</div></div>
+<div class="stat-item"><div class="stat-val">847</div><div class="stat-lbl">Calls</div></div>
+<div class="stat-item"><div class="stat-val">99.2%</div><div class="stat-lbl">Uptime</div></div>
+</div>
+</div>
+</div>
+
+<div class="panel">
+<div class="panel-head"><span class="panel-title">⚡ Quick Actions</span></div>
+<div class="panel-body">
+<div class="actions-grid">
+<div class="action-btn"><span class="action-icon">➕</span><span class="action-label">New Session</span></div>
+<div class="action-btn"><span class="action-icon">⚙️</span><span class="action-label">Config</span></div>
+<div class="action-btn"><span class="action-icon">🧠</span><span class="action-label">Memory</span></div>
+<div class="action-btn"><span class="action-icon">🩺</span><span class="action-label">Health</span></div>
+<div class="action-btn"><span class="action-icon">📦</span><span class="action-label">Skills</span></div>
+<div class="action-btn"><span class="action-icon">⏰</span><span class="action-label">Add Cron</span></div>
+<div class="action-btn"><span class="action-icon">📱</span><span class="action-label">Devices</span></div>
+<div class="action-btn"><span class="action-icon">🔄</span><span class="action-label">Updates</span></div>
+</div>
+</div>
+</div>
+
+<div class="panel">
+<div class="panel-head"><span class="panel-title">💻 Session Info</span></div>
+<div class="panel-body" style="font-size:11px;color:var(--text2);line-height:1.8">
+<div><span style="color:var(--text3)">Gateway:</span> 5682</div>
+<div><span style="color:var(--text3)">Version:</span> OpenClaw v1.0</div>
+<div><span style="color:var(--text3)">Runtime:</span> Node.js v22</div>
+<div><span style="color:var(--text3)">Uptime:</span> 14 days</div>
+<div><span style="color:var(--text3)">Model:</span> MiniMax M2.5</div>
+</div>
+</div>
+</div>
+</div>
+</main>
+</div>
+
+<script>
+function updateClock(){
+document.getElementById('clock').textContent=new Date().toLocaleTimeString('en-US',{hour:'2-digit',minute:'2-digit',second:'2-digit',hour12:false});
+}
+updateClock();setInterval(updateClock,1000);
+
+function jitter(val,range){return Math.max(0,Math.min(100,val+(Math.random()-0.5)*range));}
+function updateResources(){
+const cpu=jitter(12,8),ram=jitter(34,6);
+document.getElementById('cpuBar').style.width=cpu+'%';
+document.getElementById('cpuBar').className='res-fill '+(cpu>80?'high':cpu>60?'med':'low');
+document.getElementById('ramBar').style.width=ram+'%';
+document.getElementById('ramBar').className='res-fill '+(ram>80?'high':ram>60?'med':'low');
+}
+updateResources();setInterval(updateResources,3000);
+
+let apiCount=847;
+setInterval(()=>{apiCount+=Math.floor(Math.random()*15);document.getElementById('apiCount').textContent=apiCount;},8000);
+
+// Live BTC (Binance)
+async function fetchBTC(){
+try{
+const r=await fetch("https://api.binance.com/api/v3/ticker/24hr?symbol=BTCUSDT");
+const d=await r.json();
+const price=parseFloat(d.lastPrice).toLocaleString();
+const change=parseFloat(d.priceChangePercent).toFixed(2);
+document.getElementById('btcPrice').textContent='$'+price;
+document.getElementById('btcChange').textContent=(parseFloat(change)>=0?'+':'')+change+'% (24h)';
+document.getElementById('btcUpdated').textContent='Updated: '+new Date().toLocaleTimeString('en-US',{hour:'2-digit',minute:'2-digit',hour12:false});
+}catch(e){}
+}
+fetchBTC();setInterval(fetchBTC,30000);
+
+function addLog(type,msg){
+const list=document.getElementById('logFeed');
+const time=new Date().toLocaleTimeString('en-US',{hour12:false});
+const entry=document.createElement('div');
+entry.className='log-entry '+type;
+entry.innerHTML='<span class="log-time">'+time+'</span><span class="log-msg">'+msg+'</span>';
+list.insertBefore(entry,list.firstChild);
+if(list.children.length>10)list.removeChild(list.lastChild);
+}
+setInterval(()=>{const msgs=['Processing request','Agent heartbeat','API call','Cron check'];addLog('success',msgs[Math.floor(Math.random()*msgs.length)]);},15000);
+</script>
 </body>
 </html>
