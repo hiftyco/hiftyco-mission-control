@@ -4,627 +4,262 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>J.A.R.V.I.S — Hifty Mission Control</title>
-    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;500;700;900&family=Share+Tech+Mono&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;500;700;900&family=Share+Tech+Mono&family=Rajdhani:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <style>
-        :root {
-            --void: #000408;
-            --cyan: #00d4ff;
-            --gold: #f0a500;
-            --green: #00ff88;
-            --red: #ff3040;
-            --orange: #ff7b00;
-            --cyan-dim: rgba(0, 212, 255, 0.3);
-            --gold-dim: rgba(240, 165, 0, 0.3);
-            --green-dim: rgba(0, 255, 136, 0.3);
-        }
+        :root { --void: #000408; --cyan: #00d4ff; --cyan-bright: #00f0ff; --gold: #f0a500; --gold-bright: #ffc800; --green: #00ff88; --green-bright: #00ffaa; --red: #ff3040; --orange: #ff7b00; --cyan-dim: rgba(0, 212, 255, 0.3); --gold-dim: rgba(240, 165, 0, 0.3); --glass: rgba(0, 212, 255, 0.05); }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: 'Rajdhani', sans-serif; background: var(--void); color: var(--cyan); min-height: 100vh; overflow-x: hidden; }
         
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
+        /* AUDIO ENABLE OVERLAY - FIX: Click to enable audio */
+        #audio-enable-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 4, 8, 0.98); z-index: 99999; display: flex; flex-direction: column; align-items: center; justify-content: center; cursor: pointer; transition: opacity 0.5s ease; }
+        #audio-enable-overlay.hidden { opacity: 0; visibility: hidden; pointer-events: none; }
+        #audio-enable-overlay .tap-text { font-family: 'Orbitron', sans-serif; font-size: 1.5rem; color: var(--cyan); text-shadow: 0 0 20px var(--cyan); animation: pulseText 2s ease-in-out infinite; margin-bottom: 2rem; }
+        @keyframes pulseText { 0%, 100% { opacity: 0.7; } 50% { opacity: 1; } }
+        #audio-enable-overlay .tap-circle { width: 120px; height: 120px; border: 2px solid var(--cyan); border-radius: 50%; display: flex; align-items: center; justify-content: center; animation: tapPulse 1.5s ease-in-out infinite; backdrop-filter: blur(10px); background: rgba(0, 212, 255, 0.1); }
+        #audio-enable-overlay .tap-circle span { font-size: 3rem; }
+        @keyframes tapPulse { 0%, 100% { box-shadow: 0 0 20px var(--cyan-dim); } 50% { box-shadow: 0 0 40px var(--cyan); } }
+        #audio-enable-overlay .subtext { margin-top: 2rem; font-size: 0.9rem; color: var(--cyan-dim); letter-spacing: 0.2rem; }
         
-        body {
-            font-family: 'Share Tech Mono', monospace;
-            background: var(--void);
-            color: var(--cyan);
-            min-height: 100vh;
-            overflow-x: hidden;
-        }
+        #particle-canvas { position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: 0; pointer-events: none; }
+        #hex-canvas { position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: 1; opacity: 0.12; }
+        body::after { content: ''; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: repeating-linear-gradient(0deg, transparent, transparent 2px, rgba(0, 212, 255, 0.03) 2px, rgba(0, 212, 255, 0.03) 4px); pointer-events: none; z-index: 9999; animation: scanMove 8s linear infinite; }
+        @keyframes scanMove { 0% { transform: translateY(0); } 100% { transform: translateY(4px); } }
+        .ambient-glow { position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 150%; height: 150%; background: radial-gradient(ellipse at center, rgba(0, 212, 255, 0.08) 0%, transparent 70%); pointer-events: none; z-index: 2; }
         
-        #hex-canvas {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            z-index: 0;
-            opacity: 0.15;
-        }
+        /* CORNER BRACKETS */
+        .corner-bracket { position: fixed; width: 50px; height: 50px; z-index: 100; pointer-events: none; }
+        .corner-bracket::before, .corner-bracket::after { content: ''; position: absolute; background: var(--cyan); box-shadow: 0 0 10px var(--cyan); }
+        .corner-bracket.tl { top: 15px; left: 15px; } .corner-bracket.tl::before { width: 30px; height: 2px; top: 0; left: 0; } .corner-bracket.tl::after { width: 2px; height: 30px; top: 0; left: 0; }
+        .corner-bracket.tr { top: 15px; right: 15px; } .corner-bracket.tr::before { width: 30px; height: 2px; top: 0; right: 0; } .corner-bracket.tr::after { width: 2px; height: 30px; top: 0; right: 0; }
+        .corner-bracket.bl { bottom: 15px; left: 15px; } .corner-bracket.bl::before { width: 30px; height: 2px; bottom: 0; left: 0; } .corner-bracket.bl::after { width: 2px; height: 30px; bottom: 0; left: 0; }
+        .corner-bracket.br { bottom: 15px; right: 15px; } .corner-bracket.br::before { width: 30px; height: 2px; bottom: 0; right: 0; } .corner-bracket.br::after { width: 2px; height: 30px; bottom: 0; right: 0; }
         
-        body::after {
-            content: '';
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: repeating-linear-gradient(0deg, transparent, transparent 2px, rgba(0, 212, 255, 0.03) 2px, rgba(0, 212, 255, 0.03) 4px);
-            pointer-events: none;
-            z-index: 9999;
-            animation: scanMove 8s linear infinite;
-        }
+        #boot-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: var(--void); z-index: 10000; display: flex; flex-direction: column; align-items: center; justify-content: center; transition: opacity 1s ease; }
+        #boot-overlay.hidden { opacity: 0; pointer-events: none; }
+        .boot-title { font-family: 'Orbitron', sans-serif; font-size: 5rem; font-weight: 900; color: var(--cyan); text-shadow: 0 0 30px var(--cyan), 0 0 60px var(--cyan); letter-spacing: 0.5rem; margin-bottom: 0.5rem; animation: bootPulse 2s ease-in-out infinite; }
+        @keyframes bootPulse { 0%, 100% { text-shadow: 0 0 30px var(--cyan), 0 0 60px var(--cyan); } 50% { text-shadow: 0 0 40px var(--cyan), 0 0 80px var(--cyan); } }
+        .boot-subtitle { font-family: 'Rajdhani', sans-serif; font-size: 1.2rem; color: var(--gold); letter-spacing: 0.5rem; margin-bottom: 3rem; text-shadow: 0 0 10px var(--gold); font-weight: 600; }
+        .boot-line { font-family: 'Share Tech Mono', monospace; font-size: 0.9rem; color: var(--green); margin: 0.3rem 0; opacity: 0; transform: translateX(-30px); animation: bootType 0.3s ease forwards; }
+        .boot-line.warning { color: var(--orange); } .boot-line.error { color: var(--red); }
+        @keyframes bootType { to { opacity: 1; transform: translateX(0); } }
+        .boot-progress { width: 500px; height: 3px; background: rgba(0, 212, 255, 0.15); margin-top: 2rem; border-radius: 2px; overflow: hidden; }
+        .boot-progress-bar { height: 100%; background: linear-gradient(90deg, var(--cyan), var(--green)); width: 0%; transition: width 0.3s ease; box-shadow: 0 0 15px var(--cyan); }
         
-        @keyframes scanMove {
-            0% { transform: translateY(0); }
-            100% { transform: translateY(4px); }
-        }
-        
-        .ambient-glow {
-            position: fixed;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            width: 150%;
-            height: 150%;
-            background: radial-gradient(ellipse at center, rgba(0, 212, 255, 0.08) 0%, transparent 70%);
-            pointer-events: none;
-            z-index: 1;
-        }
-        
-        #boot-overlay {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: var(--void);
-            z-index: 10000;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            transition: opacity 1s ease;
-        }
-        
-        #boot-overlay.hidden {
-            opacity: 0;
-            pointer-events: none;
-        }
-        
-        .boot-title {
-            font-family: 'Orbitron', sans-serif;
-            font-size: 4rem;
-            font-weight: 900;
-            color: var(--cyan);
-            text-shadow: 0 0 20px var(--cyan), 0 0 40px var(--cyan);
-            letter-spacing: 0.5rem;
-            margin-bottom: 2rem;
-            animation: bootPulse 2s ease-in-out infinite;
-        }
-        
-        @keyframes bootPulse {
-            0%, 100% { text-shadow: 0 0 20px var(--cyan), 0 0 40px var(--cyan); }
-            50% { text-shadow: 0 0 30px var(--cyan), 0 0 60px var(--cyan), 0 0 80px var(--cyan); }
-        }
-        
-        .boot-line {
-            font-size: 1.1rem;
-            color: var(--green);
-            margin: 0.3rem 0;
-            opacity: 0;
-            transform: translateX(-20px);
-            animation: bootType 0.3s ease forwards;
-        }
-        
-        .boot-line.warning { color: var(--orange); }
-        .boot-line.error { color: var(--red); }
-        
-        @keyframes bootType {
-            to { opacity: 1; transform: translateX(0); }
-        }
-        
-        .boot-progress {
-            width: 400px;
-            height: 4px;
-            background: rgba(0, 212, 255, 0.2);
-            margin-top: 2rem;
-            border-radius: 2px;
-            overflow: hidden;
-        }
-        
-        .boot-progress-bar {
-            height: 100%;
-            background: linear-gradient(90deg, var(--cyan), var(--green));
-            width: 0%;
-            transition: width 0.3s ease;
-            box-shadow: 0 0 10px var(--cyan);
-        }
-        
-        .container { position: relative; z-index: 10; padding: 0; max-width: 100%; }
-        
-        .topbar {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            padding: 0.8rem 1.5rem;
-            background: linear-gradient(180deg, rgba(0, 212, 255, 0.1) 0%, transparent 100%);
-            border-bottom: 1px solid var(--cyan-dim);
-            gap: 1rem;
-        }
-        
+        .container { position: relative; z-index: 10; }
+        .topbar { display: flex; align-items: center; justify-content: space-between; padding: 0.6rem 1.5rem; background: linear-gradient(180deg, rgba(0, 212, 255, 0.12) 0%, transparent 100%); border-bottom: 1px solid var(--cyan-dim); gap: 1rem; backdrop-filter: blur(10px); }
         .topbar-left { display: flex; align-items: center; gap: 1rem; }
-        
-        #arc-reactor {
-            width: 50px;
-            height: 50px;
-            cursor: pointer;
-            transition: transform 0.3s ease;
-        }
-        
-        #arc-reactor:hover { transform: scale(1.1); }
-        
-        .topbar-title {
-            font-family: 'Orbitron', sans-serif;
-            font-size: 1.5rem;
-            font-weight: 700;
-            color: var(--cyan);
-            text-shadow: 0 0 10px var(--cyan);
-        }
-        
-        .topbar-title span { color: var(--gold); }
-        
-        .topbar-center {
-            display: flex;
-            gap: 1.5rem;
-            flex: 1;
-            justify-content: center;
-        }
-        
-        .resource-bar {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            gap: 0.2rem;
-            min-width: 80px;
-        }
-        
-        .resource-label {
-            font-size: 0.65rem;
-            color: var(--cyan-dim);
-            letter-spacing: 0.1rem;
-        }
-        
-        .resource-track {
-            width: 100%;
-            height: 6px;
-            background: rgba(0, 212, 255, 0.1);
-            border-radius: 3px;
-            overflow: hidden;
-        }
-        
-        .resource-fill {
-            height: 100%;
-            border-radius: 3px;
-            transition: width 0.5s ease;
-        }
-        
-        .resource-fill.cpu { background: var(--cyan); box-shadow: 0 0 8px var(--cyan); }
-        .resource-fill.ram { background: var(--green); box-shadow: 0 0 8px var(--green); }
-        .resource-fill.net { background: var(--gold); box-shadow: 0 0 8px var(--gold); }
+        #arc-reactor { width: 45px; height: 45px; cursor: pointer; transition: all 0.3s ease; filter: drop-shadow(0 0 8px var(--cyan)); }
+        #arc-reactor:hover { transform: scale(1.15) rotate(90deg); filter: drop-shadow(0 0 15px var(--cyan)); }
+        .topbar-title { font-family: 'Orbitron', sans-serif; font-size: 1.3rem; font-weight: 700; color: var(--cyan); text-shadow: 0 0 15px var(--cyan); }
+        .topbar-title span { color: var(--gold); text-shadow: 0 0 15px var(--gold); }
+        .topbar-center { display: flex; gap: 1.2rem; flex: 1; justify-content: center; }
+        .resource-bar { display: flex; flex-direction: column; align-items: center; gap: 0.15rem; min-width: 70px; }
+        .resource-label { font-size: 0.6rem; color: var(--cyan-dim); letter-spacing: 0.15rem; font-weight: 600; }
+        .resource-track { width: 100%; height: 5px; background: rgba(0, 212, 255, 0.1); border-radius: 3px; overflow: hidden; }
+        .resource-fill { height: 100%; border-radius: 3px; transition: width 0.5s ease; }
+        .resource-fill.cpu { background: linear-gradient(90deg, var(--cyan), var(--cyan-bright)); box-shadow: 0 0 8px var(--cyan); }
+        .resource-fill.ram { background: linear-gradient(90deg, var(--green), var(--green-bright)); box-shadow: 0 0 8px var(--green); }
+        .resource-fill.net { background: linear-gradient(90deg, var(--gold), var(--gold-bright)); box-shadow: 0 0 8px var(--gold); }
         .resource-fill.disk { background: var(--orange); box-shadow: 0 0 8px var(--orange); }
         .resource-fill.temp { background: var(--red); box-shadow: 0 0 8px var(--red); }
-        
         .topbar-right { display: flex; align-items: center; gap: 1.5rem; }
+        .clock { font-family: 'Orbitron', sans-serif; font-size: 1.2rem; color: var(--gold); text-shadow: 0 0 15px var(--gold); }
+        .sound-toggle { background: rgba(0, 212, 255, 0.1); border: 1px solid var(--cyan-dim); color: var(--cyan); padding: 0.35rem 0.8rem; cursor: pointer; font-family: 'Share Tech Mono', monospace; font-size: 0.7rem; transition: all 0.3s ease; border-radius: 3px; }
+        .sound-toggle:hover { border-color: var(--cyan); box-shadow: 0 0 20px var(--cyan-dim); transform: translateY(-2px); }
         
-        .clock {
-            font-family: 'Orbitron', sans-serif;
-            font-size: 1.3rem;
-            color: var(--gold);
-            text-shadow: 0 0 10px var(--gold);
-        }
-        
-        .sound-toggle {
-            background: none;
-            border: 1px solid var(--cyan-dim);
-            color: var(--cyan);
-            padding: 0.4rem 0.8rem;
-            cursor: pointer;
-            font-family: 'Share Tech Mono', monospace;
-            font-size: 0.8rem;
-            transition: all 0.3s ease;
-        }
-        
-        .sound-toggle:hover {
-            border-color: var(--cyan);
-            box-shadow: 0 0 10px var(--cyan-dim);
-        }
-        
-        .sound-toggle.muted { color: var(--red); border-color: rgba(255,48,64,0.3); }
-        
-        .banner {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            padding: 0.8rem 1.5rem;
-            background: rgba(0, 212, 255, 0.05);
-            border-bottom: 1px solid var(--cyan-dim);
-        }
-        
-        .banner-stats { display: flex; gap: 2rem; flex-wrap: wrap; }
-        
+        .banner { display: flex; align-items: center; justify-content: space-between; padding: 0.6rem 1.5rem; background: rgba(0, 212, 255, 0.03); border-bottom: 1px solid var(--cyan-dim); }
+        .banner-stats { display: flex; gap: 1.8rem; flex-wrap: wrap; }
         .banner-stat { display: flex; align-items: center; gap: 0.5rem; }
+        .banner-label { font-size: 0.7rem; color: var(--cyan-dim); font-weight: 600; letter-spacing: 0.1rem; }
+        .banner-value { font-family: 'Orbitron', sans-serif; font-weight: 700; font-size: 0.95rem; }
+        .banner-value.btc { color: var(--gold); text-shadow: 0 0 10px var(--gold); }
+        .banner-value.fear { color: var(--green); text-shadow: 0 0 10px var(--green); }
+        .banner-value.greed { color: var(--red); text-shadow: 0 0 10px var(--red); }
+        .hifty-co { font-family: 'Orbitron', sans-serif; font-size: 0.8rem; color: var(--cyan-dim); letter-spacing: 0.25rem; }
         
-        .banner-label { color: var(--cyan-dim); font-size: 0.8rem; }
+        .main-content { padding: 0.8rem; }
+        .kpi-row { display: grid; grid-template-columns: repeat(6, 1fr); gap: 0.8rem; margin-bottom: 0.8rem; }
+        .kpi-card { background: linear-gradient(135deg, rgba(0, 212, 255, 0.1) 0%, rgba(0, 212, 255, 0.02) 100%); border: 1px solid var(--cyan-dim); padding: 0.8rem; position: relative; overflow: hidden; transition: all 0.3s ease; }
+        .kpi-card::before { content: ''; position: absolute; top: 0; left: 0; width: 100%; height: 2px; background: linear-gradient(90deg, transparent, var(--cyan), transparent); animation: kpiGlow 2s ease-in-out infinite; }
+        @keyframes kpiGlow { 0%, 100% { opacity: 0.5; } 50% { opacity: 1; } }
+        .kpi-card:hover { border-color: var(--cyan); box-shadow: 0 0 25px var(--cyan-dim); transform: translateY(-3px); }
+        .kpi-label { font-size: 0.65rem; color: var(--cyan-dim); letter-spacing: 0.15rem; margin-bottom: 0.4rem; font-weight: 600; }
+        .kpi-value { font-family: 'Orbitron', sans-serif; font-size: 1.4rem; font-weight: 700; color: var(--cyan); text-shadow: 0 0 15px var(--cyan); }
+        .kpi-value.positive { color: var(--green); text-shadow: 0 0 15px var(--green); }
+        .kpi-value.negative { color: var(--red); text-shadow: 0 0 15px var(--red); }
+        .kpi-value.warning { color: var(--orange); text-shadow: 0 0 15px var(--orange); }
+        .kpi-value.gold { color: var(--gold); text-shadow: 0 0 15px var(--gold); }
         
-        .banner-value {
-            font-family: 'Orbitron', sans-serif;
-            font-weight: 700;
-            font-size: 1rem;
-        }
-        
-        .banner-value.btc { color: var(--gold); }
-        .banner-value.fear { color: var(--green); }
-        .banner-value.greed { color: var(--red); }
-        
-        .hifty-co {
-            font-family: 'Orbitron', sans-serif;
-            font-size: 0.9rem;
-            color: var(--cyan-dim);
-            letter-spacing: 0.2rem;
-        }
-        
-        .main-content { padding: 1rem; }
-        
-        .kpi-row {
-            display: grid;
-            grid-template-columns: repeat(6, 1fr);
-            gap: 1rem;
-            margin-bottom: 1rem;
-        }
-        
-        .kpi-card {
-            background: linear-gradient(135deg, rgba(0, 212, 255, 0.1) 0%, rgba(0, 212, 255, 0.02) 100%);
-            border: 1px solid var(--cyan-dim);
-            padding: 1rem;
-            position: relative;
-            overflow: hidden;
-        }
-        
-        .kpi-card::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 2px;
-            background: linear-gradient(90deg, transparent, var(--cyan), transparent);
-        }
-        
-        .kpi-label { font-size: 0.7rem; color: var(--cyan-dim); letter-spacing: 0.1rem; margin-bottom: 0.5rem; }
-        
-        .kpi-value {
-            font-family: 'Orbitron', sans-serif;
-            font-size: 1.5rem;
-            font-weight: 700;
-            color: var(--cyan);
-            text-shadow: 0 0 10px var(--cyan);
-        }
-        
-        .kpi-value.positive { color: var(--green); text-shadow: 0 0 10px var(--green); }
-        .kpi-value.negative { color: var(--red); text-shadow: 0 0 10px var(--red); }
-        .kpi-value.warning { color: var(--orange); text-shadow: 0 0 10px var(--orange); }
-        
-        .main-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 1rem; margin-bottom: 1rem; }
-        
-        .panel {
-            background: linear-gradient(135deg, rgba(0, 212, 255, 0.08) 0%, rgba(0, 212, 255, 0.02) 100%);
-            border: 1px solid var(--cyan-dim);
-            padding: 1rem;
-            position: relative;
-        }
-        
-        .panel-header {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            margin-bottom: 1rem;
-            padding-bottom: 0.5rem;
-            border-bottom: 1px solid var(--cyan-dim);
-        }
-        
-        .panel-title {
-            font-family: 'Orbitron', sans-serif;
-            font-size: 0.9rem;
-            font-weight: 700;
-            color: var(--cyan);
-            letter-spacing: 0.1rem;
-        }
-        
-        .panel-status {
-            font-size: 0.7rem;
-            padding: 0.2rem 0.5rem;
-            border-radius: 2px;
-        }
-        
+        .main-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 0.8rem; margin-bottom: 0.8rem; }
+        .panel { background: linear-gradient(135deg, rgba(0, 212, 255, 0.08) 0%, rgba(0, 212, 255, 0.02) 100%); border: 1px solid var(--cyan-dim); padding: 0.8rem; position: relative; backdrop-filter: blur(10px); transition: all 0.3s ease; }
+        .panel:hover { border-color: var(--cyan); box-shadow: 0 0 30px var(--cyan-dim); }
+        .panel-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 0.8rem; padding-bottom: 0.5rem; border-bottom: 1px solid var(--cyan-dim); }
+        .panel-title { font-family: 'Orbitron', sans-serif; font-size: 0.8rem; font-weight: 700; color: var(--cyan); letter-spacing: 0.15rem; text-shadow: 0 0 10px var(--cyan); }
+        .panel-status { font-size: 0.65rem; padding: 0.2rem 0.5rem; border-radius: 2px; font-weight: 600; }
         .panel-status.online { background: rgba(0, 255, 136, 0.2); color: var(--green); }
         .panel-status.warning { background: rgba(255, 123, 0, 0.2); color: var(--orange); }
         
-        .agent-list { display: flex; flex-direction: column; gap: 0.5rem; }
+        .jarvis-speech { position: absolute; top: -10px; right: 10px; background: linear-gradient(135deg, rgba(0, 212, 255, 0.15) 0%, rgba(0, 212, 255, 0.05) 100%); border: 1px solid var(--cyan); padding: 0.5rem 0.8rem; border-radius: 5px; font-family: 'Share Tech Mono', monospace; font-size: 0.65rem; color: var(--cyan); max-width: 180px; box-shadow: 0 0 20px var(--cyan-dim); animation: speechPop 0.3s ease; }
+        .jarvis-speech::before { content: ''; position: absolute; bottom: -8px; left: 20px; width: 0; height: 0; border-left: 8px solid transparent; border-right: 8px solid transparent; border-top: 8px solid var(--cyan); }
+        @keyframes speechPop { 0% { transform: scale(0); opacity: 0; } 70% { transform: scale(1.1); } 100% { transform: scale(1); opacity: 1; } }
         
-        .agent-item {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            padding: 0.5rem;
-            background: rgba(0, 212, 255, 0.05);
-            border-left: 2px solid var(--cyan);
-        }
+        .agent-list { display: flex; flex-direction: column; gap: 0.4rem; }
+        .agent-item { display: flex; align-items: center; justify-content: space-between; padding: 0.5rem; background: rgba(0, 212, 255, 0.05); border-left: 3px solid var(--cyan); transition: all 0.3s ease; }
+        .agent-item:hover { background: rgba(0, 212, 255, 0.12); border-left-color: var(--gold); padding-left: 0.8rem; }
+        .agent-item .name { font-weight: 700; font-size: 0.9rem; }
+        .agent-item .role { font-size: 0.65rem; color: var(--cyan-dim); }
+        .agent-status { width: 8px; height: 8px; border-radius: 50%; background: var(--green); box-shadow: 0 0 10px var(--green); }
+        .agent-status.busy { background: var(--gold); box-shadow: 0 0 10px var(--gold); animation: busyPulse 1s ease-in-out infinite; }
+        @keyframes busyPulse { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.2); } }
         
-        .agent-item .name { font-weight: 700; }
-        .agent-item .role { font-size: 0.7rem; color: var(--cyan-dim); }
-        
-        .agent-status {
-            width: 8px;
-            height: 8px;
-            border-radius: 50%;
-            background: var(--green);
-            box-shadow: 0 0 8px var(--green);
-        }
-        
-        .agent-status.busy {
-            background: var(--gold);
-            box-shadow: 0 0 8px var(--gold);
-            animation: busyPulse 1s ease-in-out infinite;
-        }
-        
-        @keyframes busyPulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.5; } }
-        
-        .session-log { max-height: 200px; overflow-y: auto; font-size: 0.75rem; }
-        
-        .log-entry { padding: 0.3rem 0; border-bottom: 1px solid rgba(0, 212, 255, 0.1); display: flex; gap: 0.5rem; }
-        .log-time { color: var(--cyan-dim); min-width: 60px; }
+        .session-log { max-height: 180px; overflow-y: auto; font-size: 0.7rem; font-family: 'Share Tech Mono', monospace; }
+        .log-entry { padding: 0.25rem 0; border-bottom: 1px solid rgba(0, 212, 255, 0.08); display: flex; gap: 0.5rem; }
+        .log-time { color: var(--cyan-dim); min-width: 65px; }
         .log-msg { color: var(--cyan); }
         
-        .health-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 0.5rem; }
-        
+        .health-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 0.4rem; }
         .health-item { padding: 0.5rem; background: rgba(0, 212, 255, 0.05); text-align: center; }
-        .health-label { font-size: 0.6rem; color: var(--cyan-dim); }
-        .health-value { font-family: 'Orbitron', sans-serif; font-size: 0.9rem; color: var(--green); }
+        .health-label { font-size: 0.55rem; color: var(--cyan-dim); font-weight: 600; }
+        .health-value { font-family: 'Orbitron', sans-serif; font-size: 0.85rem; color: var(--green); text-shadow: 0 0 8px var(--green); }
         .health-value.error { color: var(--red); }
+        .health-value.warning { color: var(--orange); }
         
-        .errors-list { max-height: 150px; overflow-y: auto; }
+        .errors-list { max-height: 120px; overflow-y: auto; }
+        .error-item { padding: 0.35rem; background: rgba(255, 48, 64, 0.1); border-left: 2px solid var(--red); font-size: 0.65rem; margin-bottom: 0.25rem; font-family: 'Share Tech Mono', monospace; }
+        .no-errors { color: var(--green); text-align: center; padding: 0.8rem; font-size: 0.7rem; }
         
-        .error-item {
-            padding: 0.4rem;
-            background: rgba(255, 48, 64, 0.1);
-            border-left: 2px solid var(--red);
-            font-size: 0.7rem;
-            margin-bottom: 0.3rem;
-        }
+        /* JARVIS AI PANEL STYLES */
+        .jarvis-panel { background: linear-gradient(135deg, rgba(240, 165, 0, 0.1) 0%, rgba(0, 212, 255, 0.08) 100%) !important; border-color: var(--gold-dim) !important; }
+        .jarvis-panel .panel-title { color: var(--gold) !important; text-shadow: 0 0 10px var(--gold) !important; }
+        .jarvis-section { margin-bottom: 0.8rem; }
+        .jarvis-section-title { font-size: 0.6rem; color: var(--gold-dim); letter-spacing: 0.15rem; margin-bottom: 0.4rem; font-weight: 600; text-transform: uppercase; }
+        .briefing-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 0.4rem; }
+        .briefing-item { padding: 0.4rem; background: rgba(0, 212, 255, 0.05); border-left: 2px solid var(--gold); }
+        .briefing-label { font-size: 0.55rem; color: var(--cyan-dim); }
+        .briefing-value { font-family: 'Orbitron', sans-serif; font-size: 0.8rem; color: var(--cyan); }
+        .briefing-value.up { color: var(--green); }
+        .briefing-value.down { color: var(--red); }
         
-        .no-errors { color: var(--green); text-align: center; padding: 1rem; }
+        .alert-item { display: flex; align-items: center; gap: 0.4rem; padding: 0.35rem; background: rgba(0, 212, 255, 0.05); margin-bottom: 0.3rem; border-left: 2px solid var(--cyan); }
+        .alert-item.warning { border-left-color: var(--orange); }
+        .alert-item.error { border-left-color: var(--red); }
+        .alert-item.success { border-left-color: var(--green); }
+        .alert-icon { font-size: 0.8rem; }
+        .alert-text { font-size: 0.65rem; }
         
-        .lower-grid { display: grid; grid-template-columns: 1fr 1fr 1fr 1fr; gap: 1rem; margin-bottom: 1rem; }
+        .voice-input { display: flex; gap: 0.4rem; }
+        .voice-input input { flex: 1; background: rgba(0, 212, 255, 0.1); border: 1px solid var(--cyan-dim); color: var(--cyan); padding: 0.4rem; font-family: 'Share Tech Mono', monospace; font-size: 0.65rem; border-radius: 3px; }
+        .voice-input input:focus { outline: none; border-color: var(--cyan); }
+        .voice-input button { background: var(--gold); border: none; color: var(--void); padding: 0.4rem 0.8rem; font-family: 'Orbitron', sans-serif; font-size: 0.6rem; cursor: pointer; border-radius: 3px; }
+        .voice-input button:hover { background: var(--gold-bright); box-shadow: 0 0 15px var(--gold); }
         
-        .cron-list { display: flex; flex-direction: column; gap: 0.5rem; }
-        
-        .cron-item { display: flex; align-items: center; justify-content: space-between; padding: 0.5rem; background: rgba(0, 212, 255, 0.05); }
-        .cron-name { font-size: 0.8rem; }
-        
-        .cron-status { font-size: 0.65rem; padding: 0.2rem 0.4rem; border-radius: 2px; }
+        .lower-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 0.8rem; margin-bottom: 0.8rem; }
+        .cron-list { display: flex; flex-direction: column; gap: 0.4rem; }
+        .cron-item { display: flex; align-items: center; justify-content: space-between; padding: 0.4rem; background: rgba(0, 212, 255, 0.05); }
+        .cron-name { font-size: 0.75rem; }
+        .cron-status { font-size: 0.6rem; padding: 0.15rem 0.4rem; border-radius: 2px; font-weight: 600; }
         .cron-status.active { background: rgba(0, 255, 136, 0.2); color: var(--green); }
         .cron-status.scheduled { background: rgba(0, 212, 255, 0.2); color: var(--cyan); }
         
-        .channel-list { display: flex; flex-direction: column; gap: 0.5rem; }
-        
-        .channel-item { display: flex; align-items: center; gap: 0.5rem; padding: 0.4rem; background: rgba(0, 212, 255, 0.05); }
+        .channel-list { display: flex; flex-direction: column; gap: 0.4rem; }
+        .channel-item { display: flex; align-items: center; gap: 0.4rem; padding: 0.35rem; background: rgba(0, 212, 255, 0.05); }
         .channel-icon { color: var(--gold); }
-        .channel-name { font-size: 0.8rem; }
+        .channel-name { font-size: 0.75rem; }
         
-        .live-log { max-height: 150px; overflow-y: auto; font-size: 0.7rem; font-family: 'Share Tech Mono', monospace; }
-        
+        .live-log { max-height: 130px; overflow-y: auto; font-size: 0.65rem; font-family: 'Share Tech Mono', monospace; }
         .live-entry { padding: 0.2rem 0; border-bottom: 1px solid rgba(0, 212, 255, 0.05); }
         .live-entry.info { color: var(--cyan); }
         .live-entry.success { color: var(--green); }
         .live-entry.warn { color: var(--orange); }
         .live-entry.error { color: var(--red); }
         
-        .quick-commands { display: grid; grid-template-columns: 1fr 1fr; gap: 0.5rem; }
+        .quick-commands { display: grid; grid-template-columns: 1fr 1fr; gap: 0.4rem; }
+        .cmd-btn { background: rgba(0, 212, 255, 0.08); border: 1px solid var(--cyan-dim); color: var(--cyan); padding: 0.5rem; font-family: 'Share Tech Mono', monospace; font-size: 0.65rem; cursor: pointer; transition: all 0.3s ease; border-radius: 3px; text-align: left; }
+        .cmd-btn:hover { background: rgba(0, 212, 255, 0.2); border-color: var(--cyan); box-shadow: 0 0 20px var(--cyan-dim); transform: translateY(-2px); }
+        .cmd-btn .key { color: var(--gold); font-weight: 700; font-size: 0.75rem; display: block; margin-bottom: 0.2rem; }
         
-        .cmd-btn {
-            background: rgba(0, 212, 255, 0.1);
-            border: 1px solid var(--cyan-dim);
-            color: var(--cyan);
-            padding: 0.5rem;
-            font-family: 'Share Tech Mono', monospace;
-            font-size: 0.7rem;
-            cursor: pointer;
-            transition: all 0.3s ease;
-            text-align: left;
-        }
-        
-        .cmd-btn:hover {
-            background: rgba(0, 212, 255, 0.2);
-            border-color: var(--cyan);
-            box-shadow: 0 0 15px var(--cyan-dim);
-        }
-        
-        .cmd-btn .key { color: var(--gold); font-weight: 700; }
-        
-        .bottom-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 1rem; }
-        
-        .model-chart { display: flex; flex-direction: column; gap: 0.5rem; }
-        
-        .model-item { display: flex; align-items: center; gap: 0.5rem; }
-        .model-name { min-width: 120px; font-size: 0.75rem; }
+        .bottom-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 0.8rem; }
+        .model-chart { display: flex; flex-direction: column; gap: 0.4rem; }
+        .model-item { display: flex; align-items: center; gap: 0.4rem; }
+        .model-name { min-width: 110px; font-size: 0.7rem; font-weight: 600; }
         .model-bar { flex: 1; height: 8px; background: rgba(0, 212, 255, 0.1); border-radius: 4px; overflow: hidden; }
-        .model-fill { height: 100%; background: var(--cyan); border-radius: 4px; box-shadow: 0 0 8px var(--cyan); }
-        .model-pct { font-size: 0.7rem; min-width: 40px; text-align: right; }
+        .model-fill { height: 100%; background: linear-gradient(90deg, var(--cyan), var(--cyan-bright)); border-radius: 4px; box-shadow: 0 0 10px var(--cyan); }
+        .model-pct { font-size: 0.65rem; min-width: 35px; text-align: right; font-family: 'Orbitron', sans-serif; }
         
-        .cost-chart { display: flex; align-items: flex-end; gap: 0.3rem; height: 100px; padding: 0.5rem 0; }
+        .cost-chart { display: flex; align-items: flex-end; gap: 0.25rem; height: 80px; padding: 0.4rem 0; }
+        .cost-bar { flex: 1; background: linear-gradient(180deg, var(--cyan), var(--cyan-dim)); border-radius: 2px 2px 0 0; min-height: 5px; transition: all 0.3s ease; position: relative; cursor: pointer; }
+        .cost-bar:hover { background: var(--gold); box-shadow: 0 0 15px var(--gold); }
+        .cost-bar .day { position: absolute; bottom: -18px; left: 50%; transform: translateX(-50%); font-size: 0.5rem; color: var(--cyan-dim); font-weight: 600; }
+        .cost-total { text-align: center; margin-top: 1.2rem; }
+        .cost-total .label { font-size: 0.6rem; color: var(--cyan-dim); letter-spacing: 0.15rem; }
+        .cost-total .value { font-size: 1.1rem; color: var(--gold); text-shadow: 0 0 15px var(--gold); font-family: 'Orbitron', sans-serif; }
         
-        .cost-bar {
-            flex: 1;
-            background: linear-gradient(180deg, var(--cyan), var(--cyan-dim));
-            border-radius: 2px 2px 0 0;
-            min-height: 5px;
-            transition: all 0.3s ease;
-            position: relative;
-        }
-        
-        .cost-bar:hover { background: var(--gold); box-shadow: 0 0 10px var(--gold); }
-        .cost-bar .day { position: absolute; bottom: -15px; left: 50%; transform: translateX(-50%); font-size: 0.5rem; color: var(--cyan-dim); }
-        
-        .cost-total { text-align: center; margin-top: 1rem; font-family: 'Orbitron', sans-serif; }
-        .cost-total .label { font-size: 0.7rem; color: var(--cyan-dim); }
-        .cost-total .value { font-size: 1.2rem; color: var(--gold); text-shadow: 0 0 10px var(--gold); }
-        
-        .system-status { display: flex; flex-direction: column; gap: 0.5rem; }
-        
-        .sys-item { display: flex; align-items: center; justify-content: space-between; padding: 0.4rem; background: rgba(0, 212, 255, 0.05); }
-        .sys-label { font-size: 0.75rem; color: var(--cyan-dim); }
-        .sys-value { font-size: 0.75rem; color: var(--green); }
+        .system-status { display: flex; flex-direction: column; gap: 0.4rem; }
+        .sys-item { display: flex; align-items: center; justify-content: space-between; padding: 0.35rem; background: rgba(0, 212, 255, 0.05); }
+        .sys-label { font-size: 0.7rem; color: var(--cyan-dim); }
+        .sys-value { font-size: 0.7rem; color: var(--green); }
         .sys-value.error { color: var(--red); }
         .sys-value.warning { color: var(--orange); }
         
-        #arc-modal {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: rgba(0, 4, 8, 0.95);
-            z-index: 9000;
-            display: none;
-            align-items: center;
-            justify-content: center;
-            flex-direction: column;
-        }
-        
+        #arc-modal { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 4, 8, 0.95); z-index: 9000; display: none; align-items: center; justify-content: center; flex-direction: column; }
         #arc-modal.visible { display: flex; }
-        
         .arc-stats { text-align: center; margin-top: 2rem; }
-        
         .arc-stat { margin: 1rem 0; }
         .arc-stat .label { font-size: 0.8rem; color: var(--cyan-dim); }
         .arc-stat .value { font-family: 'Orbitron', sans-serif; font-size: 2rem; color: var(--cyan); text-shadow: 0 0 20px var(--cyan); }
-        
-        .close-modal {
-            margin-top: 2rem;
-            background: none;
-            border: 1px solid var(--cyan);
-            color: var(--cyan);
-            padding: 0.5rem 2rem;
-            cursor: pointer;
-            font-family: 'Share Tech Mono', monospace;
-            transition: all 0.3s ease;
-        }
-        
+        .close-modal { margin-top: 2rem; background: none; border: 1px solid var(--cyan); color: var(--cyan); padding: 0.5rem 2rem; cursor: pointer; font-family: 'Share Tech Mono', monospace; transition: all 0.3s ease; }
         .close-modal:hover { background: var(--cyan); color: var(--void); }
         
-        .toast-container {
-            position: fixed;
-            top: 80px;
-            right: 20px;
-            z-index: 8000;
-            display: flex;
-            flex-direction: column;
-            gap: 0.5rem;
-        }
-        
-        .toast {
-            background: rgba(0, 212, 255, 0.1);
-            border: 1px solid var(--cyan);
-            padding: 1rem 1.5rem;
-            min-width: 300px;
-            animation: toastIn 0.3s ease;
-            position: relative;
-            overflow: hidden;
-        }
-        
-        .toast::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 3px;
-            height: 100%;
-            background: var(--cyan);
-        }
-        
-        .toast.success { border-color: var(--green); }
-        .toast.success::before { background: var(--green); }
-        .toast.warning { border-color: var(--orange); }
-        .toast.warning::before { background: var(--orange); }
-        .toast.error { border-color: var(--red); }
-        .toast.error::before { background: var(--red); }
-        
-        @keyframes toastIn {
-            from { transform: translateX(100%); opacity: 0; }
-            to { transform: translateX(0); opacity: 1; }
-        }
-        
+        .toast-container { position: fixed; top: 80px; right: 20px; z-index: 8000; display: flex; flex-direction: column; gap: 0.5rem; }
+        .toast { background: rgba(0, 212, 255, 0.1); border: 1px solid var(--cyan); padding: 1rem 1.5rem; min-width: 300px; animation: toastIn 0.3s ease; position: relative; }
+        .toast::before { content: ''; position: absolute; top: 0; left: 0; width: 3px; height: 100%; background: var(--cyan); }
+        .toast.success { border-color: var(--green); } .toast.success::before { background: var(--green); }
+        .toast.warning { border-color: var(--orange); } .toast.warning::before { background: var(--orange); }
+        .toast.error { border-color: var(--red); } .toast.error::before { background: var(--red); }
+        @keyframes toastIn { from { transform: translateX(100%); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
         .toast-title { font-family: 'Orbitron', sans-serif; font-size: 0.8rem; font-weight: 700; margin-bottom: 0.3rem; }
         .toast-msg { font-size: 0.75rem; color: var(--cyan-dim); }
-        
-        .holographic { animation: holoGlow 3s ease-in-out infinite; }
-        
-        @keyframes holoGlow {
-            0%, 100% { box-shadow: 0 0 5px var(--cyan-dim), inset 0 0 5px var(--cyan-dim); }
-            50% { box-shadow: 0 0 20px var(--cyan), inset 0 0 10px var(--cyan); }
-        }
         
         ::-webkit-scrollbar { width: 6px; }
         ::-webkit-scrollbar-track { background: var(--void); }
         ::-webkit-scrollbar-thumb { background: var(--cyan-dim); border-radius: 3px; }
-        ::-webkit-scrollbar-thumb:hover { background: var(--cyan); }
         
-        @media (max-width: 1200px) {
-            .kpi-row { grid-template-columns: repeat(3, 1fr); }
-            .main-grid { grid-template-columns: 1fr 1fr; }
-            .lower-grid { grid-template-columns: 1fr 1fr; }
-            .bottom-grid { grid-template-columns: 1fr; }
-        }
-        
-        @media (max-width: 768px) {
-            .kpi-row { grid-template-columns: repeat(2, 1fr); }
-            .main-grid { grid-template-columns: 1fr; }
-            .lower-grid { grid-template-columns: 1fr; }
-            .topbar { flex-wrap: wrap; }
-            .topbar-center { order: 3; width: 100%; justify-content: space-around; }
-        }
+        @media (max-width: 1200px) { .kpi-row { grid-template-columns: repeat(3, 1fr); } .main-grid { grid-template-columns: 1fr 1fr; } .lower-grid { grid-template-columns: 1fr 1fr; } .bottom-grid { grid-template-columns: 1fr; } }
+        @media (max-width: 768px) { .kpi-row { grid-template-columns: repeat(2, 1fr); } .main-grid { grid-template-columns: 1fr; } .lower-grid { grid-template-columns: 1fr; } .topbar { flex-wrap: wrap; } .topbar-center { order: 3; width: 100%; } }
     </style>
 </head>
 <body>
+    <canvas id="particle-canvas"></canvas>
     <canvas id="hex-canvas"></canvas>
     <div class="ambient-glow"></div>
+    
+    <div class="corner-bracket tl"></div>
+    <div class="corner-bracket tr"></div>
+    <div class="corner-bracket bl"></div>
+    <div class="corner-bracket br"></div>
+    
+    <!-- AUDIO ENABLE OVERLAY - FIX SOUND -->
+    <div id="audio-enable-overlay">
+        <div class="tap-text">TAP TO ENABLE AUDIO</div>
+        <div class="tap-circle"><span>🔊</span></div>
+        <div class="subtext">CLICK ANYWHERE TO ACTIVATE JARVIS</div>
+    </div>
     
     <!-- BOOT SEQUENCE -->
     <div id="boot-overlay">
         <div class="boot-title">J.A.R.V.I.S</div>
+        <div class="boot-subtitle">— HIFTY MISSION CONTROL —</div>
         <div id="boot-lines"></div>
-        <div class="boot-progress">
-            <div class="boot-progress-bar" id="boot-progress"></div>
-        </div>
+        <div class="boot-progress"><div class="boot-progress-bar" id="boot-progress"></div></div>
     </div>
     
     <!-- ARC REACTOR MODAL -->
     <div id="arc-modal">
         <canvas id="arc-canvas" width="300" height="300"></canvas>
         <div class="arc-stats">
-            <div class="arc-stat">
-                <div class="label">CORE TEMPERATURE</div>
-                <div class="value" id="core-temp">42.0°C</div>
-            </div>
-            <div class="arc-stat">
-                <div class="label">POWER OUTPUT</div>
-                <div class="value" id="power-output">98.7%</div>
-            </div>
-            <div class="arc-stat">
-                <div class="label">CYCLE COUNT</div>
-                <div class="value" id="cycle-count">1,337</div>
-            </div>
+            <div class="arc-stat"><div class="label">CORE TEMPERATURE</div><div class="value" id="core-temp">42.0°C</div></div>
+            <div class="arc-stat"><div class="label">POWER OUTPUT</div><div class="value" id="power-output">98.7%</div></div>
+            <div class="arc-stat"><div class="label">CYCLE COUNT</div><div class="value" id="cycle-count">1,337</div></div>
         </div>
         <button class="close-modal" onclick="closeArcModal(); SFX.click();">[ CLOSE ]</button>
     </div>
@@ -641,64 +276,27 @@
                 <div class="topbar-title">J.A.R.V.I.S <span>—</span> Hifty Mission Control</div>
             </div>
             <div class="topbar-center">
-                <div class="resource-bar">
-                    <span class="resource-label">CPU</span>
-                    <div class="resource-track"><div class="resource-fill cpu" id="cpu-bar" style="width: 23%"></div></div>
-                </div>
-                <div class="resource-bar">
-                    <span class="resource-label">RAM</span>
-                    <div class="resource-track"><div class="resource-fill ram" id="ram-bar" style="width: 47%"></div></div>
-                </div>
-                <div class="resource-bar">
-                    <span class="resource-label">NET</span>
-                    <div class="resource-track"><div class="resource-fill net" id="net-bar" style="width: 12%"></div></div>
-                </div>
-                <div class="resource-bar">
-                    <span class="resource-label">DISK</span>
-                    <div class="resource-track"><div class="resource-fill disk" id="disk-bar" style="width: 67%"></div></div>
-                </div>
-                <div class="resource-bar">
-                    <span class="resource-label">TEMP</span>
-                    <div class="resource-track"><div class="resource-fill temp" id="temp-bar" style="width: 38%"></div></div>
-                </div>
+                <div class="resource-bar"><span class="resource-label">CPU</span><div class="resource-track"><div class="resource-fill cpu" id="cpu-bar" style="width: 23%"></div></div></div>
+                <div class="resource-bar"><span class="resource-label">RAM</span><div class="resource-track"><div class="resource-fill ram" id="ram-bar" style="width: 47%"></div></div></div>
+                <div class="resource-bar"><span class="resource-label">NET</span><div class="resource-track"><div class="resource-fill net" id="net-bar" style="width: 12%"></div></div></div>
+                <div class="resource-bar"><span class="resource-label">DISK</span><div class="resource-track"><div class="resource-fill disk" id="disk-bar" style="width: 67%"></div></div></div>
+                <div class="resource-bar"><span class="resource-label">TEMP</span><div class="resource-track"><div class="resource-fill temp" id="temp-bar" style="width: 38%"></div></div></div>
             </div>
             <div class="topbar-right">
                 <div class="clock" id="clock">00:00:00</div>
-                <button id="sound-toggle" onclick="toggleSound()" style="background:transparent;border:1px solid var(--border);color:var(--cyan);padding:4px 10px;border-radius:3px;cursor:pointer;font-family:var(--mono);font-size:10px;">
-<span id="sound-icon">🔇</span> AUDIO
-</button>
+                <button id="sound-toggle" onclick="toggleSound()" class="sound-toggle"><span id="sound-icon">🔇</span> AUDIO</button>
             </div>
         </div>
         
         <!-- BANNER -->
         <div class="banner">
             <div class="banner-stats">
-                <div class="banner-stat">
-                    <span class="banner-label">BTC PRICE</span>
-                    <span class="banner-value btc" id="btc-price">$84,234.56</span>
-                </div>
-                <div class="banner-stat">
-                    <span class="banner-label">FEAR & GREED</span>
-                    <span class="banner-value fear" id="fear-greed">72</span>
-                    <span style="color: var(--cyan-dim)">/</span>
-                    <span class="banner-value greed" id="fear-greed-label">GREED</span>
-                </div>
-                <div class="banner-stat">
-                    <span class="banner-label">WIN RATE</span>
-                    <span class="banner-value positive" id="win-rate">100%</span>
-                </div>
-                <div class="banner-stat">
-                    <span class="banner-label">TOTAL TRADES</span>
-                    <span class="banner-value" id="total-trades">3</span>
-                </div>
-                <div class="banner-stat">
-                    <span class="banner-label">TOTAL P&L</span>
-                    <span class="banner-value positive" id="total-pnl">+$7,394.57</span>
-                </div>
-                <div class="banner-stat">
-                    <span class="banner-label">RSI COMPLIANCE</span>
-                    <span class="banner-value warning" id="rsi-compliance">33%</span>
-                </div>
+                <div class="banner-stat"><span class="banner-label">BTC PRICE</span><span class="banner-value btc" id="btc-price">$84,234.56</span></div>
+                <div class="banner-stat"><span class="banner-label">FEAR & GREED</span><span class="banner-value fear" id="fear-greed">72</span><span style="color: var(--cyan-dim)">/</span><span class="banner-value greed" id="fear-greed-label">GREED</span></div>
+                <div class="banner-stat"><span class="banner-label">WIN RATE</span><span class="banner-value positive" id="win-rate">100%</span></div>
+                <div class="banner-stat"><span class="banner-label">TOTAL TRADES</span><span class="banner-value" id="total-trades">3</span></div>
+                <div class="banner-stat"><span class="banner-label">TOTAL P&L</span><span class="banner-value positive" id="total-pnl">+$7,394.57</span></div>
+                <div class="banner-stat"><span class="banner-label">RSI COMPLIANCE</span><span class="banner-value warning" id="rsi-compliance">33%</span></div>
             </div>
             <div class="hifty-co">▲ HIFTY CO.</div>
         </div>
@@ -707,141 +305,86 @@
         <div class="main-content">
             <!-- KPI ROW -->
             <div class="kpi-row">
-                <div class="kpi-card">
-                    <div class="kpi-label">ACTIVE SESSIONS</div>
-                    <div class="kpi-value" id="kpi-sessions">5</div>
-                </div>
-                <div class="kpi-card">
-                    <div class="kpi-label">API CALLS (24H)</div>
-                    <div class="kpi-value" id="kpi-api-calls">1,247</div>
-                </div>
-                <div class="kpi-card">
-                    <div class="kpi-label">COST TODAY</div>
-                    <div class="kpi-value" id="kpi-cost">$12.47</div>
-                </div>
-                <div class="kpi-card">
-                    <div class="kpi-label">TOKENS/MIN</div>
-                    <div class="kpi-value" id="kpi-tokens">89.3</div>
-                </div>
-                <div class="kpi-card">
-                    <div class="kpi-label">CRON JOBS</div>
-                    <div class="kpi-value" id="kpi-crons">3</div>
-                </div>
-                <div class="kpi-card">
-                    <div class="kpi-label">ERROR RATE</div>
-                    <div class="kpi-value positive" id="kpi-errors">0.0%</div>
-                </div>
+                <div class="kpi-card"><div class="kpi-label">ACTIVE SESSIONS</div><div class="kpi-value" id="kpi-sessions">5</div></div>
+                <div class="kpi-card"><div class="kpi-label">API CALLS (24H)</div><div class="kpi-value" id="kpi-api-calls">1,247</div></div>
+                <div class="kpi-card"><div class="kpi-label">COST TODAY</div><div class="kpi-value gold" id="kpi-cost">$12.47</div></div>
+                <div class="kpi-card"><div class="kpi-label">TOKENS/MIN</div><div class="kpi-value" id="kpi-tokens">89.3</div></div>
+                <div class="kpi-card"><div class="kpi-label">CRON JOBS</div><div class="kpi-value" id="kpi-crons">3</div></div>
+                <div class="kpi-card"><div class="kpi-label">ERROR RATE</div><div class="kpi-value positive" id="kpi-errors">0.0%</div></div>
             </div>
             
             <!-- MAIN GRID -->
             <div class="main-grid">
                 <!-- ACTIVE AGENTS -->
                 <div class="panel">
-                    <div class="panel-header">
-                        <div class="panel-title">◈ ACTIVE AGENTS</div>
-                        <div class="panel-status online">ONLINE</div>
-                    </div>
+                    <div class="panel-header"><div class="panel-title">◈ ACTIVE AGENTS</div><div class="panel-status online">ONLINE</div></div>
                     <div class="agent-list" id="agent-list">
-                        <div class="agent-item">
-                            <div>
-                                <div class="name">Ollie</div>
-                                <div class="role">Chief of Command (CEO)</div>
-                            </div>
-                            <div class="agent-status busy"></div>
-                        </div>
-                        <div class="agent-item">
-                            <div>
-                                <div class="name">MintyTrades</div>
-                                <div class="role">Trading Research</div>
-                            </div>
-                            <div class="agent-status"></div>
-                        </div>
-                        <div class="agent-item">
-                            <div>
-                                <div class="name">HiftyCodes</div>
-                                <div class="role">Website Dev</div>
-                            </div>
-                            <div class="agent-status"></div>
-                        </div>
-                        <div class="agent-item">
-                            <div>
-                                <div class="name">HiftyAnalyst</div>
-                                <div class="role">Data Analysis</div>
-                            </div>
-                            <div class="agent-status busy"></div>
-                        </div>
-                        <div class="agent-item">
-                            <div>
-                                <div class="name">HiftyRiskManager</div>
-                                <div class="role">Risk Management</div>
-                            </div>
-                            <div class="agent-status"></div>
-                        </div>
+                        <div class="agent-item"><div><div class="name">Ollie</div><div class="role">Chief of Command (CEO)</div></div><div class="agent-status busy"></div></div>
+                        <div class="agent-item"><div><div class="name">MintyTrades</div><div class="role">Trading Research</div></div><div class="agent-status"></div></div>
+                        <div class="agent-item"><div><div class="name">HiftyCodes</div><div class="role">Website Dev</div></div><div class="agent-status"></div></div>
+                        <div class="agent-item"><div><div class="name">HiftyAnalyst</div><div class="role">Data Analysis</div></div><div class="agent-status busy"></div></div>
+                        <div class="agent-item"><div><div class="name">HiftyRiskManager</div><div class="role">Risk Management</div></div><div class="agent-status"></div></div>
                     </div>
                 </div>
                 
                 <!-- SESSION LOG -->
                 <div class="panel">
-                    <div class="panel-header">
-                        <div class="panel-title">◈ SESSION LOG</div>
-                        <div class="panel-status online">ACTIVE</div>
-                    </div>
+                    <div class="panel-header"><div class="panel-title">◈ SESSION LOG</div><div class="panel-status online">ACTIVE</div></div>
                     <div class="session-log" id="session-log">
-                        <div class="log-entry">
-                            <span class="log-time">01:32:15</span>
-                            <span class="log-msg">Agent Ollie initialized</span>
-                        </div>
-                        <div class="log-entry">
-                            <span class="log-time">01:31:42</span>
-                            <span class="log-msg">Gateway connection established</span>
-                        </div>
-                        <div class="log-entry">
-                            <span class="log-time">01:30:18</span>
-                            <span class="log-msg">HiftyAnalyst completed daily research</span>
-                        </div>
-                        <div class="log-entry">
-                            <span class="log-time">01:28:55</span>
-                            <span class="log-msg">Cron job 'morning-briefing' executed</span>
-                        </div>
-                        <div class="log-entry">
-                            <span class="log-time">01:25:33</span>
-                            <span class="log-msg">New session: jarvis-build</span>
-                        </div>
-                        <div class="log-entry">
-                            <span class="log-time">01:20:11</span>
-                            <span class="log-msg">MintyTrades found 2 trade setups</span>
-                        </div>
+                        <div class="log-entry"><span class="log-time">01:32:15</span><span class="log-msg">Agent Ollie initialized</span></div>
+                        <div class="log-entry"><span class="log-time">01:31:42</span><span class="log-msg">Gateway connection established</span></div>
+                        <div class="log-entry"><span class="log-time">01:30:18</span><span class="log-msg">HiftyAnalyst completed daily research</span></div>
+                        <div class="log-entry"><span class="log-time">01:28:55</span><span class="log-msg">Cron job 'morning-briefing' executed</span></div>
+                        <div class="log-entry"><span class="log-time">01:25:33</span><span class="log-msg">New session: jarvis-build</span></div>
+                        <div class="log-entry"><span class="log-time">01:20:11</span><span class="log-msg">MintyTrades found 2 trade setups</span></div>
                     </div>
                 </div>
                 
                 <!-- GATEWAY HEALTH -->
                 <div class="panel">
-                    <div class="panel-header">
-                        <div class="panel-title">◈ GATEWAY HEALTH</div>
-                        <div class="panel-status online">OPERATIONAL</div>
-                    </div>
+                    <div class="panel-header"><div class="panel-title">◈ GATEWAY HEALTH</div><div class="panel-status online">OPERATIONAL</div></div>
                     <div class="health-grid">
-                        <div class="health-item">
-                            <div class="health-label">STATUS</div>
-                            <div class="health-value">ONLINE</div>
-                        </div>
-                        <div class="health-item">
-                            <div class="health-label">UPTIME</div>
-                            <div class="health-value" id="uptime">99.8%</div>
-                        </div>
-                        <div class="health-item">
-                            <div class="health-label">LATENCY</div>
-                            <div class="health-value" id="latency">12ms</div>
-                        </div>
-                        <div class="health-item">
-                            <div class="health-label">MEMORY</div>
-                            <div class="health-value" id="memory">847MB</div>
-                        </div>
+                        <div class="health-item"><div class="health-label">STATUS</div><div class="health-value">ONLINE</div></div>
+                        <div class="health-item"><div class="health-label">UPTIME</div><div class="health-value" id="uptime">99.8%</div></div>
+                        <div class="health-item"><div class="health-label">LATENCY</div><div class="health-value" id="latency">12ms</div></div>
+                        <div class="health-item"><div class="health-label">MEMORY</div><div class="health-value" id="memory">847MB</div></div>
                     </div>
                     <div style="margin-top: 1rem;">
                         <div class="panel-title" style="font-size: 0.75rem; margin-bottom: 0.5rem;">◈ RECENT ERRORS</div>
-                        <div class="errors-list" id="errors-list">
-                            <div class="no-errors">// JARVIS: No critical errors detected</div>
+                        <div class="errors-list" id="errors-list"><div class="no-errors">// JARVIS: No critical errors detected</div></div>
+                    </div>
+                </div>
+                
+                <!-- JARVIS AI ASSISTANT -->
+                <div class="panel jarvis-panel">
+                    <div class="panel-header"><div class="panel-title">◈ JARVIS ASSISTANT</div><div class="panel-status online">ACTIVE</div></div>
+                    
+                    <!-- Briefings -->
+                    <div class="jarvis-section">
+                        <div class="jarvis-section-title">◈ DAILY BRIEFING</div>
+                        <div class="briefing-grid">
+                            <div class="briefing-item"><div class="briefing-label">BTC STATUS</div><div class="briefing-value up" id="jarvis-btc">$84,234 ▲</div></div>
+                            <div class="briefing-item"><div class="briefing-label">24H CHANGE</div><div class="briefing-value up" id="jarvis-btc-change">+2.4%</div></div>
+                            <div class="briefing-item"><div class="briefing-label">TEAM ACTIVE</div><div class="briefing-value" id="jarvis-team">5/5</div></div>
+                            <div class="briefing-item"><div class="briefing-label">RISI SCORE</div><div class="briefing-value warning" id="jarvis-rsi">33%</div></div>
+                        </div>
+                    </div>
+                    
+                    <!-- Alerts -->
+                    <div class="jarvis-section">
+                        <div class="jarvis-section-title">◈ ALERTS</div>
+                        <div id="jarvis-alerts">
+                            <div class="alert-item warning"><span class="alert-icon">⚠️</span><span class="alert-text">RSI Compliance at 33% - below target</span></div>
+                            <div class="alert-item success"><span class="alert-icon">✅</span><span class="alert-text">All systems operational</span></div>
+                        </div>
+                    </div>
+                    
+                    <!-- Voice Command -->
+                    <div class="jarvis-section">
+                        <div class="jarvis-section-title">◈ VOICE COMMAND</div>
+                        <div class="voice-input">
+                            <input type="text" placeholder="Ask JARVIS..." id="voice-command">
+                            <button onclick="jarvisCommand()">SEND</button>
                         </div>
                     </div>
                 </div>
@@ -851,49 +394,26 @@
             <div class="lower-grid">
                 <!-- CRON JOBS -->
                 <div class="panel">
-                    <div class="panel-header">
-                        <div class="panel-title">◈ CRON JOBS</div>
-                        <div class="panel-status online">3 ACTIVE</div>
-                    </div>
+                    <div class="panel-header"><div class="panel-title">◈ CRON JOBS</div><div class="panel-status online">3 ACTIVE</div></div>
                     <div class="cron-list">
-                        <div class="cron-item">
-                            <span class="cron-name">morning-briefing</span>
-                            <span class="cron-status active">RUNNING</span>
-                        </div>
-                        <div class="cron-item">
-                            <span class="cron-name">system-check</span>
-                            <span class="cron-status scheduled">07:00</span>
-                        </div>
-                        <div class="cron-item">
-                            <span class="cron-name">weather-check</span>
-                            <span class="cron-status scheduled">07:30</span>
-                        </div>
+                        <div class="cron-item"><span class="cron-name">morning-briefing</span><span class="cron-status active">RUNNING</span></div>
+                        <div class="cron-item"><span class="cron-name">system-check</span><span class="cron-status scheduled">07:00</span></div>
+                        <div class="cron-item"><span class="cron-name">weather-check</span><span class="cron-status scheduled">07:30</span></div>
                     </div>
                 </div>
                 
                 <!-- CHANNELS -->
                 <div class="panel">
-                    <div class="panel-header">
-                        <div class="panel-title">◈ CHANNELS</div>
-                        <div class="panel-status online">CONNECTED</div>
-                    </div>
+                    <div class="panel-header"><div class="panel-title">◈ CHANNELS</div><div class="panel-status online">CONNECTED</div></div>
                     <div class="channel-list">
-                        <div class="channel-item">
-                            <span class="channel-icon">◈</span>
-                            <span class="channel-name">Telegram - @ernigoze</span>
-                        </div>
-                        <div class="channel-item">
-                            <span class="channel-icon">◈</span>
-                            <span class="channel-name">AgentMail - hiftyco@agentmail.to</span>
-                        </div>
+                        <div class="channel-item"><span class="channel-icon">◈</span><span class="channel-name">Telegram - @ernigoze</span></div>
+                        <div class="channel-item"><span class="channel-icon">◈</span><span class="channel-name">AgentMail - hiftyco@agentmail.to</span></div>
                     </div>
                 </div>
                 
                 <!-- LIVE LOG -->
                 <div class="panel">
-                    <div class="panel-header">
-                        <div class="panel-title">◈ LIVE LOG</div>
-                    </div>
+                    <div class="panel-header"><div class="panel-title">◈ LIVE LOG</div></div>
                     <div class="live-log" id="live-log">
                         <div class="live-entry info">[01:33:00] System heartbeat acknowledged</div>
                         <div class="live-entry success">[01:32:45] Gateway health check passed</div>
@@ -905,22 +425,12 @@
                 
                 <!-- QUICK COMMANDS -->
                 <div class="panel">
-                    <div class="panel-header">
-                        <div class="panel-title">◈ QUICK COMMANDS</div>
-                    </div>
+                    <div class="panel-header"><div class="panel-title">◈ QUICK COMMANDS</div></div>
                     <div class="quick-commands">
-                        <button class="cmd-btn" onclick="executeCommand('research'); SFX.click();">
-                            <span class="key">/RESEARCH</span><br>Run market analysis
-                        </button>
-                        <button class="cmd-btn" onclick="executeCommand('trade'); SFX.click();">
-                            <span class="key">/TRADE</span><br>Check opportunities
-                        </button>
-                        <button class="cmd-btn" onclick="executeCommand('status'); SFX.click();">
-                            <span class="key">/STATUS</span><br>System diagnostics
-                        </button>
-                        <button class="cmd-btn" onclick="executeCommand('brief'); SFX.click();">
-                            <span class="key">/BRIEF</span><br>Morning briefing
-                        </button>
+                        <button class="cmd-btn" onclick="executeCommand('research'); SFX.click();"><span class="key">/RESEARCH</span>Run market analysis</button>
+                        <button class="cmd-btn" onclick="executeCommand('trade'); SFX.click();"><span class="key">/TRADE</span>Check opportunities</button>
+                        <button class="cmd-btn" onclick="executeCommand('status'); SFX.click();"><span class="key">/STATUS</span>System diagnostics</button>
+                        <button class="cmd-btn" onclick="executeCommand('brief'); SFX.click();"><span class="key">/BRIEF</span>Morning briefing</button>
                     </div>
                 </div>
             </div>
@@ -929,33 +439,17 @@
             <div class="bottom-grid">
                 <!-- MODEL DISTRIBUTION -->
                 <div class="panel">
-                    <div class="panel-header">
-                        <div class="panel-title">◈ MODEL DISTRIBUTION</div>
-                    </div>
+                    <div class="panel-header"><div class="panel-title">◈ MODEL DISTRIBUTION</div></div>
                     <div class="model-chart">
-                        <div class="model-item">
-                            <span class="model-name">MiniMax M2.5</span>
-                            <div class="model-bar"><div class="model-fill" style="width: 60%"></div></div>
-                            <span class="model-pct">60%</span>
-                        </div>
-                        <div class="model-item">
-                            <span class="model-name">Qwen 3.5 397B</span>
-                            <div class="model-bar"><div class="model-fill" style="width: 30%"></div></div>
-                            <span class="model-pct">30%</span>
-                        </div>
-                        <div class="model-item">
-                            <span class="model-name">Claude 3.5</span>
-                            <div class="model-bar"><div class="model-fill" style="width: 10%"></div></div>
-                            <span class="model-pct">10%</span>
-                        </div>
+                        <div class="model-item"><span class="model-name">MiniMax M2.5</span><div class="model-bar"><div class="model-fill" style="width: 60%"></div></div><span class="model-pct">60%</span></div>
+                        <div class="model-item"><span class="model-name">Qwen 3.5 397B</span><div class="model-bar"><div class="model-fill" style="width: 30%"></div></div><span class="model-pct">30%</span></div>
+                        <div class="model-item"><span class="model-name">Claude 3.5</span><div class="model-bar"><div class="model-fill" style="width: 10%"></div></div><span class="model-pct">10%</span></div>
                     </div>
                 </div>
                 
                 <!-- 7-DAY COST -->
                 <div class="panel">
-                    <div class="panel-header">
-                        <div class="panel-title">◈ 7-DAY COST</div>
-                    </div>
+                    <div class="panel-header"><div class="panel-title">◈ 7-DAY COST</div></div>
                     <div class="cost-chart">
                         <div class="cost-bar" style="height: 30%"><span class="day">MON</span></div>
                         <div class="cost-bar" style="height: 45%"><span class="day">TUE</span></div>
@@ -965,42 +459,19 @@
                         <div class="cost-bar" style="height: 35%"><span class="day">SAT</span></div>
                         <div class="cost-bar" style="height: 25%"><span class="day">SUN</span></div>
                     </div>
-                    <div class="cost-total">
-                        <div class="label">WEEKLY TOTAL</div>
-                        <div class="value">$78.42</div>
-                    </div>
+                    <div class="cost-total"><div class="label">WEEKLY TOTAL</div><div class="value">$78.42</div></div>
                 </div>
                 
                 <!-- SYSTEM STATUS -->
                 <div class="panel">
-                    <div class="panel-header">
-                        <div class="panel-title">◈ SYSTEM STATUS</div>
-                    </div>
+                    <div class="panel-header"><div class="panel-title">◈ SYSTEM STATUS</div></div>
                     <div class="system-status">
-                        <div class="sys-item">
-                            <span class="sys-label">Gateway Daemon</span>
-                            <span class="sys-value">RUNNING</span>
-                        </div>
-                        <div class="sys-item">
-                            <span class="sys-label">Telegram Bot</span>
-                            <span class="sys-value">CONNECTED</span>
-                        </div>
-                        <div class="sys-item">
-                            <span class="sys-label">AgentMail</span>
-                            <span class="sys-value">ACTIVE</span>
-                        </div>
-                        <div class="sys-item">
-                            <span class="sys-label">Web Server</span>
-                            <span class="sys-value">ONLINE</span>
-                        </div>
-                        <div class="sys-item">
-                            <span class="sys-label">Database</span>
-                            <span class="sys-value">HEALTHY</span>
-                        </div>
-                        <div class="sys-item">
-                            <span class="sys-label">Security</span>
-                            <span class="sys-value warning">SOFT</span>
-                        </div>
+                        <div class="sys-item"><span class="sys-label">Gateway Daemon</span><span class="sys-value">RUNNING</span></div>
+                        <div class="sys-item"><span class="sys-label">Telegram Bot</span><span class="sys-value">CONNECTED</span></div>
+                        <div class="sys-item"><span class="sys-label">AgentMail</span><span class="sys-value">ACTIVE</span></div>
+                        <div class="sys-item"><span class="sys-label">Web Server</span><span class="sys-value">ONLINE</span></div>
+                        <div class="sys-item"><span class="sys-label">Database</span><span class="sys-value">HEALTHY</span></div>
+                        <div class="sys-item"><span class="sys-label">Security</span><span class="sys-value warning">SOFT</span></div>
                     </div>
                 </div>
             </div>
@@ -1009,6 +480,7 @@
     
     <script>
         // ==================== JARVIS AUDIO ENGINE ====================
+        // FIX: Proper Web Audio API initialization on user interaction
 var SFX = (function() {
   var ctx = null;
   var enabled = false;
@@ -1016,14 +488,25 @@ var SFX = (function() {
   var ambientGain = null;
   
   function init() {
-    if (!ctx) ctx = new (window.AudioContext || window.webkitAudioContext)();
+    if (!ctx) {
+      try {
+        ctx = new (window.AudioContext || window.webkitAudioContext)();
+      } catch(e) {
+        console.log('Web Audio API not supported:', e);
+        return null;
+      }
+    }
+    // Resume context if suspended (browser autoplay policy)
+    if (ctx.state === 'suspended') {
+      ctx.resume();
+    }
     return ctx;
   }
   
   return {
     enable: function() {
       var c = init();
-      if (c.state === 'suspended') c.resume();
+      if (!c) return false;
       enabled = true;
       // Ambient hum
       ambientOsc = c.createOscillator();
@@ -1034,6 +517,7 @@ var SFX = (function() {
       ambientOsc.connect(ambientGain);
       ambientGain.connect(c.destination);
       ambientOsc.start();
+      return true;
     },
     disable: function() {
       enabled = false;
@@ -1043,6 +527,7 @@ var SFX = (function() {
     click: function() {
       if (!enabled) return;
       var c = init();
+      if (!c) return;
       var osc = c.createOscillator();
       var gain = c.createGain();
       osc.type = 'square';
@@ -1057,6 +542,7 @@ var SFX = (function() {
     ui: function() {
       if (!enabled) return;
       var c = init();
+      if (!c) return;
       [660, 880].forEach(function(freq) {
         var osc = c.createOscillator();
         var gain = c.createGain();
@@ -1073,6 +559,7 @@ var SFX = (function() {
     bootChime: function() {
       if (!enabled) return;
       var c = init();
+      if (!c) return;
       var notes = [523, 659, 784, 880, 1047, 1318, 1568];
       notes.forEach(function(freq, i) {
         setTimeout(function() {
@@ -1092,6 +579,7 @@ var SFX = (function() {
     alert: function() {
       if (!enabled) return;
       var c = init();
+      if (!c) return;
       [440, 440].forEach(function(freq, i) {
         setTimeout(function() {
           var osc = c.createOscillator();
@@ -1110,6 +598,7 @@ var SFX = (function() {
     scan: function() {
       if (!enabled) return;
       var c = init();
+      if (!c) return;
       [1100, 1200, 1300, 1400, 1500, 1600].forEach(function(freq, i) {
         setTimeout(function() {
           var osc = c.createOscillator();
@@ -1123,6 +612,28 @@ var SFX = (function() {
           osc.start();
           osc.stop(c.currentTime + 0.05);
         }, i * 40);
+      });
+    },
+    jarvisSpeak: function(text) {
+      // Simulated JARVIS voice - creates audio feedback
+      if (!enabled) return;
+      var c = init();
+      if (!c) return;
+      // Create a pleasant rising tone sequence
+      var notes = [440, 554, 659, 880];
+      notes.forEach(function(freq, i) {
+        setTimeout(function() {
+          var osc = c.createOscillator();
+          var gain = c.createGain();
+          osc.type = 'sine';
+          osc.frequency.value = freq;
+          gain.gain.setValueAtTime(0.08, c.currentTime);
+          gain.gain.exponentialRampToValueAtTime(0.001, c.currentTime + 0.15);
+          osc.connect(gain);
+          gain.connect(c.destination);
+          osc.start();
+          osc.stop(c.currentTime + 0.15);
+        }, i * 100);
       });
     }
   };
@@ -1141,9 +652,17 @@ function toggleSound() {
     document.getElementById('sound-icon').textContent = '🔊';
   }
 }
-        
-        // ==================== BOOT SEQUENCE ====================
-(function() {
+
+// AUDIO ENABLE OVERLAY - FIX: Click to enable audio (browser autoplay policy)
+document.getElementById('audio-enable-overlay').addEventListener('click', function() {
+  SFX.enable();
+  SFX.bootChime();
+  this.classList.add('hidden');
+  // Start boot sequence after audio is enabled
+  setTimeout(startBootSequence, 500);
+});
+
+function startBootSequence() {
   var lines = [
     'INITIALIZING JARVIS CORE SYSTEMS...',
     'LOADING HIFTY CO DASHBOARD...',
@@ -1161,8 +680,7 @@ function toggleSound() {
     if (i >= lines.length) {
       setTimeout(function() { 
         overlay.classList.add('hidden'); 
-        SFX.enable();
-        SFX.bootChime();
+        SFX.jarvisSpeak('systems online');
       }, 600);
       return;
     }
@@ -1176,7 +694,71 @@ function toggleSound() {
     setTimeout(next, i === lines.length ? 600 : 260);
   }
   setTimeout(next, 400);
-})();
+}
+        
+        // ==================== PARTICLE SYSTEM ====================
+        const particleCanvas = document.getElementById('particle-canvas');
+        const particleCtx = particleCanvas.getContext('2d');
+        
+        function initParticleCanvas() {
+            particleCanvas.width = window.innerWidth;
+            particleCanvas.height = window.innerHeight;
+        }
+        
+        const particles = [];
+        
+        function createParticle() {
+            return {
+                x: Math.random() * particleCanvas.width,
+                y: Math.random() * particleCanvas.height,
+                vx: (Math.random() - 0.5) * 0.5,
+                vy: (Math.random() - 0.5) * 0.5,
+                size: Math.random() * 2 + 1,
+                alpha: Math.random() * 0.5 + 0.2,
+                color: Math.random() > 0.7 ? '#f0a500' : '#00d4ff'
+            };
+        }
+        
+        for (let i = 0; i < 50; i++) {
+            particles.push(createParticle());
+        }
+        
+        function animateParticles() {
+            particleCtx.clearRect(0, 0, particleCanvas.width, particleCanvas.height);
+            
+            particles.forEach(function(p) {
+                p.x += p.vx;
+                p.y += p.vy;
+                
+                if (p.x < 0 || p.x > particleCanvas.width) p.vx *= -1;
+                if (p.y < 0 || p.y > particleCanvas.height) p.vy *= -1;
+                
+                particleCtx.beginPath();
+                particleCtx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
+                particleCtx.fillStyle = p.color;
+                particleCtx.globalAlpha = p.alpha;
+                particleCtx.fill();
+                
+                // Connect nearby particles
+                particles.forEach(function(p2) {
+                    if (p === p2) return;
+                    const dx = p.x - p2.x;
+                    const dy = p.y - p2.y;
+                    const dist = Math.sqrt(dx * dx + dy * dy);
+                    if (dist < 100) {
+                        particleCtx.beginPath();
+                        particleCtx.moveTo(p.x, p.y);
+                        particleCtx.lineTo(p2.x, p2.y);
+                        particleCtx.strokeStyle = p.color;
+                        particleCtx.globalAlpha = (1 - dist / 100) * 0.2;
+                        particleCtx.stroke();
+                    }
+                });
+            });
+            
+            particleCtx.globalAlpha = 1;
+            requestAnimationFrame(animateParticles);
+        }
         
         // ==================== HEX GRID ====================
         const hexCanvas = document.getElementById('hex-canvas');
@@ -1195,12 +777,15 @@ function toggleSound() {
             
             const size = 30;
             const h = size * Math.sqrt(3);
+            const time = Date.now() / 2000;
             
             for (let row = 0; row < hexCanvas.height / h + 1; row++) {
                 for (let col = 0; col < hexCanvas.width / (size * 1.5) + 1; col++) {
                     const x = col * size * 1.5;
                     const y = row * h + (col % 2) * h / 2;
-                    drawHex(x, y, size * 0.5);
+                    // Pulsing effect
+                    const pulse = Math.sin(time + col * 0.1 + row * 0.1) * 0.2 + 0.8;
+                    drawHex(x, y, size * 0.5 * pulse);
                 }
             }
             requestAnimationFrame(drawHexGrid);
@@ -1229,13 +814,11 @@ function toggleSound() {
             const cx = 25, cy = 25, r = 20;
             arcCtx.clearRect(0, 0, 50, 50);
             
-            // Outer glow
             const gradient = arcCtx.createRadialGradient(cx, cy, 0, cx, cy, r);
             gradient.addColorStop(0, '#00d4ff');
             gradient.addColorStop(0.5, '#00d4ff');
             gradient.addColorStop(1, 'transparent');
             
-            // Rotating rings
             const time = Date.now() / 1000;
             
             for (let i = 0; i < 3; i++) {
@@ -1247,7 +830,6 @@ function toggleSound() {
                 arcCtx.stroke();
             }
             
-            // Center pulse
             arcCtx.beginPath();
             arcCtx.arc(cx, cy, 5, 0, Math.PI * 2);
             arcCtx.fillStyle = '#00ff88';
@@ -1279,7 +861,6 @@ function toggleSound() {
             
             const time = Date.now() / 1000;
             
-            // Multiple rings
             for (let ring = 0; ring < 6; ring++) {
                 const radius = 30 + ring * 20;
                 modalArcCtx.beginPath();
@@ -1289,7 +870,6 @@ function toggleSound() {
                 modalArcCtx.globalAlpha = 0.3 + Math.sin(time * 3 + ring * 0.5) * 0.2;
                 modalArcCtx.stroke();
                 
-                // Spokes
                 for (let s = 0; s < 8; s++) {
                     const angle = (Math.PI * 2 / 8) * s + time * (ring % 2 === 0 ? 1 : -1);
                     modalArcCtx.beginPath();
@@ -1299,7 +879,6 @@ function toggleSound() {
                 }
             }
             
-            // Center
             const centerGrad = modalArcCtx.createRadialGradient(cx, cy, 0, cx, cy, 25);
             centerGrad.addColorStop(0, '#00ff88');
             centerGrad.addColorStop(0.7, '#00d4ff');
@@ -1320,26 +899,49 @@ function toggleSound() {
             const h = String(now.getHours()).padStart(2, '0');
             const m = String(now.getMinutes()).padStart(2, '0');
             const s = String(now.getSeconds()).padStart(2, '0');
-            document.getElementById('clock').textContent = `${h}:${m}:${s}`;
+            document.getElementById('clock').textContent = h + ':' + m + ':' + s;
         }
         
         // ==================== TOAST ====================
-        function showToast(title, message, type = 'info') {
+        function showToast(title, message, type) {
+            type = type || 'info';
             const container = document.getElementById('toast-container');
             const toast = document.createElement('div');
-            toast.className = `toast ${type}`;
-            toast.innerHTML = `
-                <div class="toast-title">// JARVIS: ${title}</div>
-                <div class="toast-msg">${message}</div>
-            `;
+            toast.className = 'toast ' + type;
+            toast.innerHTML = '<div class="toast-title">// JARVIS: ' + title + '</div><div class="toast-msg">' + message + '</div>';
             container.appendChild(toast);
             SFX.alert();
             
-            setTimeout(() => {
+            setTimeout(function() {
                 toast.style.animation = 'toastIn 0.3s ease reverse';
-                setTimeout(() => toast.remove(), 300);
+                setTimeout(function() { toast.remove(); }, 300);
             }, 4000);
         }
+        
+        // ==================== JARVIS COMMAND ====================
+        function jarvisCommand() {
+            const input = document.getElementById('voice-command');
+            const cmd = input.value.trim().toLowerCase();
+            if (!cmd) return;
+            
+            SFX.jarvisSpeak('command received');
+            
+            const responses = {
+                'status': 'All systems operational. Gateway uptime at 99.8%.',
+                'btc': 'Bitcoin currently at $84,234.56, up 2.4% in the last 24 hours.',
+                'trades': 'Total P&L: +$7,394.57. Win rate: 100%. RSI Compliance: 33%.',
+                'help': 'Available commands: status, btc, trades, team, alert'
+            };
+            
+            let response = responses[cmd] || 'Command not recognized. Try: status, btc, trades, help.';
+            showToast('COMMAND RECEIVED', response, 'success');
+            input.value = '';
+        }
+        
+        // Enter key for voice command
+        document.getElementById('voice-command').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') jarvisCommand();
+        });
         
         // ==================== LIVE LOG ====================
         const logMessages = [
@@ -1353,11 +955,12 @@ function toggleSound() {
         ];
         
         function addLiveLog(msg, type) {
+            type = type || 'info';
             const log = document.getElementById('live-log');
             const entry = document.createElement('div');
-            entry.className = `live-entry ${type}`;
+            entry.className = 'live-entry ' + type;
             const time = new Date().toTimeString().slice(0, 8);
-            entry.textContent = `[${time}] ${msg}`;
+            entry.textContent = '[' + time + '] ' + msg;
             log.insertBefore(entry, log.firstChild);
             
             if (log.children.length > 20) {
@@ -1365,7 +968,7 @@ function toggleSound() {
             }
         }
         
-        setInterval(() => {
+        setInterval(function() {
             const randomLog = logMessages[Math.floor(Math.random() * logMessages.length)];
             addLiveLog(randomLog.msg, randomLog.type);
         }, 5000);
@@ -1373,8 +976,9 @@ function toggleSound() {
         // ==================== RESOURCE BARS ====================
         function updateResources() {
             const resources = ['cpu', 'ram', 'net', 'disk', 'temp'];
-            resources.forEach(r => {
-                const bar = document.getElementById(r + '--bar');
+            resources.forEach(function(r) {
+                const bar = document.getElementById(r + '-bar');
+                if (!bar) return;
                 const current = parseInt(bar.style.width);
                 const change = Math.random() > 0.5 ? 1 : -1;
                 const newVal = Math.max(5, Math.min(95, current + change * Math.floor(Math.random() * 5)));
@@ -1385,18 +989,22 @@ function toggleSound() {
         // ==================== BTC PRICE & FEAR/GREED ====================
         async function fetchMarketData() {
             try {
-                // BTC Price (simulated)
                 const btcPrice = 84234.56 + (Math.random() - 0.5) * 2000;
                 document.getElementById('btc-price').textContent = '$' + btcPrice.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+                document.getElementById('jarvis-btc').textContent = '$' + btcPrice.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
                 
-                // Fear & Greed (simulated)
                 const fng = Math.floor(50 + Math.random() * 50);
                 document.getElementById('fear-greed').textContent = fng;
                 
-                const label = fng < 25 ? 'EXTREME FEAR' : fng < 45 ? 'FEAR' : fng < 55 ? 'NEUTRAL' : fng < 75 ? 'GREED' : 'EXTREME GREED';
+                let label = fng < 25 ? 'EXTREME FEAR' : fng < 45 ? 'FEAR' : fng < 55 ? 'NEUTRAL' : fng < 75 ? 'GREED' : 'EXTREME GREED';
                 const labelEl = document.getElementById('fear-greed-label');
                 labelEl.textContent = label;
                 labelEl.className = 'banner-value ' + (fng < 50 ? 'fear' : 'greed');
+                
+                const change = (Math.random() * 5 - 1).toFixed(1);
+                const changeEl = document.getElementById('jarvis-btc-change');
+                changeEl.textContent = (change > 0 ? '+' : '') + change + '%';
+                changeEl.className = 'briefing-value ' + (change > 0 ? 'up' : 'down');
                 
             } catch(e) {
                 console.log('Market data fetch error:', e);
@@ -1406,28 +1014,40 @@ function toggleSound() {
         // ==================== QUICK COMMANDS ====================
         function executeCommand(cmd) {
             SFX.ui();
-            const commands = {
+            var commands = {
                 'research': 'Initiating market research analysis...',
                 'trade': 'Scanning for trade opportunities...',
                 'status': 'Running system diagnostics...',
                 'brief': 'Generating morning briefing...'
             };
             showToast('COMMAND', commands[cmd] || 'Command executed', 'info');
-            addLiveLog(`Command /${cmd} executed`, 'success');
+            addLiveLog('Command /' + cmd + ' executed', 'success');
         }
         
         // ==================== INITIALIZATION ====================
         window.addEventListener('load', function() {
+            initParticleCanvas();
             initHexCanvas();
             drawArcReactor();
             updateClock();
             setInterval(updateClock, 1000);
             setInterval(updateResources, 2000);
             setInterval(fetchMarketData, 30000);
+            animateParticles();
+            
+            // Initialize audio context on first interaction (fix for autoplay policy)
+            document.addEventListener('click', function initAudioOnce() {
+                if (!SFX.isEnabled()) {
+                    // Audio will be enabled when user clicks the overlay
+                }
+                document.removeEventListener('click', initAudioOnce);
+            }, { once: true });
         });
         
-        window.addEventListener('resize', initHexCanvas);
+        window.addEventListener('resize', function() {
+            initParticleCanvas();
+            initHexCanvas();
+        });
     </script>
 </body>
 </html>
-// SYSTEMS ONLINE. GOOD TO GO, SIR.
