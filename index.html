@@ -422,8 +422,8 @@ if(checkSession()){document.write('<style>#loginOverlay{display:none}#dashboard{
 </div>
 <div class="two-col" style="margin-top:0">
 <div class="panel" style="flex:1">
-<div class="panel-head"><span class="panel-title">🎨 Agent Workspace</span><span class="panel-badge">Live</span></div>
-<div class="office-canvas-wrap" style="height:220px">
+<div class="panel-head"><span class="panel-title">🎨 Agent Workspace</span><span class="panel-badge" id="gatewayStatus">Demo</span></div>
+<div class="office-canvas-wrap" style="height:200px">
 <canvas id="office-canvas"></canvas>
 <div class="office-overlay">
 <div class="office-weather" id="office-weather">22C Clear</div>
@@ -431,12 +431,12 @@ if(checkSession()){document.write('<style>#loginOverlay{display:none}#dashboard{
 </div>
 </div>
 <div class="office-task-feed">
-<div id="office-task-list"></div>
+<div id="office-logs-list" class="logs-container"></div>
 </div>
 </div>
 <div class="panel" style="flex:0.6">
 <div class="panel-head"><span class="panel-title">🤖 Active Agents</span><span class="panel-badge" id="agentCount">5</span></div><div class="panel-body">
-<div class="agent-list" id="agentList"></div></div></div>
+<div class="agent-list" id="office-agent-list"></div></div></div>
 </div>
 <div class="three-col">
 <div class="panel"><div class="panel-head"><span class="panel-title">💰 Cost This Week</span><span class="panel-badge" id="weekCost">$18.42</span></div><div class="panel-body">
