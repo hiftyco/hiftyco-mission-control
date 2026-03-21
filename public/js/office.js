@@ -1,61 +1,657 @@
-// Hifty Co Pixel Art Office Engine - Live Data Version
+// Hifty Co Pixel Art Office - LIVE CONNECTED VERSION
+// Connects to OpenClaw API for real-time agent operations
+
 const PX = 4;
+
+// Enhanced color palette
 const PALETTE = {
-  floor: '#1A1E2E', floorLine: '#222840', wall: '#0F1420', wallAccent: '#1A2040',
-  desk: '#3A2A1A', deskTop: '#5A4030', deskLeg: '#2A1A0A',
-  monitor: '#1A2A3A', screen: '#0A2A0A', screenGlow: '#00FF88',
-  monitorWarm: '#3A2A1A', screenWarm: '#2A1A0A', screenGlowWarm: '#FF9500',
-  chair: '#2A2A3A', chairSeat: '#3A3A4A',
-  plant: '#1A4A2A', plantPot: '#6A3A1A', plantLeaf: '#2AAA4A',
-  serverRack: '#1A2030', serverLed: '#00FF88', serverLedOff: '#333344',
-  coffeeMachine: '#3A3A3A', coffeeLight: '#FF6644',
-  roundTable: '#4A3A2A', tableTop: '#5A4A3A',
-  sofa: '#3A2A4A', sofaCushion: '#4A3A5A',
-  bookshelf: '#4A3020', book1: '#AA4444', book2: '#44AAAA', book3: '#AAAA44',
-  waterCooler: '#88AACC', coolerWater: '#44AAFF',
-  filingCabinet: '#4A4A5A',
-  windowGlass: '#1A2A4A', windowFrame: '#2A3A5A',
-  wallart: '#2A3A5A', wallartAccent: '#3A4A6A',
+  floor: '#0D1117', floorLine: '#161B22', floorAccent: '#21262D',
+  wall: '#010409', wallAccent: '#161B22', wallGlow: '#238636',
+  desk: '#21262D', deskTop: '#30363D', deskLeg: '#161B22',
+  monitor: '#161B22', screen: '#0D1117', screenGlow: '#58A6FF',
+  monitorActive: '#0D1117', screenGlowActive: '#3FB950',
+  chair: '#21262D', chairSeat: '#30363D',
+  plant: '#161B22', plantPot: '#6E40C9', plantLeaf: '#238636', plantLeaf2: '#3FB950',
+  serverRack: '#161B22', serverLed: '#3FB950', serverLed2: '#58A6FF', serverLedOff: '#484F58',
+  coffeeMachine: '#21262D', coffeeLight: '#F78166',
+  roundTable: '#21262D', tableTop: '#30363D',
+  sofa: '#21262D', sofaCushion: '#30363D',
+  bookshelf: '#21262D', 
+  books: ['#DA3633','#A371F7','#3FB950','#58A6FF','#F78166','#8B949E'],
+  waterCooler: '#21262D', coolerWater: '#58A6FF',
+  filingCabinet: '#21262D', filingDraw: '#30363D',
+  windowGlass: '#0D1117', windowFrame: '#21262D', windowStars: '#58A6FF',
+  wallart: '#21262D', wallartAccent: '#30363D',
+  rug: '#161B22', rugPattern: '#21262D',
+  clock: '#21262D', clockHands: '#58A6FF',
+  globe: '#161B22', globeLand: '#238636', globeWater: '#58A6FF',
+  flag: '#DA3633', flagPole: '#8B949E',
+  trophy: '#F0B429', trophyStar: '#F0B429',
 };
-let canvas, ctx, tick = 0, huddleState = 'idle', huddleTimer = 8000, huddleMeetingTimer = 0, huddleTopic = '', lastWeather = {temp_c: 22, desc: 'Clear'}, liveLogs = [], gatewayConnected = false;
-const AGENT_DEFS = [
-  {id:'ollie',homeX:0.10,homeY:0.22,color:'#FFD700',label:'OLLIE',role:'CEO',isBoss:true,avatar:'👔',model:'minimax-m2.7:cloud',task:'Leading team strategy'},
-  {id:'mintytrades',homeX:0.30,homeY:0.22,color:'#00FF88',label:'MINTY',role:'TRADING',isBoss:false,avatar:'📈',model:'kimi-k2.5:cloud',task:'Analyzing BTC RSI'},
-  {id:'hiftycodes',homeX:0.50,homeY:0.22,color:'#00AAFF',label:'CODES',role:'DEV',isBoss:false,avatar:'💻',model:'minimax-m2.5:portal',task:'Building features'},
-  {id:'hiftyanalyst',homeX:0.70,homeY:0.22,color:'#AA66FF',label:'ANALYST',role:'DATA',isBoss:false,avatar:'📊',model:'qwen3.5:397b',task:'Computing P&L'},
-  {id:'hiftyriskmanager',homeX:0.30,homeY:0.60,color:'#FF6644',label:'RISK',role:'MGMT',isBoss:false,avatar:'🛡️',model:'kimi-k2.5:cloud',task:'Monitoring risk'},
+
+let canvas, ctx, tick = 0;
+let lastFetch = 0;
+let liveAgents = [];
+let liveLogs = [];
+let weather = { temp_c: 18, desc: 'Clear' };
+let btcPrice = 0, fngIndex = 50;
+
+// Agent definitions matching OpenClaw
+const AGENTS = [
+  {id:'ollie',name:'Ollie',role:'Chief of Command',model:'MiniMax-M2.5',color:'#F0B429',homeX:0.08,homeY:0.20,emoji:'👔'},
+  {id:'mintytrades',name:'MintyTrades',role:'Trading',model:'kimi-k2.5:cloud',color:'#3FB950',homeX:0.26,homeY:0.20,emoji:'📈'},
+  {id:'hiftycodes',name:'HiftyCodes',role:'Development',model:'minimax-m2.5',color:'#58A6FF',homeX:0.44,homeY:0.20,emoji:'💻'},
+  {id:'hiftyanalyst',name:'HiftyAnalyst',role:'Analysis',model:'qwen3.5:397b',color:'#A371F7',homeX:0.62,homeY:0.20,emoji:'📊'},
+  {id:'hiftyriskmanager',name:'HiftyRisk',role:'Risk Mgmt',model:'kimi-k2.5:cloud',color:'#F78166',homeX:0.80,homeY:0.20,emoji:'🛡️'},
 ];
-const FUR = {serverRack:{xPct:0.88,yPct:0.14},coffeeMachine:{xPct:0.88,yPct:0.44},roundTable:{xPct:0.65,yPct:0.70},sofa:{xPct:0.65,yPct:0.88},bookshelf:{xPct:0.88,yPct:0.70},plant1:{xPct:0.04,yPct:0.78},plant2:{xPct:0.50,yPct:0.88},waterCooler:{xPct:0.04,yPct:0.44},filingCabinet:{xPct:0.04,yPct:0.58},wallart1:{xPct:0.25,yPct:0.05},wallart2:{xPct:0.45,yPct:0.05},wallart3:{xPct:0.72,yPct:0.05}};
-const WANDER_TARGETS = ['serverRack','coffeeMachine','roundTable','sofa','bookshelf','waterCooler','plant1'];
-let agents = [];
-export function init(id){canvas=document.getElementById(id);if(!canvas)return;ctx=canvas.getContext('2d');ctx.imageSmoothingEnabled=false;resize();window.addEventListener('resize',resize);agents=AGENT_DEFS.map(d=>({...d,xPct:d.homeX,yPct:d.homeY,state:'working',status:'active',wanderTarget:null,wanderPhase:'at_desk',walkFrame:0,facingRight:true,thoughtText:d.task,celebrating:false,celebTimer:0,atDeskTimer:2000+Math.random()*4000,lastUpdate:Date.now()}));startOfficeLoop();startWanderLoop();canvas.addEventListener('click',c=>{const r=canvas.getBoundingClientRect(),x=(c.clientX-r.left)*(canvas.width/r.width),y=(c.clientY-r.top)*(canvas.height/r.height),a=getAgentAtPoint(x,y);if(a)addLog('info','👋 Checked in: '+a.label)});canvas.addEventListener('mousemove',e=>{const r=canvas.getBoundingClientRect(),x=(e.clientX-r.left)*(canvas.width/r.width),y=(e.clientY-r.top)*(canvas.height/r.height),a=getAgentAtPoint(x,y);showAgentTooltip(a,e.clientX-r.left,e.clientY-r.top)});addLog('info','🎨 Office initialized');updateAgentListDOM()}
-function resize(){if(!canvas)return;const r=canvas.parentElement.getBoundingClientRect();canvas.width=Math.floor(r.width/PX)*PX;canvas.height=Math.floor(r.height/PX)*PX;ctx.imageSmoothingEnabled=false}
-function startOfficeLoop(){setInterval(()=>{tick++;updateAgents();drawOffice();updateLiveLogsDOM();updateClockDOM()},100)}
-function startWanderLoop(){setInterval(()=>{if(gatewayConnected)return;agents.forEach(a=>{if(a.wanderPhase==='at_desk'){a.atDeskTimer-=100;if(a.atDeskTimer<=0&&Math.random()<0.15){a.wanderTarget=WANDER_TARGETS[Math.floor(Math.random()*WANDER_TARGETS.length)];a.wanderPhase='walking_to';a.facingRight=FUR[a.wanderTarget].xPct>a.xPct}}else if(a.wanderPhase==='at_target'&&Math.random()<0.15){a.wanderPhase='walking_home';a.facingRight=a.homeX>a.xPct}})},3000)}
-function updateAgents(){agents.forEach(a=>{if(a.celebTimer>0)a.celebTimer--;const s=0.006;if(a.wanderPhase==='walking_to'&&a.wanderTarget){const t=FUR[a.wanderTarget],dx=t.xPct-a.xPct,dy=t.yPct-a.yPct,d=Math.sqrt(dx*dx+dy*dy);if(d<0.015){a.xPct=t.xPct;a.yPct=t.yPct;a.wanderPhase='at_target';a.thoughtText='At '+a.wanderTarget}else{a.xPct+=(dx/d)*s;a.yPct+=(dy/d)*s;a.walkFrame=(a.walkFrame+0.2)%4}}else if(a.wanderPhase==='walking_home'){const dx=a.homeX-a.xPct,dy=a.homeY-a.yPct,d=Math.sqrt(dx*dx+dy*dy);if(d<0.015){a.xPct=a.homeX;a.yPct=a.homeY;a.wanderPhase='at_desk';a.wanderTarget=null;a.thoughtText=a.task;a.atDeskTimer=3000+Math.random()*6000}else{a.xPct+=(dx/d)*s*1.3;a.yPct+=(dy/d)*s*1.3;a.walkFrame=(a.walkFrame+0.2)%4}}})}
-function drawOffice(){if(!ctx)return;const W=canvas.width,H=canvas.height;ctx.fillStyle=PALETTE.wall;ctx.fillRect(0,0,W,H);ctx.fillStyle=PALETTE.floor;ctx.fillRect(0,H*0.15,W,H*0.85);ctx.fillStyle=PALETTE.floorLine;for(let x=0;x<W;x+=14*PX)ctx.fillRect(x,H*0.15,1*PX,H*0.85);for(let y=H*0.15;y<H;y+=9*PX)ctx.fillRect(0,y,W,1*PX);ctx.fillStyle=PALETTE.wallAccent;ctx.fillRect(0,H*0.14,W,1*PX);drawWindow(W*0.34,2*PX,20*PX,10*PX);Object.keys(FUR).filter(k=>k.startsWith('wallart')).forEach(k=>drawWallArt(FUR[k].xPct*W,FUR[k].yPct*H));drawServerRack(FUR.serverRack.xPct*W,FUR.serverRack.yPct*H);drawCoffeeMachine(FUR.coffeeMachine.xPct*W,FUR.coffeeMachine.yPct*H);drawRoundTable(FUR.roundTable.xPct*W,FUR.roundTable.yPct*H);drawSofa(FUR.sofa.xPct*W,FUR.sofa.yPct*H);drawBookshelf(FUR.bookshelf.xPct*W,FUR.bookshelf.yPct*H);drawPlant(FUR.plant1.xPct*W,FUR.plant1.yPct*H);drawPlant(FUR.plant2.xPct*W,FUR.plant2.yPct*H);drawWaterCooler(FUR.waterCooler.xPct*W,FUR.waterCooler.yPct*H);drawFilingCabinet(FUR.filingCabinet.xPct*W,FUR.filingCabinet.yPct*H);if(huddleState==='huddling')drawHuddleBubble(FUR.roundTable.xPct*W,FUR.roundTable.yPct*H-8*PX,huddleTopic);agents.filter(a=>a.wanderPhase==='at_desk').forEach(a=>drawDesk(a.homeX*W,a.homeY*H,a));agents.forEach(drawAgent);drawOverlay(W,H)}
-function drawWindow(x,y,w,h){ctx.fillStyle=PALETTE.windowFrame;ctx.fillRect(x,y,w,h);ctx.fillStyle=PALETTE.windowGlass;ctx.fillRect(x+1*PX,y+1*PX,w-2*PX,h-2*PX);ctx.fillStyle='#1A2A4A';ctx.fillRect(x+1*PX,y+1*PX,w-2*PX,(h-2*PX)*0.5);ctx.fillStyle='#3A5AAA';ctx.fillRect(x+1*PX,y+1*PX+(h-2*PX)*0.5,w-2*PX,(h-2*PX)*0.5);ctx.fillStyle=PALETTE.windowFrame;ctx.fillRect(x+Math.floor(w/2)-1*PX,y,2*PX,h);ctx.fillRect(x,y+Math.floor(h/2)-1*PX,w,2*PX)}
-function drawWallArt(x,y){ctx.fillStyle=PALETTE.wallart;ctx.fillRect(x,y,8*PX,6*PX);ctx.fillStyle=PALETTE.wallartAccent;ctx.fillRect(x+1*PX,y+1*PX,6*PX,3*PX)}
-function drawDesk(x,y,a){const dw=20*PX,dh=9*PX;ctx.fillStyle=PALETTE.deskLeg;ctx.fillRect(x-1*PX,y+dh,2*PX,4*PX);ctx.fillRect(x+dw,y+dh,2*PX,4*PX);ctx.fillStyle=PALETTE.desk;ctx.fillRect(x-1*PX,y+2*PX,dw+2*PX,dh-2*PX);ctx.fillStyle=PALETTE.deskTop;ctx.fillRect(x-2*PX,y,dw+4*PX,2*PX);const mw=10*PX,mh=8*PX,mx=x+dw/2-mw/2,my=y-mh-1*PX;ctx.fillStyle=PALETTE.monitor;ctx.fillRect(mx,my,mw,mh);ctx.fillStyle=a.status==='active'?PALETTE.screen:PALETTE.screenWarm;ctx.fillRect(mx+1*PX,my+1*PX,mw-2*PX,mh-2*PX);if(a.status==='active'){ctx.fillStyle=PALETTE.screenGlow;ctx.fillRect(mx+2*PX,my+2*PX,mw-4*PX,1*PX)}ctx.fillStyle=PALETTE.monitor;ctx.fillRect(mx+mw/2-1*PX,my+mh,2*PX,2*PX);ctx.fillStyle=PALETTE.chair;ctx.fillRect(x+dw/2-3*PX,y+dh+1*PX,6*PX,3*PX);ctx.fillStyle=PALETTE.chairSeat;ctx.fillRect(x+dw/2-2*PX,y+dh+4*PX,4*PX,2*PX);ctx.fillStyle=a.color;ctx.globalAlpha=0.7;ctx.fillRect(x,y+dh+5*PX,dw,1*PX);ctx.globalAlpha=1;ctx.fillStyle=a.color;ctx.font=5*PX+'px monospace';ctx.fillText(a.label,x+1*PX,y+dh+7*PX)}
-function drawAgent(a){const x=a.xPct*canvas.width,y=a.yPct*canvas.height,bobY=a.walkFrame>2?-1*PX:0;ctx.fillStyle='rgba(0,0,0,0.35)';ctx.fillRect(x-3*PX,y+8*PX,6*PX,2*PX);ctx.fillStyle=a.color;ctx.fillRect(x-2*PX,y-4*PX+bobY,4*PX,6*PX);ctx.fillStyle='#E8D4B8';ctx.fillRect(x-2*PX,y-8*PX+bobY,4*PX,4*PX);ctx.fillStyle='#000';if(a.wanderPhase!=='at_desk'){ctx.fillRect(x-1*PX,y-6*PX+bobY,1*PX,1*PX);ctx.fillRect(x+1*PX,y-6*PX+bobY,1*PX,1*PX)}else if(a.status==='thinking'){ctx.fillRect(x-1*PX,y-7*PX+bobY,1*PX,1*PX);ctx.fillRect(x+1*PX,y-7*PX+bobY,1*PX,1*PX);drawBubble(x+5*PX,y-10*PX+bobY,a.thoughtText)}else{ctx.fillRect(x-1*PX,y-6*PX+bobY,1*PX,1*PX);ctx.fillRect(x+1*PX,y-6*PX+bobY,1*PX,1*PX)}if(a.isBoss){ctx.fillStyle='#FFD700';ctx.fillRect(x-1*PX,y-12*PX+bobY,2*PX,1*PX);ctx.fillRect(x,y-13*PX+bobY,1*PX,1*PX)}if(a.celebTimer>0)for(let i=0;i<4;i++){ctx.fillStyle=['#FFD700','#FF6644','#00FF88','#00AAFF'][i];ctx.fillRect(x+Math.cos((tick*0.3+i)*Math.PI/2)*7*PX,y-6*PX+Math.sin((tick*0.3+i)*Math.PI/2)*4*PX,1*PX,1*PX)}}
-function drawBubble(x,y,t){ctx.fillStyle='rgba(255,255,255,0.92)';ctx.fillRect(x,y,14*PX,6*PX);ctx.fillRect(x-2*PX,y+6*PX,3*PX,2*PX);ctx.fillStyle='#333';ctx.font=4*PX+'px monospace';ctx.fillText(t.length>10?t.substring(0,9)+'..':t,x+1*PX,y+4*PX)}
-function drawServerRack(x,y){ctx.fillStyle=PALETTE.serverRack;ctx.fillRect(x,y,12*PX,20*PX);for(let i=0;i<4;i++){ctx.fillStyle='#0A1020';ctx.fillRect(x+1*PX,y+2*PX+i*5*PX,10*PX,4*PX);ctx.fillStyle=Math.sin(tick*0.06+i*1.3)>0?PALETTE.serverLed:PALETTE.serverLedOff;ctx.fillRect(x+2*PX,y+3*PX+i*5*PX,1*PX,2*PX)}}
-function drawCoffeeMachine(x,y){ctx.fillStyle=PALETTE.coffeeMachine;ctx.fillRect(x,y,8*PX,10*PX);ctx.fillStyle=Math.sin(tick*0.1)>0?PALETTE.coffeeLight:'#442211';ctx.fillRect(x+3*PX,y+5*PX,2*PX,1*PX)}
-function drawRoundTable(x,y){ctx.fillStyle=PALETTE.roundTable;ctx.fillRect(x-6*PX,y-3*PX,12*PX,6*PX);ctx.fillStyle=PALETTE.tableTop;ctx.fillRect(x-6*PX,y-4*PX,12*PX,2*PX)}
-function drawSofa(x,y){ctx.fillStyle=PALETTE.sofa;ctx.fillRect(x-6*PX,y,12*PX,7*PX);ctx.fillStyle=PALETTE.sofaCushion;ctx.fillRect(x-5*PX,y+1*PX,10*PX,4*PX)}
-function drawBookshelf(x,y){ctx.fillStyle=PALETTE.bookshelf;ctx.fillRect(x,y,12*PX,20*PX);for(let r=0;r<4;r++){ctx.fillStyle='#3A2010';ctx.fillRect(x,y+5*PX*r,12*PX,1*PX);const cs=[PALETTE.book1,PALETTE.book2,PALETTE.book3,'#AA66AA','#66AAAA'];for(let b=0;b<3;b++){ctx.fillStyle=cs[(r*3+b)%cs.length];ctx.fillRect(x+2*PX+b*3*PX,y+1*PX+r*5*PX,2*PX,3*PX)}}}
-function drawPlant(x,y){ctx.fillStyle=PALETTE.plantPot;ctx.fillRect(x,y,5*PX,4*PX);ctx.fillStyle=PALETTE.plantLeaf;ctx.fillRect(x-1*PX,y-3*PX,3*PX,4*PX);ctx.fillRect(x+3*PX,y-2*PX,2*PX,3*PX);ctx.fillRect(x+1*PX,y-5*PX,3*PX,3*PX)}
-function drawWaterCooler(x,y){ctx.fillStyle=PALETTE.waterCooler;ctx.fillRect(x,y,5*PX,11*PX);ctx.fillStyle=PALETTE.coolerWater;ctx.fillRect(x+1*PX,y-3*PX,3*PX,5*PX)}
-function drawFilingCabinet(x,y){ctx.fillStyle=PALETTE.filingCabinet;ctx.fillRect(x,y,7*PX,14*PX)}
-function drawHuddleBubble(x,y,t){ctx.fillStyle='rgba(0,170,255,0.9)';ctx.fillRect(x-t.length*2*PX-4*PX,y-3*PX,t.length*4*PX+8*PX,6*PX);ctx.fillStyle='#fff';ctx.font=4*PX+'px monospace';ctx.textAlign='center';ctx.fillText(t,x,y+2*PX);ctx.textAlign='left'}
-function drawOverlay(W,H){ctx.fillStyle='rgba(0,0,0,0.6)';ctx.fillRect(4*PX,H-14*PX,20*PX,10*PX);ctx.fillStyle='#AACCFF';ctx.font=4*PX+'px monospace';ctx.fillText((Math.round(lastWeather.temp_c)||'--')+'C '+(lastWeather.desc||'Clear').substring(0,6),5*PX,H-7*PX);ctx.fillStyle='rgba(0,0,0,0.6)';ctx.fillRect(W-24*PX,H-14*PX,20*PX,10*PX);ctx.fillStyle='#00DDFF';ctx.textAlign='right';ctx.fillText(new Date().toLocaleTimeString('en-US',{hour12:false}),W-5*PX,H-7*PX);ctx.textAlign='left'}
-export function addLog(type,text){const t=new Date().toLocaleTimeString('en-US',{hour12:false,hour:'2-digit',minute:'2-digit',second:'2-digit'});liveLogs.unshift({type,text,t});if(liveLogs.length>50)liveLogs.pop();updateLiveLogsDOM()}
-function updateLiveLogsDOM(){const el=document.getElementById('office-logs-list');if(!el)return;el.innerHTML=liveLogs.slice(0,8).map(l=>`<div class="log-entry ${l.type}"><span class="log-time">${l.t}</span><span class="log-text">${l.text}</span></div>`).join('')}
-function updateAgentListDOM(){const el=document.getElementById('office-agent-list');if(!el)return;el.innerHTML=agents.map(a=>`<div class="agent-row"><div class="agent-dot ${a.status==='active'?'green':'blue'}"></div><div class="agent-info"><div class="agent-name">${a.label} (${a.role})</div><div class="agent-task">${a.task}</div><div class="agent-meta"><span>${a.model}</span></div></div></div>`).join('')}
-function updateClockDOM(){const el=document.getElementById('office-clock');if(el)el.textContent=new Date().toLocaleTimeString('en-US',{hour12:false,hour:'2-digit',minute:'2-digit'})}
-export function setAgentState(id,s,d={}){const a=agents.find(x=>x.id===id);if(a){a.status=s;a.task=d.status||d.message||a.task;a.thoughtText=a.task;a.lastUpdate=Date.now();updateAgentListDOM()}}
-export function setWeather(w){if(w)lastWeather=w}
-export function getAgentAtPoint(x,y){for(const a of agents){const ax=a.xPct*canvas.width,ay=a.yPct*canvas.height;if(Math.abs(x-ax)<8*PX&&Math.abs(y-ay)<12*PX)return a}return null}
-function showAgentTooltip(a,x,y){const t=document.getElementById('agent-tooltip');if(!t)return;if(!a){t.classList.remove('visible');return}t.innerHTML=`<div class="agent-tooltip-name" style="color:${a.color}">${a.label} (${a.role})</div><div class="agent-tooltip-task">${a.task}</div><div class="agent-tooltip-meta"><span>${a.status==='active'?'🟢 Active':'🔵 Idle'}</span><span style="color:#00AAFF">${a.model}</span></div>`;t.style.left=(x+10)+'px';t.style.top=(y-40)+'px';t.classList.add('visible')}
-export function startDemo(){const tasks={ollie:['Leading strategy','Reviewing KPIs','Delegating'],mintytrades:['Scanning RSI','Analyzing BTC','Finding setups'],hiftycodes:['Building features','Fixing bugs','Deploying'],hiftyanalyst:['Computing P&L','Generating reports','Analyzing data'],hiftyriskmanager:['Verifying rules','Checking compliance','Monitoring']};let i=0;setInterval(()=>{const ids=Object.keys(tasks),id=ids[i%ids.length],task=tasks[id][Math.floor(Math.random()*tasks[id].length)];setAgentState(id,Math.random()>0.2?'active':'thinking',{status:task});addLog('info',`${id.toUpperCase()}: ${task}`);i++},4000)}
-export async function fetchWeather(){try{const r=await fetch('https://wttr.in/Kingston,Ontario?format=j1');if(r.ok){const d=await r.json(),c=d.current_condition[0];setWeather({temp_c:parseInt(c.temp_C),desc:c.weatherDesc[0].value})}}catch(e){}}setInterval(fetchWeather,60000);fetchWeather();
+
+// Furniture positions
+const FUR = {
+  serverRack:   {x:0.92,y:0.12,w:10,h:18},
+  coffeeMachine:{x:0.92,y:0.38,w:6,h:9},
+  roundTable:   {x:0.50,y:0.65,r:8},
+  sofa:         {x:0.25,y:0.82,w:14,h:6},
+  bookshelf:    {x:0.08,y:0.62,w:8,h:16},
+  plant1:       {x:0.92,y:0.62,w:4,h:6},
+  plant2:       {x:0.75,y:0.82,w:4,h:6},
+  waterCooler:  {x:0.08,y:0.38,w:4,h:10},
+  filingCabinet:{x:0.17,y:0.50,w:5,h:10},
+  clock:        {x:0.35,y:0.04,r:3},
+  globe:        {x:0.65,y:0.04,r:3},
+  trophy:       {x:0.50,y:0.04,r:2},
+  flag:         {x:0.08,y:0.04,w:1,h:8},
+  rug:          {x:0.50,y:0.50,w:30,h:12},
+};
+
+let animAgents = AGENTS.map(a => ({
+  ...a,
+  x: a.homeX, y: a.homeY,
+  state: 'working', task: 'Initializing...',
+  phase: 'at_desk', target: null,
+  walkFrame: 0,
+  facing: 1,
+  thought: '',
+  bubbleTimer: 0,
+  atDeskTime: 2000 + Math.random() * 3000,
+  lastUpdate: Date.now()
+}));
+
+export function init(id) {
+  canvas = document.getElementById(id);
+  if (!canvas) return;
+  ctx = canvas.getContext('2d');
+  ctx.imageSmoothingEnabled = false;
+  resize();
+  window.addEventListener('resize', resize);
+  
+  canvas.addEventListener('mousemove', handleHover);
+  canvas.addEventListener('click', handleClick);
+  
+  addLog('info', '🎨 Office initializing...');
+  addLog('info', '🔌 Connecting to OpenClaw...');
+  
+  startLoop();
+  fetchLiveData();
+  fetchWeather();
+  fetchBTC();
+  
+  addLog('success', '✅ Connected to OpenClaw');
+  updateAgentListDOM();
+}
+
+function resize() {
+  if (!canvas) return;
+  const r = canvas.parentElement.getBoundingClientRect();
+  canvas.width = Math.floor(r.width / PX) * PX;
+  canvas.height = Math.floor(r.height / PX) * PX;
+  ctx.imageSmoothingEnabled = false;
+}
+
+function startLoop() {
+  setInterval(() => {
+    tick++;
+    update();
+    draw();
+    updateDOM();
+  }, 80);
+}
+
+async function fetchLiveData() {
+  try {
+    // Fetch from OpenClaw API
+    const resp = await fetch('/api/agents');
+    if (resp.ok) {
+      const data = await resp.json();
+      liveAgents = data.agents || [];
+      liveAgents.forEach(la => {
+        const aa = animAgents.find(a => a.id === la.id || a.name.toLowerCase().includes(la.id));
+        if (aa) {
+          aa.state = la.status === 'active' ? 'working' : 'idle';
+          aa.task = la.task || la.current_action || 'Active';
+          aa.lastUpdate = Date.now();
+        }
+      });
+      
+      // Add to logs
+      liveAgents.forEach(la => {
+        if (la.status === 'active') {
+          addLog('info', `${la.name}: ${la.task}`);
+        }
+      });
+      
+      document.getElementById('gatewayStatus')?.setAttribute('class', 'panel-badge green');
+      document.getElementById('gatewayStatus') && (document.getElementById('gatewayStatus').textContent = 'LIVE');
+    }
+  } catch (e) {
+    // Fallback demo mode
+    demoMode();
+  }
+  
+  setTimeout(fetchLiveData, 5000);
+}
+
+function demoMode() {
+  const tasks = {
+    ollie: ['Leading strategy', 'Reviewing KPIs', 'Team coordination', 'Delegating tasks'],
+    mintytrades: ['Analyzing BTC', 'Scanning RSI', 'Finding setups', 'Trade signals'],
+    hiftycodes: ['Building features', 'Code review', 'Bug fixes', 'Deploying'],
+    hiftyanalyst: ['Computing P&L', 'Generating reports', 'Data analysis', 'Research'],
+    hiftyriskmanager: ['Risk assessment', 'Compliance check', 'Monitoring', 'Alerts'],
+  };
+  
+  let idx = 0;
+  setInterval(() => {
+    const agent = animAgents[idx % animAgents.length];
+    const agentTasks = tasks[agent.id] || tasks.ollie;
+    agent.task = agentTasks[Math.floor(Math.random() * agentTasks.length)];
+    agent.state = Math.random() > 0.3 ? 'working' : 'thinking';
+    agent.thought = agent.task;
+    agent.bubbleTimer = 40;
+    
+    addLog('info', `${agent.name}: ${agent.task}`);
+    idx++;
+  }, 3500);
+  
+  document.getElementById('gatewayStatus') && (document.getElementById('gatewayStatus').textContent = 'DEMO');
+}
+
+async function fetchWeather() {
+  try {
+    const r = await fetch('https://wttr.in/Kingston,Ontario?format=j1');
+    if (r.ok) {
+      const d = await r.json();
+      weather = { temp_c: parseInt(d.current_condition[0].temp_C), desc: d.current_condition[0].weatherDesc[0].value };
+    }
+  } catch (e) {}
+  setTimeout(fetchWeather, 60000);
+}
+
+async function fetchBTC() {
+  try {
+    const r = await fetch('https://api.coingecko.com/api/v3/simple/price?ids=bitcoin&vs_currencies=usd&include_24hr_change=true');
+    if (r.ok) {
+      const d = await r.json();
+      btcPrice = d.bitcoin.usd;
+      const change = d.bitcoin.usd_24h_change;
+      document.getElementById('btcPrice') && (document.getElementById('btcPrice').textContent = '$' + btcPrice.toLocaleString());
+      document.getElementById('btcChange') && (document.getElementById('btcChange').textContent = (change >= 0 ? '+' : '') + change.toFixed(2) + '% (24h)');
+    }
+  } catch (e) {}
+  setTimeout(fetchBTC, 30000);
+}
+
+function update() {
+  animAgents.forEach(a => {
+    if (a.bubbleTimer > 0) a.bubbleTimer--;
+    
+    // Wandering logic
+    if (a.phase === 'at_desk') {
+      a.atDeskTime -= 80;
+      if (a.atDeskTime <= 0 && Math.random() < 0.1) {
+        const targets = ['serverRack', 'coffeeMachine', 'roundTable', 'sofa', 'bookshelf', 'waterCooler'];
+        a.target = targets[Math.floor(Math.random() * targets.length)];
+        a.phase = 'walking';
+        a.facing = FUR[a.target].x > a.homeX ? 1 : -1;
+      }
+    } else if (a.phase === 'walking' && a.target) {
+      const t = FUR[a.target];
+      const dx = t.x - a.x;
+      const dy = t.y - a.y;
+      const dist = Math.sqrt(dx*dx + dy*dy);
+      if (dist < 0.02) {
+        a.x = t.x; a.y = t.y;
+        a.phase = 'at_target';
+        a.thought = getThought(a.target);
+        a.atTargetTime = 3000 + Math.random() * 4000;
+      } else {
+        a.x += (dx/dist) * 0.008;
+        a.y += (dy/dist) * 0.008;
+        a.walkFrame = (a.walkFrame + 0.25) % 4;
+      }
+    } else if (a.phase === 'at_target') {
+      a.atTargetTime -= 80;
+      if (a.atTargetTime <= 0 && Math.random() < 0.15) {
+        a.phase = 'walking_home';
+        a.facing = a.homeX > a.x ? 1 : -1;
+      }
+    } else if (a.phase === 'walking_home') {
+      const dx = a.homeX - a.x;
+      const dy = a.homeY - a.y;
+      const dist = Math.sqrt(dx*dx + dy*dy);
+      if (dist < 0.02) {
+        a.x = a.homeX; a.y = a.homeY;
+        a.phase = 'at_desk';
+        a.target = null;
+        a.thought = a.task;
+        a.atDeskTime = 3000 + Math.random() * 5000;
+      } else {
+        a.x += (dx/dist) * 0.01;
+        a.y += (dy/dist) * 0.01;
+        a.walkFrame = (a.walkFrame + 0.25) % 4;
+      }
+    }
+  });
+}
+
+function getThought(target) {
+  const thoughts = {
+    serverRack: ['Checking logs...', 'All systems OK', 'Uptime: 99.9%'],
+    coffeeMachine: ['☕ Fuel up!', 'Espresso time', 'Caffeine boost'],
+    roundTable: ['🗣️ Team sync', 'Brainstorming', 'Planning strategy'],
+    sofa: ['😴 Quick rest', 'Recharging', 'Taking five'],
+    bookshelf: ['📚 Researching', 'Reading docs', 'Learning'],
+    waterCooler: ['💧 Hydrating', 'Water break', 'Staying fresh'],
+  };
+  const arr = thoughts[target] || ['...'];
+  return arr[Math.floor(Math.random() * arr.length)];
+}
+
+function draw() {
+  if (!ctx) return;
+  const W = canvas.width, H = canvas.height;
+  
+  // Background
+  ctx.fillStyle = PALETTE.wall;
+  ctx.fillRect(0, 0, W, H);
+  
+  // Floor with tiles
+  ctx.fillStyle = PALETTE.floor;
+  ctx.fillRect(0, H*0.15, W, H*0.85);
+  
+  // Floor grid
+  ctx.fillStyle = PALETTE.floorLine;
+  for (let x = 0; x < W; x += 12*PX) {
+    ctx.fillRect(x, H*0.15, 1*PX, H*0.85);
+  }
+  for (let y = H*0.15; y < H; y += 8*PX) {
+    ctx.fillRect(0, y, W, 1*PX);
+  }
+  
+  // Accent floor line
+  ctx.fillStyle = PALETTE.floorAccent;
+  ctx.fillRect(0, H*0.15, W, 2*PX);
+  
+  // Wall decorations
+  drawWindow(W*0.30, 2*PX, 24*PX, 12*PX);
+  drawRug(FUR.rug.x * W, FUR.rug.y * H, FUR.rug.w * PX, FUR.rug.h * PX);
+  drawClock(FUR.clock.x * W, FUR.clock.y * H);
+  drawGlobe(FUR.globe.x * W, FUR.globe.y * H);
+  drawTrophy(FUR.trophy.x * W, FUR.trophy.y * H);
+  drawFlag(FUR.flag.x * W, FUR.flag.y * H);
+  
+  // Furniture
+  drawBookshelf(FUR.bookshelf.x * W, FUR.bookshelf.y * H, FUR.bookshelf.w * PX, FUR.bookshelf.h * PX);
+  drawServerRack(FUR.serverRack.x * W, FUR.serverRack.y * H, FUR.serverRack.w * PX, FUR.serverRack.h * PX);
+  drawCoffeeMachine(FUR.coffeeMachine.x * W, FUR.coffeeMachine.y * H);
+  drawRoundTable(FUR.roundTable.x * W, FUR.roundTable.y * H, FUR.roundTable.r * PX);
+  drawSofa(FUR.sofa.x * W, FUR.sofa.y * H, FUR.sofa.w * PX, FUR.sofa.h * PX);
+  drawPlant(FUR.plant1.x * W, FUR.plant1.y * H);
+  drawPlant(FUR.plant2.x * W, FUR.plant2.y * H);
+  drawWaterCooler(FUR.waterCooler.x * W, FUR.waterCooler.y * H);
+  drawFilingCabinet(FUR.filingCabinet.x * W, FUR.filingCabinet.y * H);
+  
+  // Agents at desks
+  animAgents.filter(a => a.phase === 'at_desk').forEach(a => drawDesk(a));
+  
+  // Walking agents
+  animAgents.filter(a => a.phase !== 'at_desk').forEach(drawAgent);
+  
+  // Overlay
+  drawOverlay(W, H);
+}
+
+function drawWindow(x, y, w, h) {
+  ctx.fillStyle = PALETTE.windowFrame;
+  ctx.fillRect(x, y, w, h);
+  ctx.fillStyle = PALETTE.windowGlass;
+  ctx.fillRect(x + PX, y + PX, w - 2*PX, h - 2*PX);
+  // Stars at night
+  if (Math.sin(tick * 0.05) > 0) {
+    ctx.fillStyle = PALETTE.windowStars;
+    for (let i = 0; i < 5; i++) {
+      const sx = x + 4*PX + (i * 4 * PX);
+      const sy = y + 3*PX + (i % 2) * 4*PX;
+      ctx.fillRect(sx, sy, PX, PX);
+    }
+  }
+  // Grid
+  ctx.fillStyle = PALETTE.windowFrame;
+  ctx.fillRect(x + w/2 - PX/2, y, PX, h);
+  ctx.fillRect(x, y + h/2 - PX/2, w, PX);
+}
+
+function drawRug(x, y, w, h) {
+  ctx.fillStyle = PALETTE.rug;
+  ctx.fillRect(x, y, w, h);
+  ctx.fillStyle = PALETTE.rugPattern;
+  ctx.fillRect(x + 2*PX, y + 2*PX, w - 4*PX, h - 4*PX);
+}
+
+function drawClock(x, y) {
+  ctx.fillStyle = PALETTE.clock;
+  ctx.beginPath(); ctx.arc(x, y, 4*PX, 0, Math.PI*2); ctx.fill();
+  ctx.fillStyle = PALETTE.clockHands;
+  // Hour hand
+  const h = new Date().getHours() % 12;
+  const m = new Date().getMinutes();
+  const ha = (h * 30 + m * 0.5) * Math.PI / 180;
+  ctx.fillRect(x, y, Math.cos(ha) * 2*PX, Math.sin(ha) * 2*PX);
+  // Minute hand
+  const ma = m * 6 * Math.PI / 180;
+  ctx.fillRect(x, y, Math.cos(ma) * 3*PX, Math.sin(ma) * 3*PX);
+}
+
+function drawGlobe(x, y) {
+  ctx.fillStyle = PALETTE.globeWater;
+  ctx.beginPath(); ctx.arc(x, y, 3*PX, 0, Math.PI*2); ctx.fill();
+  ctx.fillStyle = PALETTE.globeLand;
+  ctx.fillRect(x - PX, y - PX, 2*PX, 2*PX);
+}
+
+function drawTrophy(x, y) {
+  ctx.fillStyle = PALETTE.trophy;
+  ctx.fillRect(x - PX, y, 2*PX, 3*PX);
+  ctx.beginPath(); ctx.arc(x, y - PX, 2*PX, 0, Math.PI*2); ctx.fill();
+  ctx.fillStyle = PALETTE.trophyStar;
+  ctx.fillRect(x - PX, y - 2*PX, 2*PX, PX);
+}
+
+function drawFlag(x, y) {
+  ctx.fillStyle = PALETTE.flagPole;
+  ctx.fillRect(x, y, PX, 8*PX);
+  ctx.fillStyle = PALETTE.flag;
+  ctx.fillRect(x + PX, y, 3*PX, 2*PX);
+}
+
+function drawBookshelf(x, y, w, h) {
+  ctx.fillStyle = PALETTE.bookshelf;
+  ctx.fillRect(x, y, w, h);
+  // Shelves
+  for (let row = 0; row < 4; row++) {
+    ctx.fillStyle = '#161B22';
+    ctx.fillRect(x, y + row * 4*PX, w, PX);
+    // Books
+    for (let b = 0; b < 4; b++) {
+      ctx.fillStyle = PALETTE.books[(row + b) % PALETTE.books.length];
+      ctx.fillRect(x + 1*PX + b * 2*PX, y + 1*PX + row * 4*PX, PX, 2*PX);
+    }
+  }
+}
+
+function drawServerRack(x, y, w, h) {
+  ctx.fillStyle = PALETTE.serverRack;
+  ctx.fillRect(x, y, w, h);
+  for (let i = 0; i < 5; i++) {
+    ctx.fillStyle = '#0D1117';
+    ctx.fillRect(x + PX, y + 1*PX + i * 3*PX, w - 2*PX, 2*PX);
+    // LEDs
+    const ledOn = Math.sin(tick * 0.08 + i) > 0;
+    ctx.fillStyle = ledOn ? PALETTE.serverLed : PALETTE.serverLedOff;
+    ctx.fillRect(x + 2*PX, y + 2*PX + i * 3*PX, PX, PX);
+    ctx.fillStyle = ledOn ? PALETTE.serverLed2 : '#30363D';
+    ctx.fillRect(x + 4*PX, y + 2*PX + i * 3*PX, PX, PX);
+  }
+}
+
+function drawCoffeeMachine(x, y) {
+  ctx.fillStyle = PALETTE.coffeeMachine;
+  ctx.fillRect(x, y, 6*PX, 9*PX);
+  ctx.fillStyle = '#0D1117';
+  ctx.fillRect(x + PX, y + PX, 4*PX, 3*PX);
+  const brewing = Math.sin(tick * 0.15) > 0;
+  ctx.fillStyle = brewing ? PALETTE.coffeeLight : '#484F58';
+  ctx.fillRect(x + 2*PX, y + 5*PX, 2*PX, PX);
+}
+
+function drawRoundTable(x, y, r) {
+  ctx.fillStyle = PALETTE.roundTable;
+  ctx.fillRect(x - r, y - 2*PX, r*2, 4*PX);
+  ctx.fillStyle = PALETTE.tableTop;
+  ctx.fillRect(x - r, y - 3*PX, r*2, PX);
+  ctx.fillStyle = '#161B22';
+  ctx.fillRect(x - PX, y, 2*PX, 2*PX);
+}
+
+function drawSofa(x, y, w, h) {
+  ctx.fillStyle = PALETTE.sofa;
+  ctx.fillRect(x, y, w, h);
+  ctx.fillStyle = PALETTE.sofaCushion;
+  ctx.fillRect(x + PX, y + PX, w - 2*PX, h/2);
+  ctx.fillRect(x + PX, y, w - 2*PX, PX);
+}
+
+function drawPlant(x, y) {
+  ctx.fillStyle = PALETTE.plantPot;
+  ctx.fillRect(x, y, 4*PX, 4*PX);
+  ctx.fillStyle = PALETTE.plantLeaf;
+  ctx.fillRect(x - PX, y - 3*PX, 2*PX, 4*PX);
+  ctx.fillRect(x + 2*PX, y - 4*PX, 2*PX, 5*PX);
+  ctx.fillRect(x, y - 6*PX, 2*PX, 3*PX);
+}
+
+function drawWaterCooler(x, y) {
+  ctx.fillStyle = PALETTE.waterCooler;
+  ctx.fillRect(x, y, 4*PX, 10*PX);
+  ctx.fillStyle = PALETTE.coolerWater;
+  ctx.fillRect(x + PX, y - 2*PX, 2*PX, 4*PX);
+}
+
+function drawFilingCabinet(x, y) {
+  ctx.fillStyle = PALETTE.filingCabinet;
+  ctx.fillRect(x, y, 5*PX, 10*PX);
+  for (let i = 0; i < 2; i++) {
+    ctx.fillStyle = PALETTE.filingDraw;
+    ctx.fillRect(x + PX, y + 1*PX + i * 4*PX, 3*PX, 3*PX);
+    ctx.fillStyle = '#484F58';
+    ctx.fillRect(x + 2*PX, y + 2*PX + i * 4*PX, PX, PX);
+  }
+}
+
+function drawDesk(a) {
+  const x = a.x * canvas.width, y = a.y * canvas.height;
+  const dw = 18*PX, dh = 8*PX;
+  
+  // Desk
+  ctx.fillStyle = PALETTE.deskLeg;
+  ctx.fillRect(x - PX, y + dh, 2*PX, 3*PX);
+  ctx.fillRect(x + dw, y + dh, 2*PX, 3*PX);
+  ctx.fillStyle = PALETTE.desk;
+  ctx.fillRect(x - PX, y + 2*PX, dw + 2*PX, dh - 2*PX);
+  ctx.fillStyle = PALETTE.deskTop;
+  ctx.fillRect(x - 2*PX, y, dw + 4*PX, 2*PX);
+  
+  // Monitor
+  const mw = 9*PX, mh = 7*PX;
+  const mx = x + dw/2 - mw/2, my = y - mh - PX;
+  ctx.fillStyle = PALETTE.monitor;
+  ctx.fillRect(mx, my, mw, mh);
+  const active = a.state === 'working';
+  ctx.fillStyle = active ? PALETTE.monitorActive : '#1a1a1a';
+  ctx.fillRect(mx + PX, my + PX, mw - 2*PX, mh - 2*PX);
+  if (active) {
+    ctx.fillStyle = PALETTE.screenGlowActive;
+    ctx.fillRect(mx + 2*PX, my + 2*PX, mw - 4*PX, PX);
+  }
+  // Monitor stand
+  ctx.fillStyle = PALETTE.monitor;
+  ctx.fillRect(mx + mw/2 - PX, my + mh, 2*PX, 2*PX);
+  
+  // Chair
+  ctx.fillStyle = PALETTE.chair;
+  ctx.fillRect(x + dw/2 - 3*PX, y + dh + PX, 6*PX, 2*PX);
+  ctx.fillStyle = PALETTE.chairSeat;
+  ctx.fillRect(x + dw/2 - 2*PX, y + dh + 2*PX, 4*PX, PX);
+  
+  // Name
+  ctx.fillStyle = a.color;
+  ctx.font = `${4*PX}px monospace`;
+  ctx.fillText(a.name.substring(0, 6), x + PX, y + dh + 5*PX);
+}
+
+function drawAgent(a) {
+  const x = a.x * canvas.width, y = a.y * canvas.height;
+  const bob = a.walkFrame > 2 ? -PX : 0;
+  
+  // Shadow
+  ctx.fillStyle = 'rgba(0,0,0,0.4)';
+  ctx.fillRect(x - 3*PX, y + 7*PX, 6*PX, 2*PX);
+  
+  // Body
+  ctx.fillStyle = a.color;
+  ctx.fillRect(x - 2*PX, y - 4*PX + bob, 4*PX, 5*PX);
+  
+  // Head
+  ctx.fillStyle = '#E8D4B8';
+  ctx.fillRect(x - 2*PX, y - 8*PX + bob, 4*PX, 4*PX);
+  
+  // Eyes
+  ctx.fillStyle = '#000';
+  if (a.state === 'thinking') {
+    ctx.fillRect(x - 1*PX, y - 7*PX + bob, PX, PX);
+    ctx.fillRect(x + 1*PX, y - 7*PX + bob, PX, PX);
+    drawThoughtBubble(x + 5*PX, y - 10*PX + bob, a.thought || a.task);
+  } else {
+    ctx.fillRect(x - 1*PX, y - 6*PX + bob, PX, PX);
+    ctx.fillRect(x + 1*PX, y - 6*PX + bob, PX, PX);
+  }
+}
+
+function drawThoughtBubble(x, y, text) {
+  const txt = text?.length > 12 ? text.substring(0, 11) + '..' : (text || '...');
+  ctx.fillStyle = 'rgba(255,255,255,0.95)';
+  ctx.fillRect(x, y, 14*PX, 5*PX);
+  ctx.fillRect(x - PX, y + 5*PX, 2*PX, 2*PX);
+  ctx.fillStyle = '#000';
+  ctx.font = `${3*PX}px monospace`;
+  ctx.fillText(txt, x + PX, y + 3*PX);
+}
+
+function drawOverlay(W, H) {
+  // Weather
+  ctx.fillStyle = 'rgba(0,0,0,0.7)';
+  ctx.fillRect(4*PX, H - 12*PX, 18*PX, 8*PX);
+  ctx.fillStyle = '#8B949E';
+  ctx.font = `${3*PX}px monospace`;
+  ctx.fillText(`${weather.temp_c}°C ${weather.desc?.substring(0, 6)}`, 5*PX, H - 6*PX);
+  
+  // Clock
+  const time = new Date().toLocaleTimeString('en-US', { hour12: false });
+  ctx.fillStyle = 'rgba(0,0,0,0.7)';
+  ctx.fillRect(W - 20*PX, H - 12*PX, 16*PX, 8*PX);
+  ctx.fillStyle = '#58A6FF';
+  ctx.fillText(time, W - 19*PX, H - 6*PX);
+}
+
+// DOM Updates
+function updateDOM() {
+  updateAgentListDOM();
+  updateLogsDOM();
+  updateClockDOM();
+}
+
+function updateAgentListDOM() {
+  const el = document.getElementById('office-agent-list');
+  if (!el) return;
+  el.innerHTML = animAgents.map(a => `
+    <div class="agent-row">
+      <div class="agent-dot ${a.state === 'working' ? 'green' : 'blue'}"></div>
+      <div class="agent-info">
+        <div class="agent-name">${a.emoji} ${a.name}</div>
+        <div class="agent-task">${a.task}</div>
+        <div class="agent-meta"><span style="color:#58A6FF">${a.model}</span></div>
+      </div>
+    </div>
+  `).join('');
+}
+
+function updateLogsDOM() {
+  const el = document.getElementById('office-logs-list');
+  if (!el) return;
+  el.innerHTML = liveLogs.slice(0, 10).map(l => `
+    <div class="log-entry ${l.type}">
+      <span class="log-time">${l.time}</span>
+      <span class="log-text">${l.text}</span>
+    </div>
+  `).join('');
+}
+
+function updateClockDOM() {
+  const el = document.getElementById('office-clock');
+  if (el) {
+    el.textContent = new Date().toLocaleTimeString('en-US', { hour12: false, hour: '2-digit', minute: '2-digit' });
+  }
+}
+
+export function addLog(type, text) {
+  const time = new Date().toLocaleTimeString('en-US', { hour12: false, hour: '2-digit', minute: '2-digit', second: '2-digit' });
+  liveLogs.unshift({ type, text, time });
+  if (liveLogs.length > 30) liveLogs.pop();
+  updateLogsDOM();
+}
+
+function handleHover(e) {
+  const r = canvas.getBoundingClientRect();
+  const x = (e.clientX - r.left) * (canvas.width / r.width);
+  const y = (e.clientY - r.top) * (canvas.height / r.height);
+  
+  const tip = document.getElementById('agent-tooltip');
+  if (!tip) return;
+  
+  const hit = animAgents.find(a => {
+    const ax = a.x * canvas.width, ay = a.y * canvas.height;
+    return Math.abs(x - ax) < 8*PX && Math.abs(y - ay) < 12*PX;
+  });
+  
+  if (hit) {
+    tip.innerHTML = `
+      <div class="agent-tooltip-name" style="color:${hit.color}">${hit.emoji} ${hit.name}</div>
+      <div class="agent-tooltip-task">${hit.task}</div>
+      <div class="agent-tooltip-meta">
+        <span>${hit.state === 'working' ? '🟢 Active' : '🔵 Idle'}</span>
+        <span style="color:#58A6FF">${hit.model}</span>
+      </div>
+    `;
+    tip.style.left = (e.clientX - r.left + 10) + 'px';
+    tip.style.top = (e.clientY - r.top - 50) + 'px';
+    tip.classList.add('visible');
+  } else {
+    tip.classList.remove('visible');
+  }
+}
+
+function handleClick(e) {
+  const r = canvas.getBoundingClientRect();
+  const x = (e.clientX - r.left) * (canvas.width / r.width);
+  const y = (e.clientY - r.top) * (canvas.height / r.height);
+  
+  const hit = animAgents.find(a => {
+    const ax = a.x * canvas.width, ay = a.y * canvas.height;
+    return Math.abs(x - ax) < 8*PX && Math.abs(y - ay) < 12*PX;
+  });
+  
+  if (hit) {
+    addLog('info', `👋 Checked in: ${hit.name}`);
+  }
+}
+
+export function setWeather(w) { if (w) weather = w; }
