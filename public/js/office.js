@@ -1,112 +1,60 @@
-// Hifty Co Pixel Art Office - FULLY CONNECTED VERSION
-// No localhost references - works with GitHub Pages + local server
-
-const PX = 4;
+// Hifty Co Pixel Art Office - WOW VERSION
+const PX = 3;
 let canvas, ctx, tick = 0;
 let liveAgents = [], liveLogs = [];
 let weather = { temp_c: 18, desc: 'Clear' };
 let btcPrice = 0;
 let soundEnabled = true;
 let audioCtx = null;
+let particles = [];
 
-// Sound effects using Web Audio API
-function initAudio() {
-  try {
-    audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-  } catch(e) {}
-}
+function initAudio() { try { audioCtx = new (window.AudioContext || window.webkitAudioContext)(); } catch(e) {} }
 
 function playSound(type) {
   if (!soundEnabled || !audioCtx) return;
-  
   const osc = audioCtx.createOscillator();
   const gain = audioCtx.createGain();
   osc.connect(gain);
   gain.connect(audioCtx.destination);
-  
-  if (type === 'message') {
-    osc.frequency.value = 880;
-    osc.type = 'sine';
-    gain.gain.setValueAtTime(0.1, audioCtx.currentTime);
-    gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.2);
-    osc.start();
-    osc.stop(audioCtx.currentTime + 0.2);
-  } else if (type === '完成任务') {
-    osc.frequency.value = 523;
-    osc.type = 'sine';
-    gain.gain.setValueAtTime(0.15, audioCtx.currentTime);
-    osc.frequency.setValueAtTime(659, audioCtx.currentTime + 0.1);
-    osc.frequency.setValueAtTime(784, audioCtx.currentTime + 0.2);
-    gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.4);
-    osc.start();
-    osc.stop(audioCtx.currentTime + 0.4);
-  } else if (type === 'huddle') {
-    osc.frequency.value = 440;
-    osc.type = 'triangle';
-    gain.gain.setValueAtTime(0.08, audioCtx.currentTime);
-    gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.3);
-    osc.start();
-    osc.stop(audioCtx.currentTime + 0.3);
-  }
+  if (type === 'message') { osc.frequency.value = 1200; osc.type = 'sine'; gain.gain.setValueAtTime(0.08, audioCtx.currentTime); gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.15); osc.start(); osc.stop(audioCtx.currentTime + 0.15); }
+  else if (type === 'huddle') { osc.frequency.value = 600; osc.type = 'triangle'; gain.gain.setValueAtTime(0.06, audioCtx.currentTime); gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.25); osc.start(); osc.stop(audioCtx.currentTime + 0.25); }
 }
 
-// Color palette - GitHub Dark theme
+function createParticle(x, y, color) { particles.push({ x, y, vx: (Math.random() - 0.5) * 3, vy: (Math.random() - 0.5) * 3 - 1, life: 60 + Math.random() * 40, color: color || '#58A6FF', size: 1 + Math.random() * 2 }); }
+function updateParticles() { particles = particles.filter(p => { p.x += p.vx; p.y += p.vy; p.vy += 0.05; p.life--; return p.life > 0; }); }
+function drawParticles() { particles.forEach(p => { ctx.fillStyle = p.color; ctx.globalAlpha = p.life / 100; ctx.fillRect(p.x, p.y, p.size * PX, p.size * PX); }); ctx.globalAlpha = 1; }
+
 const PALETTE = {
-  floor: '#0D1117', floorLine: '#161B22', floorAccent: '#21262D',
-  wall: '#010409', wallAccent: '#161B22',
-  desk: '#21262D', deskTop: '#30363D', deskLeg: '#161B22',
-  monitor: '#161B22', screen: '#0D1117', screenGlow: '#58A6FF',
-  monitorActive: '#0D1117', screenGlowActive: '#3FB950',
-  chair: '#21262D', chairSeat: '#30363D',
-  plant: '#161B22', plantPot: '#6E40C9', plantLeaf: '#238636',
-  serverRack: '#161B22', serverLed: '#3FB950', serverLed2: '#58A6FF', serverLedOff: '#484F58',
-  coffeeMachine: '#21262D', coffeeLight: '#F78166',
-  roundTable: '#21262D', tableTop: '#30363D',
-  sofa: '#21262D', sofaCushion: '#30363D',
-  bookshelf: '#21262D', 
-  books: ['#DA3633','#A371F7','#3FB950','#58A6FF','#F78166','#8B949E'],
-  waterCooler: '#21262D', coolerWater: '#58A6FF',
-  filingCabinet: '#21262D', filingDraw: '#30363D',
-  windowGlass: '#0D1117', windowFrame: '#21262D', windowStars: '#58A6FF',
-  rug: '#161B22', rugPattern: '#21262D',
-  clock: '#21262D', clockHands: '#58A6FF',
-  globe: '#161B22', globeLand: '#238636', globeWater: '#58A6FF',
-  trophy: '#F0B429', trophyStar: '#F0B429',
-  flag: '#DA3633', flagPole: '#8B949E',
+  floor: '#0a0a0f', floorGrid: '#151520', wall: '#050508', wallGlow: '#00ffff',
+  desk: '#12121a', deskTop: '#1a1a25', deskEdge: '#00ffff',
+  monitor: '#0a0a12', screen: '#001020', screenGlow: '#00ffff', monitorActive: '#001015', screenGlowActive: '#00ff88',
+  chair: '#101018',
+  serverRack: '#0c0c15', serverLed: '#00ff88', serverLed2: '#00ffff', serverOff: '#222233',
+  coffeeMachine: '#101018', coffeeLight: '#ff00ff',
+  roundTable: '#101018', tableGlow: '#00ffff',
+  sofa: '#12121a', sofaGlow: '#ff00ff',
+  bookshelf: '#0f0f18', books: ['#ff0066','#00ffff','#ff00ff','#00ff66','#ffff00','#0066ff'],
+  plant: '#0a0a10', plantPot: '#ff00ff', plantLeaf: '#00ff88',
+  waterCooler: '#0f0f18', coolerWater: '#00ffff',
+  filingCabinet: '#101018',
+  windowGlass: '#050510', windowFrame: '#00ffff', windowSky: '#000020',
+  rug: '#0a0a12', rugGlow: '#ff00ff',
+  clock: '#0c0c15', clockGlow: '#00ffff',
+  globe: '#0a0a12', globeGlow: '#00ff88',
+  trophy: '#0c0c15', trophyGlow: '#ffff00',
 };
 
 const AGENTS = [
-  {id:'ollie',name:'Ollie',role:'Chief of Command',model:'MiniMax-M2.5',color:'#F0B429',homeX:0.08,homeY:0.20,emoji:'👔'},
-  {id:'mintytrades',name:'MintyTrades',role:'Trading',model:'kimi-k2.5:cloud',color:'#3FB950',homeX:0.26,homeY:0.20,emoji:'📈'},
-  {id:'hiftycodes',name:'HiftyCodes',role:'Development',model:'minimax-m2.5',color:'#58A6FF',homeX:0.44,homeY:0.20,emoji:'💻'},
-  {id:'hiftyanalyst',name:'HiftyAnalyst',role:'Analysis',model:'qwen3.5:397b',color:'#A371F7',homeX:0.62,homeY:0.20,emoji:'📊'},
-  {id:'hiftyriskmanager',name:'HiftyRisk',role:'Risk Mgmt',model:'kimi-k2.5:cloud',color:'#F78166',homeX:0.80,homeY:0.20,emoji:'🛡️'},
+  {id:'ollie',name:'OLLIE',role:'CEO',model:'MiniMax-M2.5',color:'#ffff00',homeX:0.10,homeY:0.18,emoji:'👑'},
+  {id:'mintytrades',name:'MINTY',role:'TRADING',model:'kimi-k2.5',color:'#00ff88',homeX:0.28,homeY:0.18,emoji:'📈'},
+  {id:'hiftycodes',name:'CODES',role:'DEV',model:'minimax-m2.5',color:'#00ffff',homeX:0.46,homeY:0.18,emoji:'💻'},
+  {id:'hiftyanalyst',name:'ANALYST',role:'DATA',model:'qwen3.5',color:'#ff00ff',homeX:0.64,homeY:0.18,emoji:'📊'},
+  {id:'hiftyriskmanager',name:'RISK',role:'RISK',model:'kimi-k2.5',color:'#ff8800',homeX:0.82,homeY:0.18,emoji:'🛡️'},
 ];
 
-const FUR = {
-  serverRack:   {x:0.92,y:0.12,w:10,h:18},
-  coffeeMachine:{x:0.92,y:0.38,w:6,h:9},
-  roundTable:   {x:0.50,y:0.65,r:8},
-  sofa:         {x:0.25,y:0.82,w:14,h:6},
-  bookshelf:    {x:0.08,y:0.62,w:8,h:16},
-  plant1:       {x:0.92,y:0.62,w:4,h:6},
-  plant2:       {x:0.75,y:0.82,w:4,h:6},
-  waterCooler:  {x:0.08,y:0.38,w:4,h:10},
-  filingCabinet:{x:0.17,y:0.50,w:5,h:10},
-  clock:        {x:0.35,y:0.04,r:3},
-  globe:        {x:0.65,y:0.04,r:3},
-  trophy:       {x:0.50,y:0.04,r:2},
-  flag:         {x:0.08,y:0.04,w:1,h:8},
-  rug:          {x:0.50,y:0.50,w:30,h:12},
-};
+const FUR = {serverRack:{x:0.94,y:0.10,w:8,h:16},coffeeMachine:{x:0.94,y:0.35,w:5,h:8},roundTable:{x:0.50,y:0.62,r:7},sofa:{x:0.22,y:0.80,w:12,h:5},bookshelf:{x:0.06,y:0.58,w:7,h:14},plant1:{x:0.94,y:0.58,w:3,h:5},plant2:{x:0.72,y:0.80,w:3,h:5},waterCooler:{x:0.06,y:0.35,w:3,h:9},filingCabinet:{x:0.15,y:0.46,w:4,h:9},clock:{x:0.38,y:0.03,r:3},globe:{x:0.62,y:0.03,r:3},trophy:{x:0.50,y:0.03,r:2},rug:{x:0.50,y:0.45,w:28,h:10}};
 
-let animAgents = AGENTS.map(a => ({
-  ...a, x: a.homeX, y: a.homeY,
-  state: 'working', task: 'Initializing...',
-  phase: 'at_desk', target: null, walkFrame: 0,
-  facing: 1, thought: '', bubbleTimer: 0,
-  atDeskTime: 2000 + Math.random() * 3000
-}));
+let animAgents = AGENTS.map(a => ({...a, x:a.homeX, y:a.homeY, state:'working', task:'Initializing...', phase:'at_desk', target:null, walkFrame:0, facing:1, thought:'', bubbleTimer:0, atDeskTime:2000+Math.random()*3000}));
 
 export function init(id) {
   canvas = document.getElementById(id);
@@ -117,41 +65,23 @@ export function init(id) {
   window.addEventListener('resize', resize);
   canvas.addEventListener('mousemove', handleHover);
   canvas.addEventListener('click', handleClick);
-  canvas.addEventListener('click', () => initAudio(), { once: true });
-  
-  addLog('info', '🎨 Office initializing...');
+  canvas.addEventListener('click', () => initAudio(), {once:true});
+  addLog('info', '🚀 Mission Control initializing...');
   addLog('info', '🔌 Connecting to OpenClaw...');
-  
   startLoop();
   fetchLiveData();
   fetchWeather();
   fetchBTC();
-  
-  addLog('success', '✅ Connected to OpenClaw');
+  addLog('success', '✅ System online');
   updateAgentListDOM();
 }
 
-function resize() {
-  if (!canvas) return;
-  const r = canvas.parentElement.getBoundingClientRect();
-  canvas.width = Math.floor(r.width / PX) * PX;
-  canvas.height = Math.floor(r.height / PX) * PX;
-  ctx.imageSmoothingEnabled = false;
-}
-
-function startLoop() {
-  setInterval(() => {
-    tick++;
-    update();
-    draw();
-    updateDOM();
-  }, 80);
-}
+function resize() { if (!canvas) return; const r = canvas.parentElement.getBoundingClientRect(); canvas.width = Math.floor(r.width / PX) * PX; canvas.height = Math.floor(r.height / PX) * PX; ctx.imageSmoothingEnabled = false; }
+function startLoop() { setInterval(() => { tick++; update(); draw(); updateDOM(); }, 60); }
 
 async function fetchLiveData() {
   try {
-    // Try local API first, then fall back to demo
-    const urls = ['/api/agents', 'https://hiftyco.github.io/hiftyco-mission-control/api/agents'];
+    const urls = ['/api/agents'];
     for (const url of urls) {
       try {
         const resp = await fetch(url);
@@ -162,14 +92,13 @@ async function fetchLiveData() {
             updateAgentsFromData(data.agents);
             document.getElementById('gatewayStatus') && (document.getElementById('gatewayStatus').textContent = 'LIVE');
             document.getElementById('gatewayStatus')?.classList.add('green');
+            playSound('huddle');
             return;
           }
         }
       } catch(e) { continue; }
     }
   } catch(e) {}
-  
-  // Demo mode
   demoMode();
   document.getElementById('gatewayStatus') && (document.getElementById('gatewayStatus').textContent = 'DEMO');
   setTimeout(fetchLiveData, 8000);
@@ -184,212 +113,149 @@ function updateAgentsFromData(data) {
       aa.task = la.task || la.current_action || 'Active';
       if (!wasActive && aa.state === 'working') {
         playSound('message');
-        addLog('info', `${aa.name}: ${aa.task}`);
+        addLog('info', aa.name + ': ' + aa.task);
+        for(let i=0; i<8; i++) createParticle(aa.x * canvas.width, aa.y * canvas.height, aa.color);
       }
     }
   });
 }
 
 function demoMode() {
-  const tasks = {
-    ollie: ['Leading strategy', 'Reviewing KPIs', 'Team coordination', 'Delegating tasks'],
-    mintytrades: ['Analyzing BTC', 'Scanning RSI', 'Finding setups', 'Trade signals'],
-    hiftycodes: ['Building features', 'Code review', 'Bug fixes', 'Deploying'],
-    hiftyanalyst: ['Computing P&L', 'Generating reports', 'Data analysis', 'Research'],
-    hiftyriskmanager: ['Risk assessment', 'Compliance check', 'Monitoring', 'Alerts'],
-  };
-  
+  const tasks = {ollie:['Leading strategy','Reviewing KPIs','Team sync'],mintytrades:['Analyzing BTC','RSI scan','Trade alerts'],hiftycodes:['Building features','Code review','Deploying'],hiftyanalyst:['Computing P&L','Reports','Data analysis'],hiftyriskmanager:['Risk check','Compliance','Monitoring']};
   let idx = 0;
   setInterval(() => {
     const agent = animAgents[idx % animAgents.length];
-    const agentTasks = tasks[agent.id] || tasks.ollie;
-    const prevTask = agent.task;
-    agent.task = agentTasks[Math.floor(Math.random() * agentTasks.length)];
-    agent.state = Math.random() > 0.3 ? 'working' : 'thinking';
+    agent.task = (tasks[agent.id] || tasks.ollie)[Math.floor(Math.random() * 3)];
+    agent.state = Math.random() > 0.25 ? 'working' : 'thinking';
     agent.thought = agent.task;
-    agent.bubbleTimer = 40;
-    
-    if (prevTask !== agent.task) {
-      playSound('message');
-      addLog('info', `${agent.name}: ${agent.task}`);
-    }
+    agent.bubbleTimer = 35;
+    playSound('message');
+    addLog('info', agent.name + ': ' + agent.task);
     idx++;
-  }, 3500);
+  }, 3000);
 }
 
-async function fetchWeather() {
-  try {
-    const r = await fetch('https://wttr.in/Kingston,Ontario?format=j1');
-    if (r.ok) {
-      const d = await r.json();
-      weather = { temp_c: parseInt(d.current_condition[0].temp_C), desc: d.current_condition[0].weatherDesc[0].value };
-    }
-  } catch (e) {}
-  setTimeout(fetchWeather, 120000);
-}
-
-async function fetchBTC() {
-  try {
-    const r = await fetch('https://api.coingecko.com/api/v3/simple/price?ids=bitcoin&vs_currencies=usd&include_24hr_change=true');
-    if (r.ok) {
-      const d = await r.json();
-      btcPrice = d.bitcoin.usd;
-      const change = d.bitcoin.usd_24h_change;
-      const btcEl = document.getElementById('btcPrice');
-      const chEl = document.getElementById('btcChange');
-      if (btcEl) btcEl.textContent = '$' + btcPrice.toLocaleString();
-      if (chEl) chEl.textContent = (change >= 0 ? '+' : '') + change.toFixed(2) + '% (24h)';
-    }
-  } catch (e) {}
-  setTimeout(fetchBTC, 60000);
-}
+async function fetchWeather() { try { const r = await fetch('https://wttr.in/Kingston,Ontario?format=j1'); if(r.ok) { const d = await r.json(); weather = {temp_c:parseInt(d.current_condition[0].temp_C), desc:d.current_condition[0].weatherDesc[0].value}; } } catch(e) {} setTimeout(fetchWeather, 120000); }
+async function fetchBTC() { try { const r = await fetch('https://api.coingecko.com/api/v3/simple/price?ids=bitcoin&vs_currencies=usd&include_24hr_change=true'); if(r.ok) { const d = await r.json(); btcPrice = d.bitcoin.usd; const change = d.bitcoin.usd_24h_change; const btcEl = document.getElementById('btcPrice'); const chEl = document.getElementById('btcChange'); if(btcEl) btcEl.textContent = '$' + btcPrice.toLocaleString(); if(chEl) chEl.textContent = (change >= 0 ? '+' : '') + change.toFixed(2) + '%'; } } catch(e) {} setTimeout(fetchBTC, 60000); }
 
 function update() {
+  updateParticles();
   animAgents.forEach(a => {
     if (a.bubbleTimer > 0) a.bubbleTimer--;
-    
-    if (a.phase === 'at_desk') {
-      a.atDeskTime -= 80;
-      if (a.atDeskTime <= 0 && Math.random() < 0.1) {
-        const targets = ['serverRack', 'coffeeMachine', 'roundTable', 'sofa', 'bookshelf', 'waterCooler'];
-        a.target = targets[Math.floor(Math.random() * targets.length)];
-        a.phase = 'walking';
-        a.facing = FUR[a.target].x > a.homeX ? 1 : -1;
-      }
-    } else if (a.phase === 'walking' && a.target) {
-      const t = FUR[a.target];
-      const dx = t.x - a.x, dy = t.y - a.y;
-      const dist = Math.sqrt(dx*dx + dy*dy);
-      if (dist < 0.02) { a.x = t.x; a.y = t.y; a.phase = 'at_target'; a.thought = getThought(a.target); a.atTargetTime = 3000 + Math.random() * 4000; }
-      else { a.x += (dx/dist) * 0.008; a.y += (dy/dist) * 0.008; a.walkFrame = (a.walkFrame + 0.25) % 4; }
-    } else if (a.phase === 'at_target') {
-      a.atTargetTime -= 80;
-      if (a.atTargetTime <= 0 && Math.random() < 0.15) { a.phase = 'walking_home'; a.facing = a.homeX > a.x ? 1 : -1; }
-    } else if (a.phase === 'walking_home') {
-      const dx = a.homeX - a.x, dy = a.homeY - a.y;
-      const dist = Math.sqrt(dx*dx + dy*dy);
-      if (dist < 0.02) { a.x = a.homeX; a.y = a.homeY; a.phase = 'at_desk'; a.target = null; a.thought = a.task; a.atDeskTime = 3000 + Math.random() * 5000; }
-      else { a.x += (dx/dist) * 0.01; a.y += (dy/dist) * 0.01; a.walkFrame = (a.walkFrame + 0.25) % 4; }
-    }
+    if (a.phase === 'at_desk') { a.atDeskTime -= 60; if (a.atDeskTime <= 0 && Math.random() < 0.08) { const targets = ['serverRack','coffeeMachine','roundTable','sofa','bookshelf']; a.target = targets[Math.floor(Math.random()*targets.length)]; a.phase = 'walking'; a.facing = FUR[a.target].x > a.homeX ? 1 : -1; createParticle(a.x*canvas.width, a.y*canvas.height, a.color); } }
+    else if (a.phase === 'walking' && a.target) { const t = FUR[a.target], dx = t.x - a.x, dy = t.y - a.y, dist = Math.sqrt(dx*dx+dy*dy); if (dist < 0.025) { a.x = t.x; a.y = t.y; a.phase = 'at_target'; a.thought = getThought(a.target); a.atTargetTime = 2500 + Math.random() * 3500; } else { a.x += (dx/dist) * 0.006; a.y += (dy/dist) * 0.006; a.walkFrame = (a.walkFrame + 0.2) % 4; } }
+    else if (a.phase === 'at_target') { a.atTargetTime -= 60; if (a.atTargetTime <= 0 && Math.random() < 0.12) { a.phase = 'walking_home'; a.facing = a.homeX > a.x ? 1 : -1; } }
+    else if (a.phase === 'walking_home') { const dx = a.homeX - a.x, dy = a.homeY - a.y, dist = Math.sqrt(dx*dx+dy*dy); if (dist < 0.025) { a.x = a.homeX; a.y = a.homeY; a.phase = 'at_desk'; a.target = null; a.thought = a.task; a.atDeskTime = 2500 + Math.random() * 4500; } else { a.x += (dx/dist) * 0.008; a.y += (dy/dist) * 0.008; a.walkFrame = (a.walkFrame + 0.2) % 4; } }
   });
 }
 
-function getThought(target) {
-  const thoughts = { serverRack: ['Checking logs...', 'All systems OK'], coffeeMachine: ['☕ Fuel up!', 'Espresso time'], roundTable: ['🗣️ Team sync', 'Brainstorming'], sofa: ['😴 Quick rest', 'Recharging'], bookshelf: ['📚 Researching', 'Reading docs'], waterCooler: ['💧 Hydrating', 'Water break'] };
-  return (thoughts[target] || ['...'])[Math.floor(Math.random() * (thoughts[target]?.length || 1))];
-}
+function getThought(t) { const thoughts = {serverRack:['Checking logs...','System OK'],coffeeMachine:['☕ Fuel'],roundTable:['🗣️ Sync'],sofa:['😴 Rest'],bookshelf:['📚 Research']}; return (thoughts[t] || ['...'])[Math.floor(Math.random()*2)]; }
 
 function draw() {
   if (!ctx) return;
   const W = canvas.width, H = canvas.height;
+  const grad = ctx.createLinearGradient(0, 0, 0, H);
+  grad.addColorStop(0, '#020208'); grad.addColorStop(0.5, '#050510'); grad.addColorStop(1, '#020208');
+  ctx.fillStyle = grad; ctx.fillRect(0, 0, W, H);
+  ctx.fillStyle = PALETTE.floor; ctx.fillRect(0, H*0.12, W, H*0.88);
+  ctx.strokeStyle = PALETTE.floorGrid; ctx.lineWidth = 1;
+  for (let x = 0; x < W; x += 10*PX) { ctx.beginPath(); ctx.moveTo(x, H*0.12); ctx.lineTo(x, H); ctx.stroke(); }
+  for (let y = H*0.12; y < H; y += 8*PX) { ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(W, y); ctx.stroke(); }
+  ctx.shadowColor = PALETTE.wallGlow; ctx.shadowBlur = 10; ctx.fillStyle = PALETTE.wallGlow + '40'; ctx.fillRect(0, H*0.12, W, 2*PX); ctx.shadowBlur = 0;
   
-  ctx.fillStyle = PALETTE.wall;
-  ctx.fillRect(0, 0, W, H);
-  ctx.fillStyle = PALETTE.floor;
-  ctx.fillRect(0, H*0.15, W, H*0.85);
-  ctx.fillStyle = PALETTE.floorLine;
-  for (let x = 0; x < W; x += 12*PX) ctx.fillRect(x, H*0.15, 1*PX, H*0.85);
-  for (let y = H*0.15; y < H; y += 8*PX) ctx.fillRect(0, y, W, 1*PX);
-  ctx.fillStyle = PALETTE.floorAccent;
-  ctx.fillRect(0, H*0.15, W, 2*PX);
-  
-  drawWindow(W*0.30, 2*PX, 24*PX, 12*PX);
-  drawRug(FUR.rug.x * W, FUR.rug.y * H, FUR.rug.w * PX, FUR.rug.h * PX);
-  drawClock(FUR.clock.x * W, FUR.clock.y * H);
-  drawGlobe(FUR.globe.x * W, FUR.globe.y * H);
-  drawTrophy(FUR.trophy.x * W, FUR.trophy.y * H);
-  drawFlag(FUR.flag.x * W, FUR.flag.y * H);
-  drawBookshelf(FUR.bookshelf.x * W, FUR.bookshelf.y * H, FUR.bookshelf.w * PX, FUR.bookshelf.h * PX);
-  drawServerRack(FUR.serverRack.x * W, FUR.serverRack.y * H, FUR.serverRack.w * PX, FUR.serverRack.h * PX);
-  drawCoffeeMachine(FUR.coffeeMachine.x * W, FUR.coffeeMachine.y * H);
-  drawRoundTable(FUR.roundTable.x * W, FUR.roundTable.y * H, FUR.roundTable.r * PX);
-  drawSofa(FUR.sofa.x * W, FUR.sofa.y * H, FUR.sofa.w * PX, FUR.sofa.h * PX);
-  drawPlant(FUR.plant1.x * W, FUR.plant1.y * H);
-  drawPlant(FUR.plant2.x * W, FUR.plant2.y * H);
-  drawWaterCooler(FUR.waterCooler.x * W, FUR.waterCooler.y * H);
-  drawFilingCabinet(FUR.filingCabinet.x * W, FUR.filingCabinet.y * H);
-  
+  drawWindow(W*0.30, 2*PX, 22*PX, 10*PX);
+  drawRug(FUR.rug.x*W, FUR.rug.y*H, FUR.rug.w*PX, FUR.rug.h*PX);
+  drawClock(FUR.clock.x*W, FUR.clock.y*H);
+  drawGlobe(FUR.globe.x*W, FUR.globe.y*H);
+  drawTrophy(FUR.trophy.x*W, FUR.trophy.y*H);
+  drawServerRack(FUR.serverRack.x*W, FUR.serverRack.y*H, FUR.serverRack.w*PX, FUR.serverRack.h*PX);
+  drawCoffeeMachine(FUR.coffeeMachine.x*W, FUR.coffeeMachine.y*H);
+  drawRoundTable(FUR.roundTable.x*W, FUR.roundTable.y*H, FUR.roundTable.r*PX);
+  drawSofa(FUR.sofa.x*W, FUR.sofa.y*H, FUR.sofa.w*PX, FUR.sofa.h*PX);
+  drawBookshelf(FUR.bookshelf.x*W, FUR.bookshelf.y*H, FUR.bookshelf.w*PX, FUR.bookshelf.h*PX);
+  drawPlant(FUR.plant1.x*W, FUR.plant1.y*H);
+  drawPlant(FUR.plant2.x*W, FUR.plant2.y*H);
+  drawWaterCooler(FUR.waterCooler.x*W, FUR.waterCooler.y*H);
+  drawFilingCabinet(FUR.filingCabinet.x*W, FUR.filingCabinet.y*H);
   animAgents.filter(a => a.phase === 'at_desk').forEach(drawDesk);
   animAgents.filter(a => a.phase !== 'at_desk').forEach(drawAgent);
+  drawParticles();
   drawOverlay(W, H);
 }
 
-// Drawing functions (condensed for space)
-function drawWindow(x, y, w, h) {
-  ctx.fillStyle = PALETTE.windowFrame; ctx.fillRect(x, y, w, h);
-  ctx.fillStyle = PALETTE.windowGlass; ctx.fillRect(x + PX, y + PX, w - 2*PX, h - 2*PX);
-  if (Math.sin(tick * 0.05) > 0) { ctx.fillStyle = PALETTE.windowStars; for (let i = 0; i < 5; i++) ctx.fillRect(x + 4*PX + (i * 4 * PX), y + 3*PX + (i % 2) * 4*PX, PX, PX); }
-  ctx.fillStyle = PALETTE.windowFrame; ctx.fillRect(x + w/2 - PX/2, y, PX, h); ctx.fillRect(x, y + h/2 - PX/2, w, PX);
-}
-function drawRug(x, y, w, h) { ctx.fillStyle = PALETTE.rug; ctx.fillRect(x, y, w, h); ctx.fillStyle = PALETTE.rugPattern; ctx.fillRect(x + 2*PX, y + 2*PX, w - 4*PX, h - 4*PX); }
-function drawClock(x, y) { ctx.fillStyle = PALETTE.clock; ctx.beginPath(); ctx.arc(x, y, 4*PX, 0, Math.PI*2); ctx.fill(); ctx.fillStyle = PALETTE.clockHands; const h = new Date().getHours() % 12, m = new Date().getMinutes(); ctx.fillRect(x, y, Math.cos((h*30+m*0.5)*Math.PI/180)*2*PX, Math.sin((h*30+m*0.5)*Math.PI/180)*2*PX); ctx.fillRect(x, y, Math.cos(m*6*Math.PI/180)*3*PX, Math.sin(m*6*Math.PI/180)*3*PX); }
-function drawGlobe(x, y) { ctx.fillStyle = PALETTE.globeWater; ctx.beginPath(); ctx.arc(x, y, 3*PX, 0, Math.PI*2); ctx.fill(); ctx.fillStyle = PALETTE.globeLand; ctx.fillRect(x - PX, y - PX, 2*PX, 2*PX); }
-function drawTrophy(x, y) { ctx.fillStyle = PALETTE.trophy; ctx.fillRect(x - PX, y, 2*PX, 3*PX); ctx.beginPath(); ctx.arc(x, y - PX, 2*PX, 0, Math.PI*2); ctx.fill(); ctx.fillStyle = PALETTE.trophyStar; ctx.fillRect(x - PX, y - 2*PX, 2*PX, PX); }
-function drawFlag(x, y) { ctx.fillStyle = PALETTE.flagPole; ctx.fillRect(x, y, PX, 8*PX); ctx.fillStyle = PALETTE.flag; ctx.fillRect(x + PX, y, 3*PX, 2*PX); }
-function drawBookshelf(x, y, w, h) { ctx.fillStyle = PALETTE.bookshelf; ctx.fillRect(x, y, w, h); for (let r = 0; r < 4; r++) { ctx.fillStyle = '#161B22'; ctx.fillRect(x, y + r * 4*PX, w, PX); for (let b = 0; b < 4; b++) { ctx.fillStyle = PALETTE.books[(r + b) % PALETTE.books.length]; ctx.fillRect(x + 1*PX + b * 2*PX, y + 1*PX + r * 4*PX, PX, 2*PX); } } }
-function drawServerRack(x, y, w, h) { ctx.fillStyle = PALETTE.serverRack; ctx.fillRect(x, y, w, h); for (let i = 0; i < 5; i++) { ctx.fillStyle = '#0D1117'; ctx.fillRect(x + PX, y + 1*PX + i * 3*PX, w - 2*PX, 2*PX); const ledOn = Math.sin(tick * 0.08 + i) > 0; ctx.fillStyle = ledOn ? PALETTE.serverLed : PALETTE.serverLedOff; ctx.fillRect(x + 2*PX, y + 2*PX + i * 3*PX, PX, PX); ctx.fillStyle = ledOn ? PALETTE.serverLed2 : '#30363D'; ctx.fillRect(x + 4*PX, y + 2*PX + i * 3*PX, PX, PX); } }
-function drawCoffeeMachine(x, y) { ctx.fillStyle = PALETTE.coffeeMachine; ctx.fillRect(x, y, 6*PX, 9*PX); ctx.fillStyle = '#0D1117'; ctx.fillRect(x + PX, y + PX, 4*PX, 3*PX); const brewing = Math.sin(tick * 0.15) > 0; ctx.fillStyle = brewing ? PALETTE.coffeeLight : '#484F58'; ctx.fillRect(x + 2*PX, y + 5*PX, 2*PX, PX); }
-function drawRoundTable(x, y, r) { ctx.fillStyle = PALETTE.roundTable; ctx.fillRect(x - r, y - 2*PX, r*2, 4*PX); ctx.fillStyle = PALETTE.tableTop; ctx.fillRect(x - r, y - 3*PX, r*2, PX); ctx.fillStyle = '#161B22'; ctx.fillRect(x - PX, y, 2*PX, 2*PX); }
-function drawSofa(x, y, w, h) { ctx.fillStyle = PALETTE.sofa; ctx.fillRect(x, y, w, h); ctx.fillStyle = PALETTE.sofaCushion; ctx.fillRect(x + PX, y + PX, w - 2*PX, h/2); ctx.fillRect(x + PX, y, w - 2*PX, PX); }
-function drawPlant(x, y) { ctx.fillStyle = PALETTE.plantPot; ctx.fillRect(x, y, 4*PX, 4*PX); ctx.fillStyle = PALETTE.plantLeaf; ctx.fillRect(x - PX, y - 3*PX, 2*PX, 4*PX); ctx.fillRect(x + 2*PX, y - 4*PX, 2*PX, 5*PX); ctx.fillRect(x, y - 6*PX, 2*PX, 3*PX); }
-function drawWaterCooler(x, y) { ctx.fillStyle = PALETTE.waterCooler; ctx.fillRect(x, y, 4*PX, 10*PX); ctx.fillStyle = PALETTE.coolerWater; ctx.fillRect(x + PX, y - 2*PX, 2*PX, 4*PX); }
-function drawFilingCabinet(x, y) { ctx.fillStyle = PALETTE.filingCabinet; ctx.fillRect(x, y, 5*PX, 10*PX); for (let i = 0; i < 2; i++) { ctx.fillStyle = PALETTE.filingDraw; ctx.fillRect(x + PX, y + 1*PX + i * 4*PX, 3*PX, 3*PX); ctx.fillStyle = '#484F58'; ctx.fillRect(x + 2*PX, y + 2*PX + i * 4*PX, PX, PX); } }
-function drawDesk(a) { const x = a.x * canvas.width, y = a.y * canvas.height, dw = 18*PX, dh = 8*PX; ctx.fillStyle = PALETTE.deskLeg; ctx.fillRect(x - PX, y + dh, 2*PX, 3*PX); ctx.fillRect(x + dw, y + dh, 2*PX, 3*PX); ctx.fillStyle = PALETTE.desk; ctx.fillRect(x - PX, y + 2*PX, dw + 2*PX, dh - 2*PX); ctx.fillStyle = PALETTE.deskTop; ctx.fillRect(x - 2*PX, y, dw + 4*PX, 2*PX); const mw = 9*PX, mh = 7*PX, mx = x + dw/2 - mw/2, my = y - mh - PX; ctx.fillStyle = PALETTE.monitor; ctx.fillRect(mx, my, mw, mh); const active = a.state === 'working'; ctx.fillStyle = active ? PALETTE.monitorActive : '#1a1a1a'; ctx.fillRect(mx + PX, my + PX, mw - 2*PX, mh - 2*PX); if (active) { ctx.fillStyle = PALETTE.screenGlowActive; ctx.fillRect(mx + 2*PX, my + 2*PX, mw - 4*PX, PX); } ctx.fillStyle = PALETTE.monitor; ctx.fillRect(mx + mw/2 - PX, my + mh, 2*PX, 2*PX); ctx.fillStyle = PALETTE.chair; ctx.fillRect(x + dw/2 - 3*PX, y + dh + PX, 6*PX, 2*PX); ctx.fillStyle = PALETTE.chairSeat; ctx.fillRect(x + dw/2 - 2*PX, y + dh + 2*PX, 4*PX, PX); ctx.fillStyle = a.color; ctx.font = `${4*PX}px monospace`; ctx.fillText(a.name.substring(0, 6), x + PX, y + dh + 5*PX); }
-function drawAgent(a) { const x = a.x * canvas.width, y = a.y * canvas.height, bob = a.walkFrame > 2 ? -PX : 0; ctx.fillStyle = 'rgba(0,0,0,0.4)'; ctx.fillRect(x - 3*PX, y + 7*PX, 6*PX, 2*PX); ctx.fillStyle = a.color; ctx.fillRect(x - 2*PX, y - 4*PX + bob, 4*PX, 5*PX); ctx.fillStyle = '#E8D4B8'; ctx.fillRect(x - 2*PX, y - 8*PX + bob, 4*PX, 4*PX); ctx.fillStyle = '#000'; if (a.state === 'thinking') { ctx.fillRect(x - 1*PX, y - 7*PX + bob, PX, PX); ctx.fillRect(x + 1*PX, y - 7*PX + bob, PX, PX); drawThoughtBubble(x + 5*PX, y - 10*PX + bob, a.thought || a.task); } else { ctx.fillRect(x - 1*PX, y - 6*PX + bob, PX, PX); ctx.fillRect(x + 1*PX, y - 6*PX + bob, PX, PX); } }
-function drawThoughtBubble(x, y, text) { const txt = text?.length > 12 ? text.substring(0, 11) + '..' : (text || '...'); ctx.fillStyle = 'rgba(255,255,255,0.95)'; ctx.fillRect(x, y, 14*PX, 5*PX); ctx.fillRect(x - PX, y + 5*PX, 2*PX, 2*PX); ctx.fillStyle = '#000'; ctx.font = `${3*PX}px monospace`; ctx.fillText(txt, x + PX, y + 3*PX); }
-function drawOverlay(W, H) { ctx.fillStyle = 'rgba(0,0,0,0.7)'; ctx.fillRect(4*PX, H - 12*PX, 18*PX, 8*PX); ctx.fillStyle = '#8B949E'; ctx.font = `${3*PX}px monospace`; ctx.fillText(`${weather.temp_c}°C ${weather.desc?.substring(0, 6)}`, 5*PX, H - 6*PX); const time = new Date().toLocaleTimeString('en-US', { hour12: false }); ctx.fillStyle = 'rgba(0,0,0,0.7)'; ctx.fillRect(W - 20*PX, H - 12*PX, 16*PX, 8*PX); ctx.fillStyle = '#58A6FF'; ctx.fillText(time, W - 19*PX, H - 6*PX); }
+function drawWindow(x,y,w,h) { ctx.shadowColor=PALETTE.windowFrame; ctx.shadowBlur=8; ctx.fillStyle=PALETTE.windowFrame; ctx.fillRect(x,y,w,h); ctx.shadowBlur=0; ctx.fillStyle=PALETTE.windowSky; ctx.fillRect(x+PX,y+PX,w-2*PX,h-2*PX); ctx.fillStyle='#ffffff'; for(let i=0;i<6;i++)ctx.fillRect(x+3*PX+(i*3*PX)%(w-6*PX),y+2*PX+(i*2*PX)%(h-4*PX),PX,PX); ctx.fillStyle=PALETTE.windowFrame; ctx.fillRect(x+w/2-PX/2,y,PX,h); ctx.fillRect(x,y+h/2-PX/2,w,PX); }
+function drawRug(x,y,w,h) { ctx.shadowColor=PALETTE.rugGlow; ctx.shadowBlur=15; ctx.fillStyle=PALETTE.rug; ctx.fillRect(x,y,w,h); ctx.shadowBlur=0; ctx.fillStyle=PALETTE.rugGlow+'40'; ctx.fillRect(x+2*PX,y+2*PX,w-4*PX,h-4*PX); }
+function drawClock(x,y) { ctx.shadowColor=PALETTE.clockGlow; ctx.shadowBlur=8; ctx.fillStyle=PALETTE.clock; ctx.beginPath();ctx.arc(x,y,4*PX,0,Math.PI*2);ctx.fill();ctx.shadowBlur=0;ctx.fillStyle=PALETTE.clockGlow;const h=new Date().getHours()%12,m=new Date().getMinutes();ctx.fillRect(x,y,Math.cos((h*30+m*0.5)*Math.PI/180)*2*PX,Math.sin((h*30+m*0.5)*Math.PI/180)*2*PX);ctx.fillRect(x,y,Math.cos(m*6*Math.PI/180)*3*PX,Math.sin(m*6*Math.PI/180)*3*PX); }
+function drawGlobe(x,y) { ctx.shadowColor=PALETTE.globeGlow; ctx.shadowBlur=10; ctx.fillStyle=PALETTE.globe; ctx.beginPath();ctx.arc(x,y,4*PX,0,Math.PI*2);ctx.fill();ctx.shadowBlur=0; }
+function drawTrophy(x,y) { ctx.shadowColor=PALETTE.trophyGlow; ctx.shadowBlur=12; ctx.fillStyle=PALETTE.trophy; ctx.fillRect(x-PX,y,2*PX,3*PX); ctx.beginPath();ctx.arc(x,y-PX,2*PX,0,Math.PI*2);ctx.fill();ctx.shadowBlur=0; }
+function drawServerRack(x,y,w,h) { ctx.fillStyle=PALETTE.serverRack; ctx.fillRect(x,y,w,h); for(let i=0;i<4;i++){ctx.fillStyle='#050508';ctx.fillRect(x+PX,y+1*PX+i*4*PX,w-2*PX,3*PX);const ledOn=Math.sin(tick*0.1+i)>0;ctx.fillStyle=ledOn?PALETTE.serverLed:PALETTE.serverOff;ctx.fillRect(x+2*PX,y+2*PX+i*4*PX,PX,PX);ctx.fillStyle=ledOn?PALETTE.serverLed2:PALETTE.serverOff;ctx.fillRect(x+4*PX,y+2*PX+i*4*PX,PX,PX);} }
+function drawCoffeeMachine(x,y) { ctx.fillStyle=PALETTE.coffeeMachine; ctx.fillRect(x,y,5*PX,8*PX); const brew=Math.sin(tick*0.2)>0; ctx.fillStyle=brew?PALETTE.coffeeLight:'#222233'; ctx.fillRect(x+PX,y+4*PX,3*PX,PX); }
+function drawRoundTable(x,y,r) { ctx.shadowColor=PALETTE.tableGlow; ctx.shadowBlur=8; ctx.fillStyle=PALETTE.roundTable; ctx.fillRect(x-r,y-2*PX,r*2,4*PX); ctx.shadowBlur=0; }
+function drawSofa(x,y,w,h) { ctx.shadowColor=PALETTE.sofaGlow; ctx.shadowBlur=6; ctx.fillStyle=PALETTE.sofa; ctx.fillRect(x,y,w,h); ctx.shadowBlur=0; }
+function drawBookshelf(x,y,w,h) { ctx.fillStyle=PALETTE.bookshelf; ctx.fillRect(x,y,w,h); for(let r=0;r<4;r++){ctx.fillStyle='#080810';ctx.fillRect(x,y+r*3*PX,w,PX);for(let b=0;b<3;b++){ctx.fillStyle=PALETTE.books[(r+b)%6];ctx.fillRect(x+1*PX+b*2*PX,y+1*PX+r*3*PX,PX,2*PX);}} }
+function drawPlant(x,y) { ctx.fillStyle=PALETTE.plantPot; ctx.fillRect(x,y,3*PX,3*PX); ctx.fillStyle=PALETTE.plantLeaf; ctx.fillRect(x-PX,y-2*PX,2*PX,3*PX); ctx.fillRect(x+2*PX,y-3*PX,2*PX,4*PX); }
+function drawWaterCooler(x,y) { ctx.fillStyle=PALETTE.waterCooler; ctx.fillRect(x,y,3*PX,9*PX); ctx.fillStyle=PALETTE.coolerWater; ctx.fillRect(x+PX,y-2*PX,PX,4*PX); }
+function drawFilingCabinet(x,y) { ctx.fillStyle=PALETTE.filingCabinet; ctx.fillRect(x,y,4*PX,9*PX); }
 
-function updateDOM() { updateAgentListDOM(); updateLogsDOM(); updateClockDOM(); }
+function drawDesk(a) {
+  const x=a.x*canvas.width,y=a.y*canvas.height,dw=16*PX,dh=7*PX;
+  ctx.shadowColor=a.color; ctx.shadowBlur=8;
+  ctx.fillStyle=PALETTE.deskLeg; ctx.fillRect(x-PX,y+dh,2*PX,2*PX); ctx.fillRect(x+dw,y+dh,2*PX,2*PX);
+  ctx.fillStyle=PALETTE.desk; ctx.fillRect(x-PX,y+2*PX,dw+2*PX,dh-2*PX);
+  ctx.shadowColor=PALETTE.deskEdge; ctx.fillStyle=PALETTE.deskTop; ctx.fillRect(x-2*PX,y,dw+4*PX,2*PX); ctx.shadowBlur=0;
+  const mw=8*PX,mh=6*PX,mx=x+dw/2-mw/2,my=y-mh-PX,active=a.state==='working';
+  ctx.shadowColor=active?PALETTE.screenGlowActive:'#000'; ctx.shadowBlur=active?12:0;
+  ctx.fillStyle=PALETTE.monitor; ctx.fillRect(mx,my,mw,mh); ctx.shadowBlur=0;
+  ctx.fillStyle=active?PALETTE.monitorActive:'#080810'; ctx.fillRect(mx+PX,my+PX,mw-2*PX,mh-2*PX);
+  if(active){ctx.shadowColor=PALETTE.screenGlowActive;ctx.shadowBlur=10;ctx.fillRect(mx+2*PX,my+2*PX,mw-4*PX,PX);ctx.shadowBlur=0;}
+  ctx.fillStyle=PALETTE.chair; ctx.fillRect(x+dw/2-2*PX,y+dh+PX,4*PX,2*PX);
+  ctx.fillStyle=a.color; ctx.font=4*PX+'px monospace'; ctx.fillText(a.name,x+PX,y+dh+4*PX);
+}
+
+function drawAgent(a) {
+  const x=a.x*canvas.width,y=a.y*canvas.height,bob=a.walkFrame>2?-PX:0;
+  if(Math.random()<0.3)createParticle(x,y-4*PX,a.color+'80');
+  ctx.fillStyle=a.color; ctx.fillRect(x-2*PX,y-4*PX+bob,4*PX,4*PX);
+  ctx.fillStyle='#cccccc'; ctx.fillRect(x-2*PX,y-8*PX+bob,4*PX,3*PX);
+  ctx.fillStyle='#000';
+  if(a.state==='thinking'){ctx.fillRect(x-1*PX,y-7*PX+bob,PX,PX);ctx.fillRect(x+1*PX,y-7*PX+bob,PX,PX);drawThoughtBubble(x+5*PX,y-10*PX+bob,a.thought);}
+  else{ctx.fillRect(x-1*PX,y-6*PX+bob,PX,PX);ctx.fillRect(x+1*PX,y-6*PX+bob,PX,PX);}
+}
+
+function drawThoughtBubble(x,y,text) { const txt=text?.length>10?text.substring(0,9)+'..':(text||'...'); ctx.fillStyle='rgba(255,255,255,0.95)'; ctx.fillRect(x,y,12*PX,4*PX); ctx.fillRect(x-PX,y+4*PX,2*PX,2*PX); ctx.fillStyle='#000'; ctx.font=3*PX+'px monospace'; ctx.fillText(txt,x+PX,y+3*PX); }
+
+function drawOverlay(W,H) { ctx.fillStyle='rgba(0,0,0,0.8)'; ctx.fillRect(4*PX,H-10*PX,16*PX,6*PX); ctx.fillStyle='#00ffff'; ctx.font=3*PX+'px monospace'; ctx.fillText((weather.temp_c||'--')+'C',5*PX,H-5*PX); const time=new Date().toLocaleTimeString('en-US',{hour12:false}); ctx.fillStyle='rgba(0,0,0,0.8)'; ctx.fillRect(W-18*PX,H-10*PX,14*PX,6*PX); ctx.fillStyle='#00ff88'; ctx.fillText(time,W-17*PX,H-5*PX); }
+
+function updateDOM() { updateAgentListDOM(); updateLogsDOM(); }
 
 function updateAgentListDOM() {
-  const el = document.getElementById('office-agent-list');
-  if (!el) return;
-  el.innerHTML = animAgents.map(a => `
-    <div class="agent-row">
-      <div class="agent-dot ${a.state === 'working' ? 'green' : 'blue'}"></div>
-      <div class="agent-info">
-        <div class="agent-name">${a.emoji} ${a.name}</div>
-        <div class="agent-task">${a.task}</div>
-        <div class="agent-meta"><span style="color:#58A6FF">${a.model}</span></div>
-      </div>
-    </div>
-  `).join('');
+  const el=document.getElementById('office-agent-list');
+  if(!el)return;
+  el.innerHTML=animAgents.map(a=>`<div class="agent-row"><div class="agent-dot ${a.state==='working'?'green':'blue'}" style="background:${a.state==='working'?a.color:''}"></div><div class="agent-info"><div class="agent-name" style="color:${a.color}">${a.emoji} ${a.name}</div><div class="agent-task">${a.task}</div><div class="agent-meta"><span style="color:#00ffff">${a.model}</span></div></div></div>`).join('');
 }
 
 function updateLogsDOM() {
-  const el = document.getElementById('office-logs-list');
-  if (!el) return;
-  el.innerHTML = liveLogs.slice(0, 10).map(l => `<div class="log-entry ${l.type}"><span class="log-time">${l.time}</span><span class="log-text">${l.text}</span></div>`).join('');
+  const el=document.getElementById('office-logs-list');
+  if(!el)return;
+  el.innerHTML=liveLogs.slice(0,8).map(l=>`<div class="log-entry ${l.type}"><span class="log-time">${l.time}</span><span class="log-text">${l.text}</span></div>`).join('');
 }
 
-function updateClockDOM() {
-  const el = document.getElementById('office-clock');
-  if (el) el.textContent = new Date().toLocaleTimeString('en-US', { hour12: false, hour: '2-digit', minute: '2-digit' });
-}
-
-export function addLog(type, text) {
-  const time = new Date().toLocaleTimeString('en-US', { hour12: false, hour: '2-digit', minute: '2-digit', second: '2-digit' });
-  liveLogs.unshift({ type, text, time });
-  if (liveLogs.length > 30) liveLogs.pop();
-  updateLogsDOM();
-}
+export function addLog(type,text) { const time=new Date().toLocaleTimeString('en-US',{hour12:false,hour:'2-digit',minute:'2-digit',second:'2-digit'});liveLogs.unshift({type,text,time});if(liveLogs.length>25)liveLogs.pop();updateLogsDOM(); }
 
 function handleHover(e) {
-  const r = canvas.getBoundingClientRect(), x = (e.clientX - r.left) * (canvas.width / r.width), y = (e.clientY - r.top) * (canvas.height / r.height);
-  const tip = document.getElementById('agent-tooltip');
-  if (!tip) return;
-  const hit = animAgents.find(a => { const ax = a.x * canvas.width, ay = a.y * canvas.height; return Math.abs(x - ax) < 8*PX && Math.abs(y - ay) < 12*PX; });
-  if (hit) {
-    tip.innerHTML = `<div class="agent-tooltip-name" style="color:${hit.color}">${hit.emoji} ${hit.name}</div><div class="agent-tooltip-task">${hit.task}</div><div class="agent-tooltip-meta"><span>${hit.state === 'working' ? '🟢 Active' : '🔵 Idle'}</span><span style="color:#58A6FF">${hit.model}</span></div>`;
-    tip.style.left = (e.clientX - r.left + 10) + 'px'; tip.style.top = (e.clientY - r.top - 50) + 'px'; tip.classList.add('visible');
-  } else { tip.classList.remove('visible'); }
+  const r=canvas.getBoundingClientRect(),x=(e.clientX-r.left)*(canvas.width/r.width),y=(e.clientY-r.top)*(canvas.height/r.height);
+  const tip=document.getElementById('agent-tooltip');
+  if(!tip)return;
+  const hit=animAgents.find(a=>{const ax=a.x*canvas.width,ay=a.y*canvas.height;return Math.abs(x-ax)<8*PX&&Math.abs(y-ay)<10*PX;});
+  if(hit){tip.innerHTML=`<div class="agent-tooltip-name" style="color:${hit.color}">${hit.emoji} ${hit.name}</div><div class="agent-tooltip-task">${hit.task}</div><div class="agent-tooltip-meta"><span>${hit.state==='working'?'🟢 Active':'🔵 Idle'}</span><span style="color:#00ffff">${hit.model}</span></div>`;tip.style.left=(e.clientX-r.left+10)+'px';tip.style.top=(e.clientY-r.top-45)+'px';tip.classList.add('visible');}
+  else tip.classList.remove('visible');
 }
 
 function handleClick(e) {
-  const r = canvas.getBoundingClientRect(), x = (e.clientX - r.left) * (canvas.width / r.width), y = (e.clientY - r.top) * (canvas.height / r.height);
-  const hit = animAgents.find(a => { const ax = a.x * canvas.width, ay = a.y * canvas.height; return Math.abs(x - ax) < 8*PX && Math.abs(y - ay) < 12*PX; });
-  if (hit) { addLog('info', `👋 Checked in: ${hit.name}`); playSound('huddle'); }
+  const r=canvas.getBoundingClientRect(),x=(e.clientX-r.left)*(canvas.width/r.width),y=(e.clientY-r.top)*(canvas.height/r.height);
+  const hit=animAgents.find(a=>{const ax=a.x*canvas.width,ay=a.y*canvas.height;return Math.abs(x-ax)<8*PX&&Math.abs(y-ay)<10*PX;});
+  if(hit){addLog('info','👋 '+hit.name+' checked in');playSound('huddle');for(let i=0;i<10;i++)createParticle(hit.x*canvas.width,hit.y*canvas.height,hit.color);}
 }
 
-export function setWeather(w) { if (w) weather = w; }
-export function toggleSound() { soundEnabled = !soundEnabled; return soundEnabled; }
+export function setWeather(w){if(w)weather=w;}
+export function toggleSound(){soundEnabled=!soundEnabled;return soundEnabled;}

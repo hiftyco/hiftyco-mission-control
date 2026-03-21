@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Hifty Mission Control</title>
-<link rel="stylesheet" href="public/css/office.css?v=4">
+<link rel="stylesheet" href="public/css/office.css?v=6">
 <style>
 :root{--bg:#000;--bg2:#0d0d0f;--bg3:#1c1c1e;--bg4:#2c2c2e;--bg5:#3a3a3c;--text:#fff;--text2:#98989d;--text3:#636366;--blue:#007AFF;--green:#34C759;--orange:#FF9500;--red:#FF3B30;--purple:#AF52DE;--teal:#5AC8FA;--border:rgba(255,255,255,0.08);--border2:rgba(255,255,255,0.12);--radius:14px;--radius2:9px;--font:-apple-system,BlinkMacSystemFont,"SF Pro Display",sans-serif}
 *{margin:0;padding:0;box-sizing:border-box}
@@ -420,23 +420,18 @@ if(checkSession()){document.write('<style>#loginOverlay{display:none}#dashboard{
 <div class="btc-left"><div class="btc-icon">₿</div><div class="btc-info"><div class="btc-label">Bitcoin Price</div><div class="btc-price" id="btcPrice">$71,195</div><div class="btc-change" id="btcChange">-4.02% (24h)</div></div></div>
 <div class="btc-right"><div class="btc-fng">Fear & Greed</div><div class="btc-fng-val" id="fngValue">28</div><div class="btc-updated" id="btcUpdated">Updated: 23:52</div></div>
 </div>
-<div class="three-col" style="margin-top:0">
-<div class="panel" style="flex:1.2">
-<div class="panel-head"><span class="panel-title">🎨 Agent Workspace</span><span class="panel-badge green" id="gatewayStatus">CONNECTING</span></div>
-<div class="office-canvas-wrap" style="height:320px">
+<div class="panel" style="flex:1;max-width:100%;margin:0 auto;">
+<div class="panel-head" style="justify-content:center;gap:12px"><span class="panel-title">🎮 AGENT WORKSPACE</span><span class="panel-badge green" id="gatewayStatus">CONNECTING</span></div>
+<div class="office-canvas-wrap" style="height:380px;border:1px solid #00ffff30;border-radius:8px;box-shadow:0 0 30px #00ffff10,inset 0 0 60px #00000080">
 <canvas id="office-canvas"></canvas>
 <div class="office-overlay">
 <div class="office-weather" id="office-weather">18C Clear</div>
 <div class="office-clock" id="office-clock">00:00</div>
 </div>
 </div>
-<div class="office-logs-wrap"><div class="logs-header"><span>📋 Live Activity</span><button class="sound-toggle" onclick="toggleSound()">🔊</button></div>
+<div class="office-logs-wrap"><div class="logs-header"><span>📋 LIVE ACTIVITY</span><button class="sound-toggle" onclick="toggleSound()">🔊</button></div>
 <div id="office-logs-list" class="logs-container"></div>
 </div>
-</div>
-<div class="panel" style="flex:0.5">
-<div class="panel-head"><span class="panel-title">🤖 Active Agents</span><span class="panel-badge" id="agentCount">5</span></div><div class="panel-body">
-<div class="agent-list" id="office-agent-list"></div></div></div>
 </div>
 <div class="three-col">
 <div class="panel"><div class="panel-head"><span class="panel-title">💰 Cost This Week</span><span class="panel-badge" id="weekCost">$18.42</span></div><div class="panel-body">
@@ -723,7 +718,7 @@ setTimeout(()=>{updateTimeline();addLog('success','Team workflow section loaded'
 <!-- Agent tooltip for office hover -->
 <div class="agent-tooltip" id="agent-tooltip"></div>
 <script type="module">
-import * as office from './public/js/office.js?v=4';
+import * as office from './public/js/office.js?v=6';
 
 // Start office when dashboard loads
 window._office = office;
