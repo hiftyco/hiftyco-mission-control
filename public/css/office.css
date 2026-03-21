@@ -187,6 +187,38 @@
   text-overflow: ellipsis;
 }
 
+/* Logs wrap with header */
+.office-logs-wrap {
+  background: var(--bg2);
+  border-top: 1px solid var(--border);
+  padding: 8px;
+  max-height: 120px;
+  overflow-y: auto;
+}
+
+.logs-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 6px;
+  font-size: 10px;
+  color: var(--text2);
+  text-transform: uppercase;
+}
+
+.sound-toggle {
+  background: var(--bg3);
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  padding: 2px 6px;
+  cursor: pointer;
+  font-size: 10px;
+}
+
+.sound-toggle:hover {
+  background: var(--bg4);
+}
+
 /* Gateway status badge */
 .panel-badge.green {
   background: rgba(63, 185, 80, 0.2);
