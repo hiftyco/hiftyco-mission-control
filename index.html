@@ -4,6 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Hifty Mission Control</title>
+<link rel="stylesheet" href="public/css/office.css?v=2">
 <style>
 :root{--bg:#000;--bg2:#0d0d0f;--bg3:#1c1c1e;--bg4:#2c2c2e;--bg5:#3a3a3c;--text:#fff;--text2:#98989d;--text3:#636366;--blue:#007AFF;--green:#34C759;--orange:#FF9500;--red:#FF3B30;--purple:#AF52DE;--teal:#5AC8FA;--border:rgba(255,255,255,0.08);--border2:rgba(255,255,255,0.12);--radius:14px;--radius2:9px;--font:-apple-system,BlinkMacSystemFont,"SF Pro Display",sans-serif}
 *{margin:0;padding:0;box-sizing:border-box}
@@ -419,15 +420,25 @@ if(checkSession()){document.write('<style>#loginOverlay{display:none}#dashboard{
 <div class="btc-left"><div class="btc-icon">₿</div><div class="btc-info"><div class="btc-label">Bitcoin Price</div><div class="btc-price" id="btcPrice">$71,195</div><div class="btc-change" id="btcChange">-4.02% (24h)</div></div></div>
 <div class="btc-right"><div class="btc-fng">Fear & Greed</div><div class="btc-fng-val" id="fngValue">28</div><div class="btc-updated" id="btcUpdated">Updated: 23:52</div></div>
 </div>
+<div class="two-col" style="margin-top:0">
+<div class="panel" style="flex:1">
+<div class="panel-head"><span class="panel-title">🎨 Agent Workspace</span><span class="panel-badge">Live</span></div>
+<div class="office-canvas-wrap" style="height:220px">
+<canvas id="office-canvas"></canvas>
+<div class="office-overlay">
+<div class="office-weather" id="office-weather">22C Clear</div>
+<div class="office-clock" id="office-clock">00:00</div>
+</div>
+</div>
+<div class="office-task-feed">
+<div id="office-task-list"></div>
+</div>
+</div>
+<div class="panel" style="flex:0.6">
+<div class="panel-head"><span class="panel-title">🤖 Active Agents</span><span class="panel-badge" id="agentCount">5</span></div><div class="panel-body">
+<div class="agent-list" id="agentList"></div></div></div>
+</div>
 <div class="three-col">
-<div class="panel"><div class="panel-head"><span class="panel-title">🤖 Active Agents</span><span class="panel-badge" id="agentCount">5</span></div><div class="panel-body">
-<div class="agent-list" id="agentList">
-<div class="agent-row"><div class="agent-dot green"></div><div class="agent-info"><div class="agent-name">Ollie (CEO)</div><div class="agent-task">Leading team strategy</div><div class="agent-meta"><span>12m</span><span class="agent-cost">$0.02</span></div></div></div>
-<div class="agent-row"><div class="agent-dot green"></div><div class="agent-info"><div class="agent-name">MintyTrades</div><div class="agent-task">Analyzing BTC RSI signals</div><div class="agent-meta"><span>3m</span><span class="agent-cost">$0.01</span></div></div></div>
-<div class="agent-row"><div class="agent-dot blue"></div><div class="agent-info"><div class="agent-name">HiftyCodes</div><div class="agent-task">Website maintenance</div><div class="agent-meta"><span>idle</span><span>$0.00</span></div></div></div>
-<div class="agent-row"><div class="agent-dot blue"></div><div class="agent-info"><div class="agent-name">HiftyAnalyst</div><div class="agent-task">Daily research complete</div><div class="agent-meta"><span>idle</span><span>$0.00</span></div></div></div>
-<div class="agent-row"><div class="agent-dot green"></div><div class="agent-info"><div class="agent-name">HiftyRiskManager</div><div class="agent-task">Monitoring risk compliance</div><div class="agent-meta"><span>5m</span><span class="agent-cost">$0.01</span></div></div></div>
-</div></div></div>
 <div class="panel"><div class="panel-head"><span class="panel-title">💰 Cost This Week</span><span class="panel-badge" id="weekCost">$18.42</span></div><div class="panel-body">
 <div class="chart-container" id="costChart"><div class="chart-bar" style="height:45%"><div class="bar-fill"></div></div><div class="chart-bar" style="height:62%"><div class="bar-fill"></div></div><div class="chart-bar" style="height:38%"><div class="bar-fill"></div></div><div class="chart-bar" style="height:55%"><div class="bar-fill"></div></div><div class="chart-bar" style="height:78%"><div class="bar-fill"></div></div><div class="chart-bar" style="height:42%"><div class="bar-fill"></div></div><div class="chart-bar today" style="height:28%"><div class="bar-fill"></div></div></div>
 <div class="chart-labels"><span class="chart-label">Mon</span><span class="chart-label">Tue</span><span class="chart-label">Wed</span><span class="chart-label">Thu</span><span class="chart-label">Fri</span><span class="chart-label">Sat</span><span class="chart-label">Sun</span></div>
@@ -708,6 +719,30 @@ function updateTimeline(){const n=new Date(),h=n.getHours(),tl=document.getEleme
 function updateTeamKPIs(){const pe=document.getElementById('teamPnl');const pro=15399;if(pe&&Math.random()>0.7){const c=Math.floor(Math.random()*100);const np=pro+c;pe.textContent='+$'+np.toLocaleString()}const re=document.getElementById('teamRsiCompliance');if(re&&Math.random()>0.8){const nr=Math.floor(Math.random()*20)+33;re.textContent=nr+'%'}}
 document.querySelectorAll('.team-member').forEach(m=>{m.addEventListener('click',function(){const mid=this.dataset.member;addLog('info','Team member selected: '+mid);document.querySelectorAll('.team-member').forEach(me=>me.classList.remove('active'));this.classList.add('active')})});
 setTimeout(()=>{updateTimeline();addLog('success','Team workflow section loaded')},500);
+</script>
+<!-- Agent tooltip for office hover -->
+<div class="agent-tooltip" id="agent-tooltip"></div>
+<script type="module">
+import * as office from './public/js/office.js';
+
+// Start office when dashboard loads
+window._office = office;
+office.init('office-canvas');
+office.startDemo();
+
+// Connect office to existing agent list updates
+const origUpdateAgentList = window.updateAgentList;
+window.updateAgentList = function(agents) {
+  if (origUpdateAgentList) origUpdateAgentList(agents);
+  // Sync agent states from WS updates
+  if (agents && agents.length) {
+    agents.forEach(a => {
+      const state = a.status === 'active' ? 'working' : 'idle';
+      const task = a.task || a.status || '';
+      office.setAgentState(a.id || a.name, state, { status: task });
+    });
+  }
+};
 </script>
 </div>
 <button id="signOutBtn" onclick="logout()" style="display:none;position:fixed;top:14px;right:14px;z-index:100;padding:6px 12px;background:#1c1c1e;border:1px solid #333;border-radius:9px;color:#fff;font-size:12px;cursor:pointer">Sign Out</button>

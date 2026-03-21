@@ -1,0 +1,154 @@
+/* Pixel Art Office Panel */
+.office-panel {
+  background: var(--bg);
+  border-radius: var(--radius2);
+  overflow: hidden;
+  border: 1px solid var(--border);
+}
+
+.office-canvas-wrap {
+  position: relative;
+  width: 100%;
+  background: #0F1420;
+}
+
+#office-canvas {
+  width: 100%;
+  display: block;
+  image-rendering: pixelated;
+  image-rendering: crisp-edges;
+  cursor: pointer;
+}
+
+/* Office overlay info */
+.office-overlay {
+  position: absolute;
+  bottom: 8px;
+  left: 8px;
+  right: 8px;
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-end;
+  pointer-events: none;
+}
+
+.office-weather {
+  background: rgba(0, 0, 0, 0.7);
+  border-radius: 6px;
+  padding: 4px 8px;
+  font-size: 10px;
+  color: #AACCFF;
+  font-family: 'JetBrains Mono', monospace;
+}
+
+.office-clock {
+  background: rgba(0, 0, 0, 0.7);
+  border-radius: 6px;
+  padding: 4px 8px;
+  font-size: 10px;
+  color: #00DDFF;
+  font-family: 'JetBrains Mono', monospace;
+}
+
+/* Agent tooltip on hover */
+.agent-tooltip {
+  position: absolute;
+  background: rgba(13, 13, 15, 0.95);
+  border: 1px solid var(--border2);
+  border-radius: 8px;
+  padding: 8px 12px;
+  pointer-events: none;
+  z-index: 100;
+  min-width: 140px;
+  display: none;
+}
+
+.agent-tooltip.visible {
+  display: block;
+}
+
+.agent-tooltip-name {
+  font-weight: 600;
+  font-size: 12px;
+  margin-bottom: 2px;
+}
+
+.agent-tooltip-task {
+  font-size: 10px;
+  color: var(--text2);
+  margin-bottom: 4px;
+}
+
+.agent-tooltip-meta {
+  display: flex;
+  gap: 8px;
+  font-size: 9px;
+  color: var(--text3);
+}
+
+.agent-tooltip-cost {
+  color: var(--green);
+  font-weight: 500;
+}
+
+/* Huddle notification */
+.office-huddle-notify {
+  position: absolute;
+  top: 8px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: rgba(0, 170, 255, 0.9);
+  border-radius: 12px;
+  padding: 4px 10px;
+  font-size: 9px;
+  color: #fff;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 0.3s;
+  white-space: nowrap;
+}
+
+.office-huddle-notify.visible {
+  opacity: 1;
+}
+
+/* Team task feed below office */
+.office-task-feed {
+  padding: 8px 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  max-height: 80px;
+  overflow-y: auto;
+}
+
+.task-entry {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 10px;
+  padding: 3px 6px;
+  border-radius: 4px;
+  background: var(--bg);
+}
+
+.task-entry-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.task-entry-text {
+  flex: 1;
+  color: var(--text2);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.task-entry-time {
+  color: var(--text3);
+  font-size: 9px;
+  flex-shrink: 0;
+}
